@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
+	<classpathentry kind="lib" path="/libraries/external/joda-time/2.0/joda-time-2.0.jar"/>
+	<classpathentry kind="lib" path="/libraries/external/sl4j/1.6.4/slf4j-api-1.6.4.jar"/>
+	<classpathentry kind="lib" path="/libraries/external/guava/11.0.1/guava-11.0.1.jar"/>
+	<classpathentry kind="lib" path="/libraries/external/gson/2.1/gson-2.1.jar"/>
+	<classpathentry kind="lib" path="/libraries/external/jetty/9.1.0/jsp/javax.servlet.jsp-2.3.2.jar"/>
+	<classpathentry kind="lib" path="/libraries/external/jetty/9.1.0/jetty-client-9.1.0.v20131115.jar"/>
+	<classpathentry kind="lib" path="/libraries/external/jetty/9.1.0/jetty-continuation-9.1.0.v20131115.jar"/>
+	<classpathentry kind="lib" path="/libraries/external/jetty/9.1.0/jetty-deploy-9.1.0.v20131115.jar"/>
+	<classpathentry kind="lib" path="/libraries/external/jetty/9.1.0/jetty-http-9.1.0.v20131115.jar"/>
+	<classpathentry kind="lib" path="/libraries/external/jetty/9.1.0/jetty-io-9.1.0.v20131115.jar"/>
+	<classpathentry kind="lib" path="/libraries/external/jetty/9.1.0/jetty-security-9.1.0.v20131115.jar"/>
+	<classpathentry kind="lib" path="/libraries/external/jetty/9.1.0/jetty-server-9.1.0.v20131115.jar"/>
+	<classpathentry kind="lib" path="/libraries/external/jetty/9.1.0/jetty-servlet-9.1.0.v20131115.jar"/>
+	<classpathentry kind="lib" path="/libraries/external/jetty/9.1.0/jetty-servlets-9.1.0.v20131115.jar"/>
+	<classpathentry kind="lib" path="/libraries/external/jetty/9.1.0/jetty-util-9.1.0.v20131115.jar"/>
+	<classpathentry kind="lib" path="/libraries/external/jetty/9.1.0/jetty-xml-9.1.0.v20131115.jar"/>
+	<classpathentry kind="lib" path="/libraries/external/jetty/9.1.0/servlet-api-3.1.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
