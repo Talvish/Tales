@@ -444,8 +444,7 @@ public abstract class Service implements Runnable {
 			loadConnectorConfigurations( );
 			
 			// setup the admin interface
-			List<String> adminEndPoints = configurationFacility.getListValue( String.format( ConfigurationConstants.HTTP_INTERFACE_ENDPOINTS, "admin" ), String.class );
-	        HttpInterface adminInterface = new HttpInterface( "admin", adminEndPoints, this );
+	        HttpInterface adminInterface = new HttpInterface( "admin", this );
 	        this.interfaceManager.register( adminInterface );
 	        
 	        // TODO: I could do something similar to the keystore, and have the ones to start based on a 'service.http_interfaces' setting

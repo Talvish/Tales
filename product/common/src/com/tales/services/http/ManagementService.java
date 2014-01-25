@@ -15,10 +15,6 @@
 // ***************************************************************************
 package com.tales.services.http;
 
-import java.util.List;
-
-import com.tales.services.ConfigurationConstants;
-
 /**
  * This is a convenience class for someone looking to create a management http-based
  * service. Management refers to a set of contracts that are used to augment a public
@@ -46,12 +42,7 @@ public class ManagementService extends HttpService {
 	@Override
 	protected void onStart() {
 		// setup the work interface
-		List<String> endPoints;
-		HttpInterfaceBase httpInterface;
-
-		endPoints = getConfigurationManager( ).getListValue( String.format( ConfigurationConstants.HTTP_INTERFACE_ENDPOINTS, ServiceConstants.MANAGEMENT_INTERFACE_NAME ), String.class );
-        httpInterface = new HttpInterface( ServiceConstants.MANAGEMENT_INTERFACE_NAME, endPoints, this );
-        this.interfaceManager.register( httpInterface );
+        this.interfaceManager.register( new HttpInterface( ServiceConstants.MANAGEMENT_INTERFACE_NAME, this ) );
 	}
 
 	/**

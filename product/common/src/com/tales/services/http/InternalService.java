@@ -15,10 +15,6 @@
 // ***************************************************************************
 package com.tales.services.http;
 
-import java.util.List;
-
-import com.tales.services.ConfigurationConstants;
-
 /**
  * This is a convenience class for someone looking to create an http-based
  * internal service. Internal means that the service will typically take
@@ -45,12 +41,7 @@ public class InternalService extends HttpService {
 	@Override
 	protected void onStart() {
         // setup the work interface
-		List<String> endPoints;
-		HttpInterfaceBase httpInterface;
-
-		endPoints = getConfigurationManager( ).getListValue( String.format( ConfigurationConstants.HTTP_INTERFACE_ENDPOINTS, ServiceConstants.INTERNAL_INTERFACE_NAME ), String.class );
-        httpInterface = new HttpInterface( ServiceConstants.INTERNAL_INTERFACE_NAME, endPoints, this );
-        this.interfaceManager.register( httpInterface );
+        this.interfaceManager.register( new HttpInterface( ServiceConstants.INTERNAL_INTERFACE_NAME, this ) );
 	}
 
 	/**

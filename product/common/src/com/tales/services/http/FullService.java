@@ -15,10 +15,6 @@
 // ***************************************************************************
 package com.tales.services.http;
 
-import java.util.List;
-
-import com.tales.services.ConfigurationConstants;
-
 /**
  * This is a convenience class for someone looking to create an http-based
  * service with public, internal and management service.
@@ -42,20 +38,9 @@ public class FullService extends HttpService {
 	@Override
 	protected void onStart() {
 		// setup the work interfaces
-		List<String> endPoints;
-		HttpInterfaceBase httpInterface;
-		
-		endPoints = getConfigurationManager( ).getListValue( String.format( ConfigurationConstants.HTTP_INTERFACE_ENDPOINTS, ServiceConstants.PUBLIC_INTERFACE_NAME ), String.class );
-        httpInterface = new HttpInterface( ServiceConstants.PUBLIC_INTERFACE_NAME, endPoints, this );
-        this.interfaceManager.register( httpInterface );
-
-		endPoints = getConfigurationManager( ).getListValue( String.format( ConfigurationConstants.HTTP_INTERFACE_ENDPOINTS, ServiceConstants.INTERNAL_INTERFACE_NAME ), String.class );
-        httpInterface = new HttpInterface( ServiceConstants.INTERNAL_INTERFACE_NAME, endPoints, this );
-        this.interfaceManager.register( httpInterface );
-
-		endPoints = getConfigurationManager( ).getListValue( String.format( ConfigurationConstants.HTTP_INTERFACE_ENDPOINTS, ServiceConstants.MANAGEMENT_INTERFACE_NAME ), String.class );
-        httpInterface = new HttpInterface( ServiceConstants.MANAGEMENT_INTERFACE_NAME, endPoints, this );
-        this.interfaceManager.register( httpInterface );
+        this.interfaceManager.register( new HttpInterface( ServiceConstants.PUBLIC_INTERFACE_NAME,  this ) );
+        this.interfaceManager.register( new HttpInterface( ServiceConstants.INTERNAL_INTERFACE_NAME, this ) );
+        this.interfaceManager.register( new HttpInterface( ServiceConstants.MANAGEMENT_INTERFACE_NAME,  this ) );
     }
 
 	/**

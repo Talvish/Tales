@@ -15,7 +15,6 @@
 // ***************************************************************************
 package com.tales.services.http;
 
-import java.util.List;
 import java.util.Map;
 
 import org.apache.jasper.servlet.JspServlet;
@@ -37,13 +36,12 @@ public class WebsiteInterface extends HttpInterfaceBase {
 	/**
 	 * Constructor taking parameters needed to start a website.
 	 * @param theName the name given to the interface
-	 * @param theEndpoints the endpoints exposed by this interface
 	 * @param theService the service the interface will be bound to
 	 * @param theResourceBase the location on disk to map where to find files from
 	 * @param theService the service the interface will be bound to
 	 */
-	public WebsiteInterface( String theName, List<String> theEndpoints,	String theResourceBase, Service theService ) {
-		super(theName, theEndpoints, theService);
+	public WebsiteInterface( String theName, String theResourceBase, Service theService ) {
+		super(theName, theService);
 		Preconditions.checkArgument( !Strings.isNullOrEmpty( theResourceBase ), String.format( "Website interface '%s'  needs a resource base.", theName ) );
 
 		setupInterface( theName, theResourceBase, null );
@@ -57,8 +55,8 @@ public class WebsiteInterface extends HttpInterfaceBase {
 	 * @param theInitParameters an optional set of parameters to configure the jsp servlet with
 	 * @param theService the service the interface will be bound to
 	 */
-	public WebsiteInterface( String theName, List<String> theEndpoints,	String theResourceBase, Map<String,String> theInitParameters, Service theService ) {
-		super(theName, theEndpoints, theService);
+	public WebsiteInterface( String theName, String theResourceBase, Map<String,String> theInitParameters, Service theService ) {
+		super(theName, theService);
 		Preconditions.checkArgument( !Strings.isNullOrEmpty( theResourceBase ), String.format( "Website interface '%s'  needs a resource base.", theName ) );
 
 		setupInterface( theName, theResourceBase, theInitParameters );

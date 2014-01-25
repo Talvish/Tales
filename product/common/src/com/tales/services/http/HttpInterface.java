@@ -15,8 +15,6 @@
 // ***************************************************************************
 package com.tales.services.http;
 
-import java.util.List;
-
 import javax.servlet.Servlet;
 import javax.servlet.http.HttpServletRequest;
 
@@ -45,8 +43,8 @@ public class HttpInterface extends HttpInterfaceBase {
 	 * @param theEndpoints the endpoints exposed by this interface
 	 * @param theService the service the interface will be bound to
 	 */
-	public HttpInterface(String theName, List<String> theEndpoints,	Service theService) {
-		super(theName, theEndpoints, theService);
+	public HttpInterface(String theName, Service theService) {
+		super(theName, theService);
 	}
 
 	/**

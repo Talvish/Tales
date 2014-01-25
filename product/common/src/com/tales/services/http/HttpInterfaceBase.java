@@ -35,18 +35,15 @@ import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.SslConnectionFactory;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
-
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Period;
 import org.joda.time.PeriodType;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-
 import com.tales.contracts.services.ServiceContract;
 import com.tales.contracts.services.ContractManager;
 import com.tales.serialization.Readability;
@@ -248,14 +245,14 @@ public abstract class HttpInterfaceBase implements Interface {
 	private ExecutionLifecycleListeners  listeners 	= new ExecutionLifecycleListeners( );
 	private ExecutionLifecycleState lifecycleState	= ExecutionLifecycleState.CREATED;
 
+	// TODO: add a constructor that takes the parameters manually instead of loaded from the configuration
+	
 	/**
 	 * Constructor taking the items needed for the interface to start.
 	 * @param theName the name given to the interface
-	 * @param theEndpoints the endpoints exposed by this interface
 	 * @param theService the service the interface will be bound to
 	 */
-	public HttpInterfaceBase( String theName, List<String> theEndpoints, Service theService ) {
-		Preconditions.checkArgument( theEndpoints != null && theEndpoints.size() > 0, "must have endpoints" );
+	public HttpInterfaceBase( String theName, Service theService ) {
 		Preconditions.checkArgument( !Strings.isNullOrEmpty( theName ), "must have a name" );
 		Preconditions.checkNotNull( theService, "need a service" );
 		
@@ -298,14 +295,10 @@ public abstract class HttpInterfaceBase implements Interface {
 		} else {
 			sslFactory = null;
 		}
-		
-		int count = 0;
-		HttpEndpoint endpoint;
-		ArrayList<HttpEndpoint> modifiableEndpoints = new ArrayList<HttpEndpoint>( theEndpoints.size() );
+
 		ConnectorConfiguration connectorConfiguration = null;
 
-    	// finish configuring the other settings we want to use
-    	// if there is a reference to the connector configuration
+    	// load up the the connector configuration
     	String connectorName = String.format( ConfigurationConstants.HTTP_INTERFACE_CONNECTOR, this.getName( ) );
 		if( service.getConfigurationManager().contains( connectorName ) ) {
 	    	ConnectorConfigurationManager connectorConfigurationManager = this.service.getFacility( ConnectorConfigurationManager.class );
@@ -321,8 +314,15 @@ public abstract class HttpInterfaceBase implements Interface {
     		logger.info( "Interface '{}' is using default connector configuration.", this.name );
 		}
 
+		// load up the endpoints from the configuration and set them on the service
+		List<String> endPoints = service.getConfigurationManager( ).getListValue( String.format( ConfigurationConstants.HTTP_INTERFACE_ENDPOINTS, theName), String.class );
+		Preconditions.checkState( endPoints != null && endPoints.size() > 0, String.format( "HttpInterface '%s' does not have any endpoints defined.",  theName ) );
+
+		int count = 0;
+		HttpEndpoint endpoint;
+		ArrayList<HttpEndpoint> modifiableEndpoints = new ArrayList<HttpEndpoint>( endPoints.size() );
 		
-		for( String stringEndpoint : theEndpoints ) {
+		for( String stringEndpoint : endPoints ) {
 			endpoint = new HttpEndpoint( stringEndpoint );
 			if( endpoint.getScheme().equals( "https") ) {
 				if( sslFactory == null ) {

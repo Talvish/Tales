@@ -15,10 +15,6 @@
 // ***************************************************************************
 package com.tales.services.http;
 
-import java.util.List;
-
-import com.tales.services.ConfigurationConstants;
-
 /**
  * A convenience class for creating an http service that is just a website.
  * @author Joseph Molnar
@@ -42,12 +38,7 @@ public class WebsiteService extends HttpService {
 	@Override
 	protected void onStart() {
 		// setup the work interface
-		List<String> endPoints;
-		HttpInterfaceBase httpInterface;
-
-		endPoints = getConfigurationManager( ).getListValue( String.format( ConfigurationConstants.HTTP_INTERFACE_ENDPOINTS, ServiceConstants.WEBSITE_INTERFACE_NAME ), String.class );
-        httpInterface = new WebsiteInterface( ServiceConstants.WEBSITE_INTERFACE_NAME, endPoints, "webapp", this );
-        this.interfaceManager.register( httpInterface );
+        this.interfaceManager.register( new WebsiteInterface( ServiceConstants.WEBSITE_INTERFACE_NAME, "webapp", this ) );
 	}
 
 	/**
