@@ -13,7 +13,7 @@
 // *  See the License for the specific language governing permissions and
 // *  limitations under the License.
 // ***************************************************************************
-package com.tales.samples.simpleservice;
+package com.tales.samples.multiversionservice;
 
 import com.google.common.base.Strings;
 import com.tales.services.http.HttpInterface;
@@ -25,10 +25,10 @@ import com.tales.system.configuration.PropertySource;
  * @author Joseph Molnar
  *
  */
-public class SimpleService extends HttpService {
+public class MultiversionService extends HttpService {
 
-	protected SimpleService( ) {
-		super( "simple_service", "Simple Service", "A public tales service show a very simple contract." );
+	protected MultiversionService( ) {
+		super( "multiversion_service", "Multiversion Service", "A public http service demonstrating contracts with the same method having more than one version available." );
 	}
 	
 	@Override
@@ -47,11 +47,11 @@ public class SimpleService extends HttpService {
 		HttpInterface httpInterface = new HttpInterface( "public", this );
 		
 		this.interfaceManager.register( httpInterface );
-		httpInterface.bind( new SimpleResource( ), "/simple_contract" );
+		httpInterface.bind( new MultiversionResource( ), "/multiversion_contract" );
 	}
 	
     public static void main( String[ ] args ) throws Exception {
-    	SimpleService service = new SimpleService( );
+    	MultiversionService service = new MultiversionService( );
     	
     	service.start( args );
     	service.run( );
