@@ -15,6 +15,9 @@
 // ***************************************************************************
 package com.tales.samples.complexservice;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.tales.contracts.services.http.RequestParam;
 import com.tales.contracts.services.http.ResourceContract;
 import com.tales.contracts.services.http.ResourceOperation;
@@ -57,6 +60,27 @@ public class DataStructureResource {
 	@ResourceOperation( name="set_complex_structure", path="GET | POST : set_complex_structure")
 	public ComplexStructure setComplexStructure( @RequestParam( name="value" )ComplexStructure theValue ) {
 		return theValue;
+	}
+
+	/**
+	 * Returns a list of strings. Demonstrates both Java generics and list responses.
+	 */
+	@ResourceOperation( name="get_list", path="GET : get_list" )
+	public List<String> getList( ) {
+		List<String> list = new ArrayList<String>( );
+		
+		list.add( "entry one" );
+		list.add( "entry two" );
+	
+		return list;
+	}
+
+	/**
+	 * Receives a list of strings. Demonstrates both Java generics and list responses.
+	 */
+	@ResourceOperation( name="set_list", path="GET : set_list" )
+	public List<String> getList( @RequestParam( name="list" )List<String> theList) {
+		return theList;
 	}
 }
 

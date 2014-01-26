@@ -51,6 +51,7 @@ public class ComplexService extends HttpService {
 		
 		this.interfaceManager.register( httpInterface );
 		httpInterface.bind( new DataStructureResource( ), "/data_structure_contract" );
+		httpInterface.bind( new ResponseResource( ), "/response_contract" );
 	}
 	
     public static void main( String[ ] args ) throws Exception {
