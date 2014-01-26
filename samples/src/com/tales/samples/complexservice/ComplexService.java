@@ -13,7 +13,7 @@
 // *  See the License for the specific language governing permissions and
 // *  limitations under the License.
 // ***************************************************************************
-package com.tales.samples.simpleservice;
+package com.tales.samples.complexservice;
 
 import com.google.common.base.Strings;
 import com.tales.services.http.HttpInterface;
@@ -21,16 +21,17 @@ import com.tales.services.http.HttpService;
 import com.tales.system.configuration.PropertySource;
 
 /**
- * A simple http service that is designed to be public facing.
+ * A service demonstrating a lot of different abilities of the tales service framework.
+ * Various contracts and interface are created.
  * <br>
- * For browsing samples, this should the FIRST to look at.
+ * For browsing samples, this should the LAST to look at.
  * @author Joseph Molnar
  *
  */
-public class SimpleService extends HttpService {
+public class ComplexService extends HttpService {
 
-	protected SimpleService( ) {
-		super( "simple_service", "Simple Service", "A public tales service show a very simple contract." );
+	protected ComplexService( ) {
+		super( "complex_service", "Complex Service", "A service demonstrating a lot of different abilities of the tales service framework." );
 	}
 	
 	@Override
@@ -49,11 +50,11 @@ public class SimpleService extends HttpService {
 		HttpInterface httpInterface = new HttpInterface( "public", this );
 		
 		this.interfaceManager.register( httpInterface );
-		httpInterface.bind( new SimpleResource( ), "/simple_contract" );
+		httpInterface.bind( new DataStructureResource( ), "/data_structure_contract" );
 	}
 	
     public static void main( String[ ] args ) throws Exception {
-    	SimpleService service = new SimpleService( );
+    	ComplexService service = new ComplexService( );
     	
     	service.start( args );
     	service.run( );

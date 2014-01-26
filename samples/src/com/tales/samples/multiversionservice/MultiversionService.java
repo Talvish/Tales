@@ -21,7 +21,9 @@ import com.tales.services.http.HttpService;
 import com.tales.system.configuration.PropertySource;
 
 /**
- * A simple http service that is designed to be public facing.
+ * A public http service demonstrating contracts with the same method having more than one version available.
+ *  * <br>
+ * For browsing samples, this should be the SECOND to look at.
  * @author Joseph Molnar
  *
  */
