@@ -3,7 +3,7 @@ Tales
 
 A service and storage framework
 
-There were three primary objectives for this framework. I wanted to service teams to a) concentrate on building core functionality, b) manage services in a consistent fashion, and c) have the freedom to tailor the framework for their specific needs.
+There were three primary objectives for this framework. I wanted service teams to a) concentrate on building core functionality, b) manage services in a consistent fashion, and c) have the freedom to tailor the framework for their specific needs.
 
 There are a good number of capabilities of this framework and I will aspire to document and create samples for them all over time. There are also updates I would like to make given the feedback and experience of seeing it in production use over the last few years. 
 
