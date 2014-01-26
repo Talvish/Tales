@@ -12,3 +12,9 @@ This framework is one of the underpinnings of the services created at Getjar (ht
 The version of this framework currently checked is in mid-update. I'm in the process of updating to support Jetty 9.x/JDK 1.7. 
 
 
+A bit of history
+----------------
+
+I started building this framework in early 2011 because a) I hadn’t used Java in nearly 10 years and wanted to re-familiarize myself and b) when I looked at other frameworks I found they were lacking in some areas I felt strongly about (e.g. versioned contracts). 
+
+While most of what you see here was written in 2011 and 2012, I continue to make periodic updates.
