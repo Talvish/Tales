@@ -1,9 +1,9 @@
 Tales
 =====
 
-A service infrastructure and storage framework
+A service and storage framework
 
-The primary goal of this framework is to allows service developers/operations to get something off the ground quickly while being manageable and providing long-term depth and customization. It allows developers to concentrate on creating while operations can consistently manage whatever is created.
+There were three primary objectives for this framework. I wanted to service teams to a) concentrate on building core functionality, b) manage services in a consistent fashion, and c) have the freedom to tailor the framework for their specific needs.
 
 There are a good number of capabilities of this framework and I will aspire to document and create samples for them all over time. There are also updates I would like to make given the feedback and experience of seeing it in production use over the last few years. 
 
