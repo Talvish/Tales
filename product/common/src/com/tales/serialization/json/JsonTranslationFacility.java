@@ -34,7 +34,6 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
-
 import com.tales.parts.naming.NameValidator;
 import com.tales.parts.naming.NopNameValidator;
 import com.tales.parts.reflection.FieldDescriptor;
@@ -60,6 +59,7 @@ import com.tales.serialization.json.translators.NumberToJsonPrimitiveTranslator;
 import com.tales.serialization.json.translators.ObjectToJsonObjectTranslator;
 import com.tales.serialization.json.translators.ObjectToJsonPrimitiveTranslator;
 import com.tales.serialization.json.translators.StringToJsonPrimitiveTranslator;
+import com.tales.serialization.json.translators.VoidToJsonObjectTranslator;
 import com.tales.system.Facility;
 
 /**
@@ -168,6 +168,9 @@ public final class JsonTranslationFacility implements Facility {
 		toJsonElementTranslators.put( String.class, stringToJsonTranslator );
 
 		toJsonElementTranslators.put( UUID.class, objectToJsonTranslator );
+		
+		Translator voidToJsonTranslator = new VoidToJsonObjectTranslator( );
+		toJsonElementTranslators.put( Void.class, voidToJsonTranslator );
 	}
 	
 	/**
