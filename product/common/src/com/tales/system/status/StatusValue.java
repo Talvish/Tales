@@ -22,6 +22,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.tales.services.NameManager;
 
+// TODO: consider updating to use the DataSite ... more flexibility
+
 /**
  * This class represents a status value used
  * to aid in the monitoring and health of

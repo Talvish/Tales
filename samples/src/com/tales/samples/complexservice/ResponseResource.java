@@ -20,6 +20,7 @@ import com.tales.contracts.services.http.RequestParam;
 import com.tales.contracts.services.http.ResourceContract;
 import com.tales.contracts.services.http.ResourceOperation;
 import com.tales.contracts.services.http.ResourceResult;
+import com.tales.services.Conditions;
 import com.tales.services.DependencyException;
 import com.tales.services.DependencyException.Problem;
 import com.tales.services.InvalidParameterException;
@@ -70,22 +71,21 @@ public class ResponseResource {
 
 	/**
 	 * Throws an InvalidParameterException which will result in a 400-level HTTP status code.
+	 * This also demonstrates the Conditions helper methods.
 	 */
 	@ResourceOperation( name="throw_parameter_exception", path="GET : throw_parameter_exception" )
 	public void throwParameterException( @RequestParam( name="value" )String theValue ) {
-		if( Strings.isNullOrEmpty( theValue ) ) {
-			throw new InvalidParameterException( "The 'value' parameter must not be null or empty. ");
-		} else {
-			throw new InvalidParameterException( "The 'value' parameter must be null." );
-		}
+		Conditions.checkParameter( !Strings.isNullOrEmpty( theValue ), "The 'value' parameter must not be null or empty." );
+		Conditions.checkParameter( Strings.isNullOrEmpty( theValue ), "The 'value' parameter must be null." );
 	}
 	
 	/**
 	 * Throws an InvalidStateException which will result in a 400-level HTTP status code.
+	 * This also demonstrates the Conditions helper methods.
 	 */
 	@ResourceOperation( name="throw_state_exception", path="GET : throw_state_exception" )
 	public void throwStateException( ) {
-		throw new InvalidStateException( "not in a good state" );
+		Conditions.checkState( false, "not in a good state" );
 	}
 
 	/**
