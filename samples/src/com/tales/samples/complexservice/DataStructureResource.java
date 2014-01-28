@@ -16,7 +16,9 @@
 package com.tales.samples.complexservice;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.tales.contracts.services.http.RequestParam;
 import com.tales.contracts.services.http.ResourceContract;
@@ -78,9 +80,30 @@ public class DataStructureResource {
 	/**
 	 * Receives a list of strings. Demonstrates both Java generics and list responses.
 	 */
-	@ResourceOperation( name="set_list", path="GET : set_list" )
+	@ResourceOperation( name="set_list", path="GET | POST : set_list" )
 	public List<String> getList( @RequestParam( name="list" )List<String> theList) {
 		return theList;
+	}
+	
+	/**
+	 * Returns a map keyed by strings and holding a structure.
+	 */
+	@ResourceOperation( name="get_map", path="GET : get_map" )
+	public Map<String,SimpleStructure> getMap( ) {
+		Map<String,SimpleStructure> map = new HashMap<String,SimpleStructure>( );
+		
+		map.put( "key_one", new SimpleStructure( "string one", 1l, 1.0f) );
+		map.put( "key_two", new SimpleStructure( "string two", 2l, 2.0f) );
+	
+		return map;
+	}
+
+	/**
+	 * Receives a map keyed by strings and holding a structure.
+	 */
+	@ResourceOperation( name="set_map", path="GET | POST : set_map" )
+	public Map<String,SimpleStructure> setMap( @RequestParam( name="map" )Map<String,SimpleStructure> theMap) {
+		return theMap;
 	}
 }
 
