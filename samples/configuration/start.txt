@@ -1,1 +1,2 @@
 java -jar tales.simpleservice.jar -settings.file=settings.properties
+java -jar tales.userservice.jar -settings.file=settings.properties
