@@ -23,11 +23,12 @@ import org.joda.time.DateTimeZone;
 import com.google.common.base.Preconditions;
 
 /**
- * A helper base class for objects that are persisted into storage.
+ * A helper base class for objects that are used in an engine
+ * and typically persisted into storage.
  * @author Joseph Molnar
- *
  */
-public class StorageModelBase {
+public class EngineModelBase {
+	// TODO: this needs to be updated to make use of the storage system
 	private UUID id;
 	private DateTime creationTimestamp;
 	private DateTime modificationTimestamp;
@@ -35,14 +36,14 @@ public class StorageModelBase {
 	/**
 	 * A constructor used for serialization purposes.
 	 */
-	protected StorageModelBase( ) {
+	protected EngineModelBase( ) {
 	}
 	
 	/**
 	 * The constructor needed when creating a new instance. 
 	 * @param theId The unique id for this object.
 	 */
-	public StorageModelBase( UUID theId ) {
+	public EngineModelBase( UUID theId ) {
 		Preconditions.checkArgument( theId != null, "an id must be give" );
 		
 		id = theId;

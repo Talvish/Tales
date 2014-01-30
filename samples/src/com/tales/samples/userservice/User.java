@@ -19,25 +19,27 @@ import java.util.UUID;
 
 
 /**
- * The representation of the User entity when persisted.
+ * The representation of the User entity in the engine/persistence.
  * @author Joseph Molnar
  *
  */
-public class StorageUser extends StorageModelBase {
+public class User extends EngineModelBase {
+	// TODO: this needs to be updated to make use of the storage system
 	private String firstName;
 	private String lastName;
+	private boolean deleted = false;
 	
 	/**
 	 * A constructor used for serialization purposes.
 	 */
 	@SuppressWarnings("unused") 
-	private StorageUser( ) {
+	private User( ) {
 	}
 	
 	/**
 	 * Constructor taking the required id.
 	 */
-	public StorageUser( UUID theId ) {
+	public User( UUID theId ) {
 		super( theId );
 	}
 	
@@ -67,5 +69,23 @@ public class StorageUser extends StorageModelBase {
 	 */
 	public void setLastName( String theLastName ) {
 		lastName = theLastName;
+	}
+	
+	/**
+	 * Indicates if an entity is soft-deleted.
+	 * @return
+	 */
+	public boolean isDeleted( ) {
+		return deleted;
+	}
+	
+	/**
+	 * A mechanism for soft-deletion. Pretty common
+	 * to not actually delete entities in a system
+	 * but instead to have them 'soft deleted'.
+	 */
+	public void indicateDeleted( ) {
+		deleted = true;
+		indicateModified();
 	}
 }

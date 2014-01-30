@@ -21,14 +21,18 @@ import com.tales.services.http.HttpService;
 import com.tales.system.configuration.PropertySource;
 
 /**
- * TBD
+ * The is an example of a user service that is built using many of the patterns
+ * I've tried to use when building up service while taking advantage of the
+ * capabilities of the tales framework.
+ * This is nearly a fully working sample. While it runs, it currently does not
+ * do any real persistence.
  * <br>
  * For browsing samples, this should the LAST to look at.
  * @author Joseph Molnar
  *
  */
 public class UserService extends HttpService {
-	private UserEngine userEngine = new UserEngine();
+	private UserEngine userEngine;
 
 	protected UserService( ) {
 		super( "user_service", "User Service", "A simple sample service showing a functioning user service." );
@@ -47,10 +51,15 @@ public class UserService extends HttpService {
 	protected void onStart() {
 		super.onStart();
 		
-		HttpInterface httpInterface = new HttpInterface( "public", this );
-		
+
+		HttpInterface httpInterface = new HttpInterface( "public", this );		
 		this.interfaceManager.register( httpInterface );
+		
+		userEngine = new UserEngine();
 		httpInterface.bind( new UserResource( userEngine ), "/user" );
+		// engine's typically have their own status block and those need to be
+		// registered with a status manager
+		this.statusManager.register( "user_engine_status", userEngine.getStatus( ) );
 	}
 	
     public static void main( String[ ] args ) throws Exception {

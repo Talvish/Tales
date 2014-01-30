@@ -1,3 +1,18 @@
+// ***************************************************************************
+// *  Copyright 2014 Joseph Molnar
+// *
+// *  Licensed under the Apache License, Version 2.0 (the "License");
+// *  you may not use this file except in compliance with the License.
+// *  You may obtain a copy of the License at
+// *
+// *      http://www.apache.org/licenses/LICENSE-2.0
+// *
+// *  Unless required by applicable law or agreed to in writing, software
+// *  distributed under the License is distributed on an "AS IS" BASIS,
+// *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// *  See the License for the specific language governing permissions and
+// *  limitations under the License.
+// ***************************************************************************
 package com.tales.samples.userservice;
 
 import java.util.Collection;
@@ -5,79 +20,116 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import com.google.common.base.Preconditions;
 
-public class UserEngine {	
-//	public class Status {
-//		private AtomicInteger queuedItems = new AtomicInteger( 0 );
-//		private RatedLong enqueueRate = new RatedLong( );
-//		private AverageLong itemsPerFacebookRequest = new AverageLong( );
-//
-//	
-//	//	private AtomicLong successfulItems;
-//	//	private AtomicLong unsuccessfulItems;
-//	
-//		/**
-//		 * Returns the current execution state of the engine.
-//		 * @return the execution state
-//		 */
-//		@MonitorableStatusValue( name="state" )
-//		public ExecutionLifecycleState getState( ) {
-//			return FacebookBatchEngine.this.lifecycleState;
-//		}
-//	}
+/**
+ * The engine is the component that actually does the work
+ * this includes any logic, persistence, etc. It is 
+ * independent of the transports/communication mechanisms used.
+ * This allows for a few possibilities including, a) having
+ * more than one communication mechanism but same underlying
+ * logic/control, b) a great entity to write tests againsts
+ * since this is the pure logic/workhorse of the component.
+ * @author Joseph Molnar
+ */
+public class UserEngine {
+	// TODO: this needs to be updated to to proper persistence
 	
-	private Map<UUID, StorageUser> storage = new HashMap<UUID, StorageUser>( );
+	private UserEngineStatus status = new UserEngineStatus( );
+	private Map<UUID, User> storage = new HashMap<UUID, User>( );
 	
 	public UserEngine( ) {
 		// since we aren't building a real storage system
 		// we are faking a storage system by using a map
 		// and adding a few existing users
-		StorageUser user;
+		User user;
 		
-		user = new StorageUser( UUID.fromString( "00000000-0000-0000-0000-000000000001" ) );
+		user = new User( UUID.fromString( "00000000-0000-0000-0000-000000000001" ) );
 		user.setFirstName( "John" );
 		user.setLastName( "Doe" );		
 		storage.put( user.getId(), user );
 
-		user = new StorageUser( UUID.fromString( "00000000-0000-0000-0000-000000000002" ) );
+		user = new User( UUID.fromString( "00000000-0000-0000-0000-000000000002" ) );
 		user.setFirstName( "Jane" );
 		user.setLastName( "Smith" );		
 		storage.put( user.getId(), user );
 	}
 	
-	public StorageUser createUser( String theFirstName, String theLastName ) {
-		StorageUser user = new StorageUser( UUID.randomUUID() );
+	/**
+	 * The status block for the engine. This tracks
+	 * engine specific states/status.
+	 */
+	public UserEngineStatus getStatus( ) {
+		return status;
+	}
+	
+	/**
+	 * Returns a particular user, if it can be found.
+	 */
+	public User getUser( UUID theId ) {
+		Preconditions.checkArgument( theId != null, "an id must be given" );
+		return storage.get( theId );
+	}
+	
+	/**
+	 * Gets the users from storage.
+	 */
+	public Collection<User> getUsers( ) {
+		// TODO: this should have a continuation token, maybe some filters, to minimize 
+		//       the data returned.
+		return storage.values();
+	}
+
+	/**
+	 * Creates the user in storage. The parameters are not forced.
+	 */
+	public User createUser( String theFirstName, String theLastName ) {
+		User user = new User( UUID.randomUUID() );
 		
 		user.setFirstName( theFirstName );
 		user.setLastName( theLastName );
 		storage.put( user.getId(), user);
+		status.recordCreatedUser(); // update our status block
 		return user;
 	}
-	
-	public StorageUser getUser( UUID theId ) {
-		return storage.get( theId );
-	}
-	
-	public Collection<StorageUser> getUsers( ) {
-		return storage.values();
-	}
-	
-	public boolean updateUser( StorageUser theUser ) {
-		boolean updated = false;
-		StorageUser user = getUser( theUser.getId() );
+
+	/**
+	 * Updates the user's information, though not all fields.
+	 */
+	public User updateUser( User theUser ) {
+		Preconditions.checkArgument( theUser != null, "a user must be given if it is to be updated" );
+		User user = getUser( theUser.getId() );
 		
-		if( user != null ) {
+		if( user != null && ! user.isDeleted() ) { // we don't allow updates to soft-deleted users
 			user.setFirstName( theUser.getFirstName( ) );
 			user.setLastName(  theUser.getLastName( ) );
+			// we don't reset the creation/modification time stamps
 			user.indicateModified();
 			storage.put( user.getId( ),  user ); // yes not needed, but pretend we are storing back into persistence
-			updated = true;
+
+			return user;
+		} else {
+			return null;		
 		}
-		return updated;
+
 	}
 	
+	/**
+	 * Performs the removal of the user from the storage system.
+	 * This actually performs a soft-delete.
+	 */
 	public boolean deleteUser( UUID theId ) {
-		return !( storage.remove( theId )==null );
+		Preconditions.checkArgument( theId != null, "an id must be given" );
+		
+		User user = getUser( theId );
+		if( user != null ) {
+			user.indicateDeleted();
+			storage.put( user.getId( ),  user ); // yes not needed, but pretend we are storing back into persistence
+			status.recordDeletedUser(); // update our status block
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 }

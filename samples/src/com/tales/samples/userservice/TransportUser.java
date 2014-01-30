@@ -34,6 +34,16 @@ public class TransportUser extends TransportModelBase {
 	}
 	
 	/**
+	 * A transforming copy constructor from the internal
+	 * representation to the wire representation.
+	 */
+	protected TransportUser( User theUser ) {
+		super( theUser );
+		firstName = theUser.getFirstName();
+		lastName = theUser.getLastName();
+	}
+	
+	/**
 	 * Constructor taking the required id.
 	 */
 	public TransportUser( UUID theId ) {
@@ -55,19 +65,22 @@ public class TransportUser extends TransportModelBase {
 	}
 	
 	
-	public static StorageUser toStorageUser( TransportUser theUser ) {
-		StorageUser storageUser = new StorageUser( theUser.getId( ) );
+	public static User toEngineUser( TransportUser theUser ) {
+		// TODO: need to do parameter validation
+		User storageUser = new User( theUser.getId( ) );
 		storageUser.setFirstName( theUser.getFirstName());
 		storageUser.setLastName(theUser.getLastName());
+
+		// NOTE: the timestamp objects are not set here
+		//       in part because we opt not to trust the 
+		//       outside world, the engine loads
+		//       the user and updates the fields it
+		//       wants to update
 		return storageUser;
 	}
 	
-	public static TransportUser toTransportUser( StorageUser theUser ) {
-		TransportUser transportUser = new TransportUser( theUser.getId( ) );
-		transportUser.firstName = theUser.getFirstName();
-		transportUser.lastName = theUser.getLastName();
-		
-		// TODO: need to set the base class members
+	public static TransportUser toTransportUser( User theUser ) {
+		TransportUser transportUser = new TransportUser( theUser );
 		return transportUser;
 	}
 }

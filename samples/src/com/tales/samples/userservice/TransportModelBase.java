@@ -36,6 +36,16 @@ public class TransportModelBase {
 	}
 	
 	/**
+	 * A transforming copy constructor from the internal
+	 * representation to the wire representation.
+	 */
+	protected TransportModelBase( EngineModelBase theBase ) {
+		id = theBase.getId( );
+		creationTimestamp = theBase.getCreationTimestamp();
+		modificationTimestamp = theBase.getModificationTimestamp();
+	}
+	
+	/**
 	 * The constructor needed when creating a new instance. 
 	 * @param theId The unique id for this object.
 	 */
