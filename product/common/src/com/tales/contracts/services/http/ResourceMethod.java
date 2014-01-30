@@ -232,6 +232,35 @@ public class ResourceMethod extends Subcontract {
 		if( newMethodParameters.size() < paramClasses.length ) {
 			throw new IllegalStateException( String.format( "Method '%s.%s' has parameters without a parameter annotation.", method.getDeclaringClass().getName(), method.getName() ) );
 		}
+		// make sure that every path parameter mentioned in the path was
+		// found as a parameter in the method, we should be able to look
+		// over the list of path parameters compare to method parameters
+		// a simple way is to keep a count and then verify we used them
+		// all, but it wont' say which one, so we do this instead
+		// to verify
+		for( String pathParam : pathParams ) {
+			boolean found = false;
+			for( ResourceMethodParameter methodParam : newMethodParameters ) {
+				if( pathParam.equals( methodParam.getValueName() ) ) {
+					if( !methodParam.getSource().equals( ParameterSource.PATH ) ) {
+						throw new IllegalStateException( String.format( 
+								"Method '%s.%s' has a path referring to parameter '%s' but the parameter in the method says the parameter is sourced from '%s'.", 
+								method.getDeclaringClass().getName(), 
+								method.getName(),
+								pathParam,
+								methodParam.getSource( ) ) );
+					} else {
+						found = true;
+						break;
+					}
+				}
+			}
+//			TODO: not ensuring the path parameters have a method equivalent, just in case they want to identify a dynamic area, but not care about the value			
+//			if( !found ) {
+//				// means we have a path parameter that isn't being used
+//				throw new IllegalStateException( String.format( "Method '%s.%s' has a path parameterparameters without a parameter annotation.", method.getDeclaringClass().getName(), method.getName() ) );
+//			}
+		}
 		
 		methodParameters = Collections.unmodifiableList( newMethodParameters );
 
@@ -759,14 +788,14 @@ public class ResourceMethod extends Subcontract {
 				// the exceptions below are handled here since they are definitely about the data coming in so no one else is meant to trap
 				} catch( JsonParseException e ) {
 					// if this happens then we have a problem with what the caller sent so we return now with a failed result
-					result = new ResourceMethodResult( Status.CALLER_BAD_INPUT, null, String.format( "Parameter '%s' for request '%s' is not valid JSON.", parameter.getValueName(), uri ), e );
+					result = new ResourceMethodResult( Status.CALLER_BAD_INPUT, null, String.format( "Parameter '%s' for request '%s', using path '%s', is not valid JSON.", parameter.getValueName(), this.getName(), this.parameterPath ), e );
 				} catch( TranslationException e) {
 					// if this happens then we have a problem with what the caller sent so we return now with a failed result
-					result = new ResourceMethodResult( Status.CALLER_BAD_INPUT, null, String.format( "Parameter '%s' for request '%s' is not the expected format.", parameter.getValueName(), uri ), e );
+					result = new ResourceMethodResult( Status.CALLER_BAD_INPUT, null, String.format( "Parameter '%s' for request '%s', using path '%s', is not the expected format.", parameter.getValueName(), this.getName(), this.parameterPath ), e );
 				} catch( DataSiteException e ) {
 					// if this happens then we passed at least parts of translation, but still saw a failure, typically due to things like attempting to assign
 					// null to a primitive type, etc, so we return now with a failed result
-					result = new ResourceMethodResult( Status.CALLER_BAD_INPUT, null, String.format( "Parameter '%s' for request '%s' was not assignable, check for null values when they aren't expected.", parameter.getValueName(), uri ), e );
+					result = new ResourceMethodResult( Status.CALLER_BAD_INPUT, null, String.format( "Parameter '%s' for request '%s, using path '%s',' was not assignable ... check for null values when they aren't expected (e.g using primitive types).", parameter.getValueName(), this.getName(), this.parameterPath ), e );
 				}
 			}
 			// if we have a result we errored out

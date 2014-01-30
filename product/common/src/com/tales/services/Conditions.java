@@ -53,4 +53,20 @@ public class Conditions {
 			throw new InvalidStateException( String.format( theMessage, theMessageParameters ) );
 		} 
 	}
+	
+	/**
+	 * Checks the condition and if false throws a NotFoundException.
+	 */
+	public static void checkFound( boolean theCondition ) {
+		checkParameter( theCondition, "failed found check" );
+	}
+	
+	/**
+	 * Checks the condition and if false throws a NotFoundException.
+	 */
+	public static void checkFound( boolean theCondition, String theMessage, Object... theMessageParameters ) {
+		if( !theCondition ) {
+			throw new NotFoundException( String.format( theMessage, theMessageParameters ) );
+		} 
+	}
 }
