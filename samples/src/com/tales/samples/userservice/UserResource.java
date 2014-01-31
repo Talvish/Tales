@@ -75,7 +75,7 @@ public class UserResource {
 		User user = engine.getUser( theId );
 		// Conditions.checkFound throws a NotFoundException which tales turns into an HTTP status code 404
 		// public interface doesn't support sending soft-deleted entities
-		Conditions.checkFound( user != null && !user.isDeleted(), "Cound not find the user with id '%s'.", theId ); 
+		Conditions.checkFound( user != null && !user.isDeleted(), "Could not find the user with id '%s'.", theId ); 
 		return TransportUser.toTransportUser( user );
 	}
 	
@@ -126,7 +126,7 @@ public class UserResource {
 		
 		User user = engine.updateUser( TransportUser.toEngineUser( theUser ) );
 		// Conditions.checkFound throws a NotFoundException which tales turns into an HTTP status code 404
-		Conditions.checkFound( user != null, "Cound not find the user with id '%s'.", theId );
+		Conditions.checkFound( user != null, "Could not find the user with id '%s'.", theId );
 		return TransportUser.toTransportUser( user );
 	}
 
@@ -140,6 +140,6 @@ public class UserResource {
 		
 		boolean deleted = engine.deleteUser( theId );
 		// Conditions.checkFound throws a NotFoundException which tales turns into an HTTP status code 404
-		Conditions.checkFound( deleted, "Cound not find the user with id '%s'.", theId );
+		Conditions.checkFound( deleted, "Could not find the user with id '%s'.", theId );
 	}
 }

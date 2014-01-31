@@ -56,7 +56,6 @@ public class UserEngineStatus {
 
 	/**
 	 * The rate of users created.
-	 * @return the rate of the number of local errors.
 	 */
 	@MonitorableStatusValue( name = "created_user_rate", description = "Rate of the number of users created per second as measured over a 10 second interval." )
 	public double getCreatedUserRate( ) {
@@ -91,7 +90,6 @@ public class UserEngineStatus {
 
 	/**
 	 * The rate of users deleted.
-	 * @return the rate of the number of local errors.
 	 */
 	@MonitorableStatusValue( name = "deleted_user_rate", description = "Rate of the number of users deleted per second as measured over a 10 second interval." )
 	public double getDeletedUserRate( ) {
