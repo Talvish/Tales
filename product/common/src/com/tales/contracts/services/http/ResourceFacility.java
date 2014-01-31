@@ -328,12 +328,14 @@ public final class ResourceFacility implements Facility {
 					message,
 					theException );
 		} else {
-			String message = String.format( 
-					"Handled exception '%s', which occurred while running '%s.%s'.", 
-					theException.getClass( ).getSimpleName( ), 
+			// we don't log the exception here since it was elected to be handled
+			// we could consider moving to add configuration to switch is important
+			logger.info( String.format( 
+					"Remapped a response for '%s.%s' to status '%s' with message: %s", 
 					theMethod.getResourceType().getType().getSimpleName(), 
-					theMethod.getMethod( ).getName( ) ); 
-			logger.info( message, theException );
+					theMethod.getMethod( ).getName( ),
+					result.getStatusCode( ),
+					theException.getMessage() ) );
 		}
 
 		return result;
