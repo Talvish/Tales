@@ -35,11 +35,15 @@ public @interface DataMember {
      * @return the serialized name of the class
      */
     String name( ) default "";
-//    /**
-//     * An optional set of types that are allowed, which
-//     * can be useful when dealing with multiple union 
-//     * style situations.
-//     * @return the types allowed, or empty if directly based on the return type
-//     */
-//    Class<?>[] types( ) default {};
+    /**
+     * An optional set of types for key types used in maps.
+     * @return the types allowed, or empty if directly based on the return type
+     */
+    Class<?>[] keyTypes( ) default {};
+    /**
+     * An optional set of types that are allowed for objects
+     * values in collections and values in maps.
+     * @return the types allowed, or empty if directly based on the return type
+     */
+    Class<?>[] valueTypes( ) default {};
 }

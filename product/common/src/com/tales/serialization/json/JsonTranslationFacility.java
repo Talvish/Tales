@@ -269,13 +269,14 @@ public final class JsonTranslationFacility implements Facility {
 			
 			// now we iterate over the fields found by the analysis
 			for( FieldDescriptor<?,?> field : fields ) {
-                toJsonTranslator = getToJsonElementTranslator( field.getFieldType().getType(), field.getFieldType().getGenericType() );
-                fromJsonTranslator = getFromJsonElementTranslator( field.getFieldType().getType(), field.getFieldType().getGenericType( ) );
+        		// TODO: we have more than one type to consider
+                toJsonTranslator = getToJsonElementTranslator( field.getSite( ).getType(), field.getSite().getGenericType() );
+                fromJsonTranslator = getFromJsonElementTranslator( field.getSite( ).getType(), field.getSite().getGenericType() );
 
                 if( toJsonTranslator == null ) {
-					throw new IllegalStateException( String.format( "Type '%s' on field '%s.%s' could not be analyzed because the to translator could not be found.", field.getFieldType().getType(), theType.getName( ), field.getSite().getName( ) ) );
+					throw new IllegalStateException( String.format( "Type '%s' on field '%s.%s' could not be analyzed because the to translator could not be found.", field.getSite().getType(), theType.getName( ), field.getSite().getName( ) ) );
                 } else if( fromJsonTranslator == null ) {
-					throw new IllegalStateException( String.format( "Type '%s' on field '%s.%s' could not be analyzed because the from translator could not be found.", field.getFieldType().getType(), theType.getName( ), field.getSite().getName( ) ) );
+					throw new IllegalStateException( String.format( "Type '%s' on field '%s.%s' could not be analyzed because the from translator could not be found.", field.getSite().getType(), theType.getName( ), field.getSite().getName( ) ) );
                 } else if( !memberNameValidator.isValid( field.getName( ) ) ) {
             		throw new IllegalStateException( String.format( "Field '%s.%s' is using the name '%s' that does not conform to validator '%s'.", reflectedType.getType().getName(), field.getSite().getName(), field.getName( ), memberNameValidator.getClass().getSimpleName() ) );
             	}
@@ -604,9 +605,10 @@ public final class JsonTranslationFacility implements Facility {
 		            	// we should loop through the members and add to this list
 		            	// if there are any to add
 		            	for( JsonMemberMap memberMap : typeMap.getMembers( ) ) {
+		            		// TODO: we have more than one type to consider
 		            		generateTypeName( 
-		            				memberMap.getReflectedField().getFieldType().getType(), 
-		            				memberMap.getReflectedField().getFieldType().getGenericType(), 
+		            				memberMap.getReflectedField().getSite().getType(), 
+		            				memberMap.getReflectedField().getSite().getGenericType(), 
 		            				theFoundTypeMaps );
 		            	}
 	            	}
@@ -651,7 +653,7 @@ public final class JsonTranslationFacility implements Facility {
 	            	
 	            	// next we should loop through the members and add to this list
 	            	for( JsonMemberMap memberMap : typeMap.getMembers( ) ) {
-	            		getTypes( memberMap.getReflectedField().getFieldType().getType(), memberMap.getReflectedField().getFieldType().getGenericType(), theDataTypes );
+	            		getTypes( memberMap.getReflectedField().getSite().getType(), memberMap.getReflectedField().getSite().getGenericType(), theDataTypes );
 	            	}
 				}
 			}

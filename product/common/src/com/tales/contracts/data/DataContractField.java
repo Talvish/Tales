@@ -15,6 +15,8 @@
 // ***************************************************************************
 package com.tales.contracts.data;
 
+import java.util.List;
+
 import com.tales.parts.reflection.ValueType;
 import com.tales.parts.reflection.FieldDescriptor;
 import com.tales.parts.sites.MemberSite;
@@ -34,30 +36,12 @@ public class DataContractField extends FieldDescriptor<DataContractType, DataCon
      */
     DataContractField( 
     		String theName, 
-    		ValueType<DataContractType, DataContractField> theFieldType, 
+    		FieldDescriptor.FieldValueType theFieldValueType,
+    		List<ValueType<DataContractType, DataContractField>> theObjectTypes, 
     		MemberSite theFieldSite, 
     		DataContractType theDeclaringType, 
     		DataContractType theContainingType ) {
-    	super( theName, theFieldType, theFieldSite, theDeclaringType, theContainingType );
-    }
-
-    /**
-     * Primary constructor used to create a field that is either a collection or an array.
-     * @param theName the name to give the field
-     * @param theFieldType the type information regarding the field
-     * @param theElementType the type information for the elements in a collection
-     * @param theFieldSite the site information for modifying the field
-     * @param theDeclaringType the contract type this field was declared in
-     * @param theContainingType the class that currently contains the field, which, if not the same as theDeclaringType is a subclass
-     */
-    DataContractField( 
-    		String theName, 
-    		ValueType<DataContractType, DataContractField> theFieldType, 
-    		ValueType<DataContractType, DataContractField> theElementType, 
-    		MemberSite theFieldSite, 
-    		DataContractType theDeclaringType, 
-    		DataContractType theContainingType ) {
-    	super( theName, theFieldType, theElementType, theFieldSite, theDeclaringType, theContainingType );
+    	super( theName, theFieldValueType, theObjectTypes, theFieldSite, theDeclaringType, theContainingType );
     }
 
     /**
@@ -72,13 +56,12 @@ public class DataContractField extends FieldDescriptor<DataContractType, DataCon
      */
     DataContractField( 
     		String theName, 
-    		ValueType<DataContractType, DataContractField> theFieldType, 
-    		ValueType<DataContractType, DataContractField> theKeyType, 
-    		ValueType<DataContractType, DataContractField> theValueType, 
+    		List<ValueType<DataContractType, DataContractField>> theKeyTypes, 
+    		List<ValueType<DataContractType, DataContractField>> theValueTypes, 
     		MemberSite theFieldSite, 
     		DataContractType theDeclaringType, 
     		DataContractType theContainingType ) {
-    	super( theName, theFieldType, theKeyType, theValueType, theFieldSite, theDeclaringType, theContainingType );
+    	super( theName, theKeyTypes, theValueTypes, theFieldSite, theDeclaringType, theContainingType );
     }
 
     /**
@@ -89,25 +72,17 @@ public class DataContractField extends FieldDescriptor<DataContractType, DataCon
     	if( this.isMap() ) {
 	        return new DataContractField( 
 	        		this.name,
-	        		this.fieldType,
-	        		this.keyType,
-	        		this.elementType,
+	        		this.keyTypes,
+	        		this.valueTypes,
 	        		this.site, 
 	        		this.declaringType, 
 	        		theContainingType );
     		
-    	} else if( this.isCollection() ) {
-	        return new DataContractField( 
-	        		this.name,
-	        		this.fieldType,
-	        		this.elementType,
-	        		this.site, 
-	        		this.declaringType, 
-	        		theContainingType );
     	} else {
 	        return new DataContractField( 
 	        		this.name,
-	        		this.fieldType,
+	        		this.fieldValueType,
+	        		this.valueTypes,
 	        		this.site, 
 	        		this.declaringType, 
 	        		theContainingType );

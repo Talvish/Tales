@@ -15,70 +15,100 @@
 // ***************************************************************************
 package com.tales.parts.reflection;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.tales.parts.sites.MemberSite;
 
 public abstract class FieldDescriptor<T extends TypeDescriptor<T, F>, F extends FieldDescriptor<T, F>> {
+	/**
+	 * Indicates the type of the values on this field.
+	 * @author jmolnar
+	 *
+	 */
+	public enum FieldValueType {
+		/**
+		 * Field is an object.
+		 */
+		OBJECT,
+		/**
+		 * Field is a collection.
+		 */
+		COLLECTION,
+		/**
+		 * Field is a MAP.
+		 */
+		MAP
+	}
+	
 	protected final T declaringType;
 	protected final T containingType;
     protected final String name;
+    protected final FieldValueType fieldValueType; // TODO: this would need to be object, collection, map
     protected final MemberSite site;
     
-    protected final ValueType<T,F> fieldType; // we always have this
+    protected final List<ValueType<T,F>> keyTypes;
+    protected final List<ValueType<T,F>> valueTypes;
     
-    protected final ValueType<T,F> elementType; // we have this if we are a collection
-
-    protected final ValueType<T,F> keyType; // we have these if we are a map
-    protected final ValueType<T,F> valueType;
-    
+    /**
+     * Constructor used when creating a field that holds object.
+     */
     protected FieldDescriptor(
     		String theName, 
-    		ValueType<T,F> theFieldType, 
-    		MemberSite theFieldSite, T 
-    		theDeclaringType, 
+    		FieldValueType theFieldValueType, 
+    		List<ValueType<T,F>> theObjectTypes, 
+    		MemberSite theFieldSite,
+    		T theDeclaringType, 
     		T theContainingType ) {
-    	this( theName, theFieldType, null, null, null, theFieldSite, theDeclaringType, theContainingType );
+    	this( theName, FieldValueType.OBJECT, theObjectTypes, null, theFieldSite, theDeclaringType, theContainingType );
     }
 
-    protected FieldDescriptor(
-    		String theName, 
-    		ValueType<T,F> theFieldType, 
-    		ValueType<T,F> theElementType, 
-    		MemberSite theFieldSite, T 
-    		theDeclaringType, 
-    		T theContainingType ) {
-    	this( theName, theFieldType, theElementType, null, null, theFieldSite, theDeclaringType, theContainingType );
-    }
-
+    /**
+     * Constructor used when creating a field that holds maps.
+     */
     protected FieldDescriptor( 
     		String theName, 
-    		ValueType<T,F> theFieldType, 
-    		ValueType<T,F> theKeyType, 
-    		ValueType<T,F> theValueType, 
-    		MemberSite theFieldSite, T 
-    		theDeclaringType, 
+    		List<ValueType<T,F>> theKeyTypes, 
+    		List<ValueType<T,F>> theValueTypes, 
+    		MemberSite theFieldSite,
+    		T theDeclaringType, 
     		T theContainingType ) {
-    	this( theName, theFieldType, null, theKeyType, theValueType, theFieldSite, theDeclaringType, theContainingType );
+    	this( theName, FieldValueType.MAP, theValueTypes, theKeyTypes, theFieldSite, theDeclaringType, theContainingType );
     }
 
-    protected FieldDescriptor( String theName, ValueType<T,F> theFieldType, ValueType<T,F> theElementType, ValueType<T,F> theKeyType, ValueType<T,F> theValueType, MemberSite theFieldSite, T theDeclaringType, T theContainingType ) {
+    protected FieldDescriptor(
+    		String theName, 
+    		FieldValueType theFieldValueType, 
+    		List<ValueType<T,F>> theValueTypes, 
+    		List<ValueType<T,F>> theKeyTypes, 
+    		MemberSite theFieldSite, 
+    		T theDeclaringType, 
+    		T theContainingType ) {
         Preconditions.checkArgument( !Strings.isNullOrEmpty( theName ), "theName must be specified" );
-        Preconditions.checkNotNull( theFieldType, String.format( "field '%s' is missing the field type", theName ) );
-        Preconditions.checkArgument( !( theElementType != null && theKeyType != null ), String.format( "field '%s' must not have both an element and a key type", theName ) );
-        Preconditions.checkArgument( ( theKeyType == null && theValueType == null) || ( theKeyType != null && theValueType != null), String.format( "field '%s' either needs both a key and value type, or neitheris missing the value type", theName ) );
+        Preconditions.checkNotNull( theFieldValueType, String.format( "field '%s' is missing the field value type" ) );
+        Preconditions.checkArgument( theValueTypes != null && theValueTypes.size() > 0, String.format( "field '%s' msut have at list one value type" ) );
+        Preconditions.checkArgument( 
+        		( theFieldValueType.equals( FieldValueType.OBJECT) && theKeyTypes == null ) || 
+        		( theFieldValueType.equals( FieldValueType.COLLECTION) && theKeyTypes == null ) || 
+        		( theFieldValueType.equals( FieldValueType.MAP ) && theKeyTypes != null && theKeyTypes.size() > 0 ), String.format( "if field '%s' is an object or collection a key type cannot be given, if a map a key type can be given", theName ) );
         Preconditions.checkNotNull( theFieldSite, String.format( "field '%s' is missing the field site", theName ) );
         Preconditions.checkNotNull( theDeclaringType, String.format( "field '%s' is missing the declaring type", theName ) );
         Preconditions.checkNotNull( theContainingType, String.format( "field '%s' is missing the containing type", theName ) );
         
         name = theName;
-        fieldType = theFieldType;
+        fieldValueType = theFieldValueType;
+        valueTypes = Collections.unmodifiableList( new ArrayList<ValueType<T,F>>( theValueTypes ) );
+        if( theKeyTypes == null ) {
+        	keyTypes = Collections.unmodifiableList( new ArrayList<ValueType<T,F>>( 0 ) );
+        } else {
+        	keyTypes = Collections.unmodifiableList( new ArrayList<ValueType<T,F>>( theKeyTypes ) );
+        }
         site = theFieldSite;
         declaringType = theDeclaringType;
         containingType = theContainingType;
-        elementType = theElementType;
-        keyType = theKeyType;
-        valueType = theValueType;
     }
 
     /**
@@ -91,46 +121,32 @@ public abstract class FieldDescriptor<T extends TypeDescriptor<T, F>, F extends 
     }
 
     /**
-     * Returns the type information for this field.
-     */
-    public ValueType<T,F> getFieldType( ) {
-    	return this.fieldType;
-    }
-
-    /**
      * Indicates if this field is a collection or an array.
      */
     public boolean isCollection( ) {
-    	return this.elementType == null ? false : true;
-    }
-
-    /**
-     * Returns the type information for the element in the collection.
-     */
-    public ValueType<T,F> getElementType( ) {
-    	return this.elementType;
+    	return this.fieldValueType == FieldValueType.COLLECTION;
     }
 
     /**
      * Indicates if this field is a map.
      */
     public boolean isMap( ) {
-    	return this.keyType == null ? false : true;
+    	return this.fieldValueType == FieldValueType.MAP;
     }
     
     /**
-     * Returns the type information for the key in the map.
+     * Returns the type information for the keys in the map.
      */
-    public ValueType<T,F> getKeyType( ) {
-    	return this.keyType;
+    public List<ValueType<T,F>> getKeyTypes( ) {
+    	return this.keyTypes;
     }
 
     /**
-     * Returns the type information for the value in the map.
+     * Returns the type information for the values in the map, collection or object.
      * @return
      */
-    public ValueType<T,F> getValueType( ) {
-    	return this.valueType;
+    public List<ValueType<T,F>> getValueTypes( ) {
+    	return this.valueTypes;
     }
     
     /**
