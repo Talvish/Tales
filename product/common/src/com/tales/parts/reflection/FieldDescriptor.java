@@ -88,8 +88,8 @@ public abstract class FieldDescriptor<T extends TypeDescriptor<T, F>, F extends 
     		T theDeclaringType, 
     		T theContainingType ) {
         Preconditions.checkArgument( !Strings.isNullOrEmpty( theName ), "theName must be specified" );
-        Preconditions.checkNotNull( theFieldValueType, String.format( "field '%s' is missing the field value type" ) );
-        Preconditions.checkArgument( theValueTypes != null && theValueTypes.size() > 0, String.format( "field '%s' msut have at list one value type" ) );
+        Preconditions.checkNotNull( theFieldValueType, String.format( "field '%s' is missing the field value type", theName ) );
+        Preconditions.checkArgument( theValueTypes != null && theValueTypes.size() > 0, String.format( "field '%s' must have at list one value type", theName ) );
         Preconditions.checkArgument( 
         		( theFieldValueType.equals( FieldValueType.OBJECT) && theKeyTypes == null ) || 
         		( theFieldValueType.equals( FieldValueType.COLLECTION) && theKeyTypes == null ) || 
@@ -118,6 +118,15 @@ public abstract class FieldDescriptor<T extends TypeDescriptor<T, F>, F extends 
      */
     public String getName( ) {
         return this.name;
+    }
+    
+    
+    /**
+     * Indicates if this field is just an object, not a collection or map.
+     * @return
+     */
+    public boolean isObject( ) {
+    	return this.fieldValueType == FieldValueType.OBJECT;
     }
 
     /**

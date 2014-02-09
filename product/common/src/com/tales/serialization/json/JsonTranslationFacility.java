@@ -26,7 +26,6 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.joda.time.DateTime;
-import org.joda.time.Period;
 
 import com.google.common.base.Preconditions;
 import com.google.gson.Gson;
@@ -38,6 +37,7 @@ import com.tales.parts.naming.NameValidator;
 import com.tales.parts.naming.NopNameValidator;
 import com.tales.parts.reflection.FieldDescriptor;
 import com.tales.parts.reflection.TypeDescriptor;
+import com.tales.parts.reflection.ValueType;
 import com.tales.parts.sites.TranslatedDataSite;
 import com.tales.parts.translators.StringToEnumTranslator;
 import com.tales.parts.translators.TranslationException;
@@ -54,6 +54,7 @@ import com.tales.serialization.json.translators.JsonArrayToCollectionTranslator;
 import com.tales.serialization.json.translators.JsonArrayToMapTranslator;
 import com.tales.serialization.json.translators.JsonElementToStringToChainTranslator;
 import com.tales.serialization.json.translators.JsonObjectToObjectTranslator;
+import com.tales.serialization.json.translators.JsonObjectToVoidTranslator;
 import com.tales.serialization.json.translators.MapToJsonArrayTranslator;
 import com.tales.serialization.json.translators.NumberToJsonPrimitiveTranslator;
 import com.tales.serialization.json.translators.ObjectToJsonObjectTranslator;
@@ -68,13 +69,13 @@ import com.tales.system.Facility;
  *
  */
 public final class JsonTranslationFacility implements Facility {
+	private final Map<Class<?>, JsonTypeReference> translators = new ConcurrentHashMap<>( 16, 0.75f, 1 );
+	
+	
 	// these are using concurrent hash maps for slight protection, but concurrency factor is low
 	// since we don't expect much concurrency and we don't want the memory overhead
     private final Map<Class<?>, JsonTypeMap> typeMaps = new ConcurrentHashMap< Class<?>, JsonTypeMap>( 16, 0.75f, 1 );
     
-	private final Map< Class<?>, Translator> toJsonElementTranslators = new ConcurrentHashMap<Class<?>, Translator>( 16, 0.75f, 1 );
-	private final Map< Class<?>, Translator> fromJsonElementTranslators = new ConcurrentHashMap<Class<?>, Translator>( 16, 0.75f, 1 );
-
 // 	TODO: cannot store the string versions effectively until we have something to manage class/generic type combo
 //	private final Map< Class<?>, Translator> toJsonStringTranslators = new ConcurrentHashMap<Class<?>, Translator>( 16, 0.75f, 1 );
 //	private final Map< Class<?>, Translator> fromJsonStringTranslators = new ConcurrentHashMap<Class<?>, Translator>( 16, 0.75f, 1 );
@@ -118,59 +119,79 @@ public final class JsonTranslationFacility implements Facility {
 		typeNameValidator = theTypeNameValidator == null ? new NopNameValidator( ) : theTypeNameValidator;
 		memberNameValidator = theMemberNameValidator == null ? new NopNameValidator( ) : theMemberNameValidator;
 		
-		// translators to convert from a json element into a type
-		
-		// TODO: these could be faster if we went to number directly and then cast into the right type, instead of turning them into strings first
-		fromJsonElementTranslators.put( Integer.class, new JsonElementToStringToChainTranslator( stringTranslators.getFromStringTranslator( Integer.class ) ) );
-		fromJsonElementTranslators.put( int.class, new JsonElementToStringToChainTranslator( stringTranslators.getFromStringTranslator( int.class ) ) );
-
-		fromJsonElementTranslators.put( Long.class, new JsonElementToStringToChainTranslator( stringTranslators.getFromStringTranslator( Long.class ) ) );
-		fromJsonElementTranslators.put( long.class, new JsonElementToStringToChainTranslator( stringTranslators.getFromStringTranslator( long.class ) ) );
-
-		fromJsonElementTranslators.put( Float.class, new JsonElementToStringToChainTranslator( stringTranslators.getFromStringTranslator( Float.class ) ) );
-		fromJsonElementTranslators.put( float.class, new JsonElementToStringToChainTranslator( stringTranslators.getFromStringTranslator( float.class ) ) );
-
-		fromJsonElementTranslators.put( Double.class, new JsonElementToStringToChainTranslator( stringTranslators.getFromStringTranslator( Double.class ) ) );
-		fromJsonElementTranslators.put( double.class, new JsonElementToStringToChainTranslator( stringTranslators.getFromStringTranslator( double.class ) ) );
-
-		fromJsonElementTranslators.put( Boolean.class, new JsonElementToStringToChainTranslator( stringTranslators.getFromStringTranslator( Boolean.class ) ) );
-		fromJsonElementTranslators.put( boolean.class, new JsonElementToStringToChainTranslator( stringTranslators.getFromStringTranslator( boolean.class ) ) );
-
-		fromJsonElementTranslators.put( DateTime.class, new JsonElementToStringToChainTranslator( stringTranslators.getFromStringTranslator( DateTime.class ) ) );
-		fromJsonElementTranslators.put( String.class, new JsonElementToStringToChainTranslator( stringTranslators.getFromStringTranslator( String.class ) ) );
-
-		fromJsonElementTranslators.put( UUID.class, new JsonElementToStringToChainTranslator( stringTranslators.getFromStringTranslator( UUID.class ) ) );
-
-		
-		// translators to convert from a type into a json element
-		
-		Translator numberToJsonTranslator = new NumberToJsonPrimitiveTranslator();
-		toJsonElementTranslators.put( Integer.class, numberToJsonTranslator );
-		toJsonElementTranslators.put( int.class, numberToJsonTranslator );
-
-		toJsonElementTranslators.put( Long.class, numberToJsonTranslator );
-		toJsonElementTranslators.put( long.class, numberToJsonTranslator );
-
-		toJsonElementTranslators.put( Float.class, numberToJsonTranslator );
-		toJsonElementTranslators.put( float.class, numberToJsonTranslator );
-
-		toJsonElementTranslators.put( Double.class, numberToJsonTranslator );
-		toJsonElementTranslators.put( double.class, numberToJsonTranslator );
-
-		Translator booleanToJsonTranslator = new BooleanToJsonPrimitiveTranslator();
-		toJsonElementTranslators.put( Boolean.class, booleanToJsonTranslator );
-		toJsonElementTranslators.put( boolean.class, booleanToJsonTranslator );
-
+		Translator numberToJsonTranslator = new NumberToJsonPrimitiveTranslator( );
+		Translator booleanToJsonTranslator = new BooleanToJsonPrimitiveTranslator( );
 		Translator objectToJsonTranslator = new ObjectToJsonPrimitiveTranslator( );
-		toJsonElementTranslators.put( DateTime.class, objectToJsonTranslator );
-		
-		Translator stringToJsonTranslator = new StringToJsonPrimitiveTranslator();
-		toJsonElementTranslators.put( String.class, stringToJsonTranslator );
-
-		toJsonElementTranslators.put( UUID.class, objectToJsonTranslator );
-		
+		Translator stringToJsonTranslator = new StringToJsonPrimitiveTranslator( );
+		Translator jsonToVoidTransator = new JsonObjectToVoidTranslator( );
 		Translator voidToJsonTranslator = new VoidToJsonObjectTranslator( );
-		toJsonElementTranslators.put( Void.class, voidToJsonTranslator );
+
+		// TODO: these could be faster if we went to number directly and then cast into the right type, instead of turning them into strings first
+		
+		this.translators.put( int.class, new JsonTypeReference(
+				int.class, "int32", 
+				new JsonElementToStringToChainTranslator( stringTranslators.getFromStringTranslator( int.class ) ),
+				numberToJsonTranslator ) );
+		this.translators.put( Integer.class, new JsonTypeReference(
+				Integer.class, "int32", 
+				new JsonElementToStringToChainTranslator( stringTranslators.getFromStringTranslator( Integer.class ) ),
+				numberToJsonTranslator ) );	
+		
+		this.translators.put( long.class, new JsonTypeReference(
+				long.class, "int64", 
+				new JsonElementToStringToChainTranslator( stringTranslators.getFromStringTranslator( long.class ) ),
+				numberToJsonTranslator ) );
+		this.translators.put( Long.class, new JsonTypeReference(
+				Long.class, "int64", 
+				new JsonElementToStringToChainTranslator( stringTranslators.getFromStringTranslator( Long.class ) ),
+				numberToJsonTranslator ) );	
+		
+		this.translators.put( float.class, new JsonTypeReference(
+				float.class, "float32", 
+				new JsonElementToStringToChainTranslator( stringTranslators.getFromStringTranslator( float.class ) ),
+				numberToJsonTranslator ) );
+		this.translators.put( Float.class, new JsonTypeReference(
+				Float.class, "float32", 
+				new JsonElementToStringToChainTranslator( stringTranslators.getFromStringTranslator( Float.class ) ),
+				numberToJsonTranslator ) );	
+		
+		this.translators.put( double.class, new JsonTypeReference(
+				double.class, "float64", 
+				new JsonElementToStringToChainTranslator( stringTranslators.getFromStringTranslator( double.class ) ),
+				numberToJsonTranslator ) );
+		this.translators.put( Double.class, new JsonTypeReference(
+				Double.class, "float64", 
+				new JsonElementToStringToChainTranslator( stringTranslators.getFromStringTranslator( Double.class ) ),
+				numberToJsonTranslator ) );	
+
+		this.translators.put( boolean.class, new JsonTypeReference(
+				boolean.class, "boolean", 
+				new JsonElementToStringToChainTranslator( stringTranslators.getFromStringTranslator( boolean.class ) ),
+				booleanToJsonTranslator ) );
+		this.translators.put( Boolean.class, new JsonTypeReference(
+				Boolean.class, "boolean", 
+				new JsonElementToStringToChainTranslator( stringTranslators.getFromStringTranslator( Boolean.class ) ),
+				booleanToJsonTranslator ) );	
+		
+		this.translators.put( DateTime.class, new JsonTypeReference(
+				DateTime.class, "datetime", 
+				new JsonElementToStringToChainTranslator( stringTranslators.getFromStringTranslator( DateTime.class ) ),
+				objectToJsonTranslator ) );
+		
+		this.translators.put( String.class, new JsonTypeReference(
+				String.class, "string", 
+				new JsonElementToStringToChainTranslator( stringTranslators.getFromStringTranslator( String.class ) ),
+				stringToJsonTranslator ) );
+		
+		this.translators.put( UUID.class, new JsonTypeReference(
+				UUID.class, "uuid : string", 
+				new JsonElementToStringToChainTranslator( stringTranslators.getFromStringTranslator( UUID.class ) ),
+				objectToJsonTranslator ) );
+		
+		this.translators.put( Void.TYPE, new JsonTypeReference(
+				Void.TYPE, "void", 
+				jsonToVoidTransator,
+				voidToJsonTranslator ) );
 	}
 	
 	/**
@@ -190,16 +211,18 @@ public final class JsonTranslationFacility implements Facility {
 	 * @param fromStringTranslator the translator that converts from a string into the type
 	 * @param toStringTranslator the translator that converts from the type to a string
 	 */
-	public void registerStringTranslators( Class<?> theClass, Translator fromStringTranslator, Translator toStringTranslator ) {
+	public void registerStringTranslators( Class<?> theClass, String theName, Translator fromStringTranslator, Translator toStringTranslator ) {
 		Preconditions.checkNotNull( theClass, "need a class" );
 		Preconditions.checkNotNull( fromStringTranslator, "need a from-string translator" );
 		Preconditions.checkNotNull( toStringTranslator, "need a to-string translator" );
 		
 		// register with the string handler
 		stringTranslators.registerTranslators( theClass, fromStringTranslator, toStringTranslator );
-		// and keep copy with the locals
-		fromJsonElementTranslators.put( theClass, new JsonElementToStringToChainTranslator( fromStringTranslator ) );
-		toJsonElementTranslators.put( theClass, new ChainToStringToJsonPrimitiveTranslator( toStringTranslator ) );
+		// now keep local
+		this.translators.put( theClass,  new JsonTypeReference(
+				theClass, theName, 
+				new JsonElementToStringToChainTranslator( fromStringTranslator ), 
+				new ChainToStringToJsonPrimitiveTranslator( toStringTranslator ) ) );
 	}
 
 	/***
@@ -209,13 +232,12 @@ public final class JsonTranslationFacility implements Facility {
 	 * @param fromJsonTranslator the translator that converts from a Gson JsonElement into the type
 	 * @param toJsonTranslator the translator that converts from the type to a Gson JsonElement
 	 */
-	public void registerJsonElementTranslators( Class<?> theClass, Translator fromJsonTranslator, Translator toJsonTranslator ) {
+	public void registerJsonElementTranslators( Class<?> theClass, String theName,  Translator fromJsonTranslator, Translator toJsonTranslator ) {
 		Preconditions.checkNotNull( theClass, "need a class" );
 		Preconditions.checkNotNull( fromJsonTranslator, "need a from-Json translator" );
 		Preconditions.checkNotNull( toJsonTranslator, "need a to-Json translator" );
 		
-		fromJsonElementTranslators.put( theClass, fromJsonTranslator );
-		toJsonElementTranslators.put( theClass, toJsonTranslator );
+		this.translators.put( theClass,  new JsonTypeReference( theClass, theName, fromJsonTranslator, toJsonTranslator ) );
 	}
 
 	/**
@@ -260,28 +282,34 @@ public final class JsonTranslationFacility implements Facility {
 			}
 
 			JsonTypeMap typeMap = new JsonTypeMap( reflectedType );
-			
-			Translator toJsonTranslator = null;
-			Translator fromJsonTranslator = null;
-			
+			JsonTypeReference typeReference;
+		
 			Collection<FieldDescriptor<?,?>> fields = this.typeSource.getSerializedFields( reflectedType );
 			ArrayList<JsonMemberMap> members = new ArrayList<JsonMemberMap>( fields.size() );
 			
 			// now we iterate over the fields found by the analysis
 			for( FieldDescriptor<?,?> field : fields ) {
-        		// TODO: we have more than one type to consider
-                toJsonTranslator = getToJsonElementTranslator( field.getSite( ).getType(), field.getSite().getGenericType() );
-                fromJsonTranslator = getFromJsonElementTranslator( field.getSite( ).getType(), field.getSite().getGenericType() );
-
-                if( toJsonTranslator == null ) {
-					throw new IllegalStateException( String.format( "Type '%s' on field '%s.%s' could not be analyzed because the to translator could not be found.", field.getSite().getType(), theType.getName( ), field.getSite().getName( ) ) );
-                } else if( fromJsonTranslator == null ) {
-					throw new IllegalStateException( String.format( "Type '%s' on field '%s.%s' could not be analyzed because the from translator could not be found.", field.getSite().getType(), theType.getName( ), field.getSite().getName( ) ) );
-                } else if( !memberNameValidator.isValid( field.getName( ) ) ) {
-            		throw new IllegalStateException( String.format( "Field '%s.%s' is using the name '%s' that does not conform to validator '%s'.", reflectedType.getType().getName(), field.getSite().getName(), field.getName( ), memberNameValidator.getClass().getSimpleName() ) );
-            	}
-
-                members.add( new JsonMemberMap( field, new TranslatedDataSite( field.getSite(), toJsonTranslator, fromJsonTranslator ), typeMap ) );
+				if( field.isObject( ) && field.getValueTypes().size() > 1 ) {
+					for( ValueType<?,?> valueType : field.getValueTypes( ) ) {
+						// we need to get translators made for each of the value types						
+						typeReference = getTypeReference( valueType.getType(), valueType.getGenericType( ) );		
+		                if( typeReference == null ) {
+							throw new IllegalStateException( String.format( "Type '%s' on field '%s.%s' could not be analyzed because the type reference could not be found.", field.getSite().getType(), theType.getName( ), field.getSite().getName( ) ) );
+		                } else if( !memberNameValidator.isValid( field.getName( ) ) ) {
+		            		throw new IllegalStateException( String.format( "Field '%s.%s' is using the name '%s' that does not conform to validator '%s'.", reflectedType.getType().getName(), field.getSite().getName(), field.getName( ), memberNameValidator.getClass().getSimpleName() ) );
+		            	}
+					}
+					
+				} else {
+					typeReference = getTypeReference( field.getSite( ).getType(), field.getSite().getGenericType() );
+	                if( typeReference == null ) {
+						throw new IllegalStateException( String.format( "Type '%s' on field '%s.%s' could not be analyzed because the type reference could not be found.", field.getSite().getType(), theType.getName( ), field.getSite().getName( ) ) );
+	                } else if( !memberNameValidator.isValid( field.getName( ) ) ) {
+	            		throw new IllegalStateException( String.format( "Field '%s.%s' is using the name '%s' that does not conform to validator '%s'.", reflectedType.getType().getName(), field.getSite().getName(), field.getName( ), memberNameValidator.getClass().getSimpleName() ) );
+	            	}
+	
+	                members.add( new JsonMemberMap( field, new TranslatedDataSite( field.getSite(), typeReference.getToJsonTranslator( ), typeReference.getFromJsonTranslator( ) ), typeMap ) );
+				}
 			}
 			// save the members
 			typeMap.setMembers( members );
@@ -303,11 +331,11 @@ public final class JsonTranslationFacility implements Facility {
 	public <O> JsonElement toJsonElement( O theObject, Class<O> theType, Type theGenericType ) {
 		// TODO: getToJsonElementTranslator doesn't save items when there is a generic type, so this generates dead objects for some types like collections
 		Preconditions.checkNotNull( theType, "need a type" );
-		Translator translator = getToJsonElementTranslator( theType, theGenericType );
-		if( translator == null ){
-			throw new IllegalArgumentException( String.format( "Unable to find a translator for type '%s'.", theType.getName( ) ) );
+		JsonTypeReference typeReference = getTypeReference( theType, theGenericType );
+		if( typeReference == null ){
+			throw new IllegalArgumentException( String.format( "Unable to find a type reference for type '%s'.", theType.getName( ) ) );
 		} else {
-			return ( JsonElement )translator.translate( theObject );
+			return ( JsonElement )typeReference.getToJsonTranslator().translate( theObject );
 		}
 	}
 
@@ -323,11 +351,11 @@ public final class JsonTranslationFacility implements Facility {
 	public <O> O fromJsonElement( JsonElement theObject, Class<O> theType, Type theGenericType ) {
 		// TODO: getFromJsonElementTranslator doesn't save items when there is a generic type, so this generates dead objects for some types like collections
 		Preconditions.checkNotNull( theType, "need a type" );
-		Translator translator = getFromJsonElementTranslator( theType, theGenericType );
-		if( translator == null ){
-			throw new IllegalArgumentException( String.format( "Unable to find a translator for type '%s'.", theType.getName( ) ) );
+		JsonTypeReference typeReference = getTypeReference( theType, theGenericType );
+		if( typeReference == null ){
+			throw new IllegalArgumentException( String.format( "Unable to find a type reference for type '%s'.", theType.getName( ) ) );
 		} else {
-			return ( O )translator.translate( theObject );
+			return ( O )typeReference.getFromJsonTranslator().translate( theObject );
 		}	
 	}
 
@@ -374,171 +402,88 @@ public final class JsonTranslationFacility implements Facility {
 			throw new TranslationException( e );
 		}
 	}
-	
-	/**
-	 * This method is called to get or generate a translator for the class, and its generic details.
-	 * The translator translates to a JsonEelement from the specified type.
-	 * @param theType the type to translate from
-	 * @param theGenericType the generic details of the type to translate from
-	 * @return the translator for the type
-	 */
-	public Translator getToJsonElementTranslator( Class<?> theType, Type theGenericType ) {
-		Translator translator = toJsonElementTranslators.get( theType );
-		// TODO: getToJsonElementTranslator doesn't save items when there is a generic type, so this generates dead objects for some types like collections
 
-		if( translator == null ) {
-    		if( Map.class.isAssignableFrom( theType ) && ( theGenericType instanceof ParameterizedType ) ) {
-	            Class<?> keyType = ( Class<?> )( ( ParameterizedType ) theGenericType ).getActualTypeArguments( )[ 0 ];
-	            Class<?> valueType = ( Class<?> )( ( ParameterizedType ) theGenericType ).getActualTypeArguments( )[ 1 ];
-	            Translator keyTranslator = getToJsonElementTranslator( keyType, null );
-	            Translator valueTranslator = getToJsonElementTranslator( valueType, null );
-
-	            if( keyTranslator == null ) {
-	            	throw new IllegalStateException( String.format( "Unable to create translator for a map because a translator for key type '%s' could not be found.", keyType.getName( ) ) );
-	            } else if( valueTranslator == null ) {
-	            	throw new IllegalStateException( String.format( "Unable to create translator for a map because a translator for value type '%s' could not be found.", valueType.getName( ) ) );
-	            } else {
-	            	translator = new MapToJsonArrayTranslator( keyTranslator, valueTranslator );
-	            	// we don't save this translator in our translator map since it requires more than a class to do a lookup
-	            }
-			
-    		} else if( Collection.class.isAssignableFrom( theType ) && ( theGenericType instanceof ParameterizedType ) ) {
-        		// first see if we have a collection, and look to get a generic type for it
-                Class<?> elementType = ( Class<?> )( ( ( ParameterizedType ) theGenericType ).getActualTypeArguments( )[ 0 ] );
-                Translator elementTranslator = getToJsonElementTranslator( elementType, null );
-	            
-                if( elementTranslator == null ) {
-	            	throw new IllegalStateException( String.format( "Unable to create translator for a collection because a translator for element type '%s' could not be found.", elementType.getName( ) ) );
-	            } else {
-	            	translator = new CollectionToJsonArrayTranslator( elementTranslator );
-	            	// we don't save this translator in our translator map since it requires more than a class to do a lookup
-	            }
-
-        	} else if( theType.isArray( ) ) {
-        		// next see if we have an array to get
-				Translator elementTranslator = getToJsonElementTranslator( theType.getComponentType( ), null );
-	            if( elementTranslator == null ) {
-	            	throw new IllegalStateException( String.format( "Unable to create translator for an array because a translator for element type '%s' could not be found.", theType.getComponentType( ).getName( ) ) );
-	            } else {
-					translator = new ArrayToJsonArrayTranslator( elementTranslator );
-	        		// save so we don't continually create
-	        		toJsonElementTranslators.put( theType, translator );
-				}
-        	} else if( theType.isEnum( ) ) {
-        		translator = new ObjectToJsonPrimitiveTranslator( );
-        		// save so we don't continually create
-        		toJsonElementTranslators.put( theType, translator );
-			} else {
-				// if none of the above, we have a complex type
-				JsonTypeMap typeMap = generateTypeMap( theType );
-				if( typeMap == null ) {
-					throw new IllegalStateException( String.format( "Unable to create a translator for complex type '%s' because a json map could not be generated.", theType.getName() ) );
-				} else {
-					// TODO: if/when we have generic types parameters here we will no longer be
-					//       able to cache like this
-					translator = new ObjectToJsonObjectTranslator( typeMap );
-	        		// save so we don't continually create
-	        		toJsonElementTranslators.put( theType, translator );
-				}
-			}
-		}
-		return translator;
-	}
 
 	/**
-	 * This method is called to get or generate a translator for the class, and its generic details.
-	 * The translator translates from a JsonElement to the specified type.
+	 * This method is called to get or generate a type reference for the class, and its generic details.
 	 * @param theType the type to translate to
 	 * @param theGenericType the generic details of the type to translate to
-	 * @return the translator for the type
+	 * @return the type reference for the type
 	 */
-	public Translator getFromJsonElementTranslator( Class<?> theType, Type theGenericType ) {
-		Translator translator = fromJsonElementTranslators.get( theType );
-		// TODO: getFromJsonElementTranslator doesn't save items when there is a generic type, so this generates dead objects for some types like collections
-	
-		if( translator == null ) {
+	public JsonTypeReference getTypeReference( Class<?> theType, Type theGenericType ) {
+		JsonTypeReference typeReference = translators.get( theType );
+		
+		// TODO: this doesn't save items when there is a generic type, so this generates dead objects for some types like collections
+		if( typeReference == null ) {
 	    	if( Map.class.isAssignableFrom( theType ) && ( theGenericType instanceof ParameterizedType ) ) {
 	            Class<?> keyType = ( Class<?> )( ( ParameterizedType ) theGenericType ).getActualTypeArguments( )[ 0 ];
 	            Class<?> valueType = ( Class<?> )( ( ParameterizedType ) theGenericType ).getActualTypeArguments( )[ 1 ];
-	            Translator keyTranslator = getFromJsonElementTranslator( keyType, null );
-	            Translator valueTranslator = getFromJsonElementTranslator( valueType, null );
+	            JsonTypeReference keyTypeReference = getTypeReference( keyType, null );
+	            JsonTypeReference valueTypeReference = getTypeReference( valueType, null );
 
-	            if( keyTranslator == null ) {
-	            	throw new IllegalStateException( String.format( "Unable to create translator for a map because a translator for key type '%s' could not be found.", keyType.getName( ) ) );
-	            } else if( valueTranslator == null ) {
-	            	throw new IllegalStateException( String.format( "Unable to create translator for a map because a translator for value type '%s' could not be found.", valueType.getName( ) ) );
+	            if( keyTypeReference == null ) {
+	            	throw new IllegalStateException( String.format( "Unable to create a type reference for a map because a type reference for key type '%s' could not be found.", keyType.getName( ) ) );
+	            } else if( valueTypeReference == null ) {
+	            	throw new IllegalStateException( String.format( "Unable to create a type reference for a map because a type refernece for value type '%s' could not be found.", valueType.getName( ) ) );
 	            } else {
-	            	translator = new JsonArrayToMapTranslator( keyTranslator, valueTranslator, theType );
-	            	// we don't save this translator in our translator map since it requires more than a class to do a lookup
+	            	typeReference = new JsonTypeReference( 
+	            			theType, "map", // TODO: need to generate better
+	            			new JsonArrayToMapTranslator( keyTypeReference.getFromJsonTranslator(), valueTypeReference.getFromJsonTranslator(), theType ),
+	            			new MapToJsonArrayTranslator( keyTypeReference.getToJsonTranslator(), valueTypeReference.getToJsonTranslator() ) );
+	            	// we don't save this reference since it requires more than a class to do a lookup
 	            }
 	            
 	    	} else if( Collection.class.isAssignableFrom( theType ) && ( theGenericType instanceof ParameterizedType ) ) {
         		// start be seeing if we have a collection and if so generate some translators
                 Class<?> elementType = ( Class<?> )( ( ( ParameterizedType ) theGenericType ).getActualTypeArguments( )[ 0 ] );
-                Translator elementTranslator = getFromJsonElementTranslator( elementType, null );
+                JsonTypeReference elementTypeReference = getTypeReference( elementType, null );
 	            
-                if( elementTranslator == null ) {
-	            	throw new IllegalStateException( String.format( "Unable to create translator for a collection because a translator for element type '%s' could not be found.", elementType.getName( ) ) );
+                if( elementTypeReference == null ) {
+	            	throw new IllegalStateException( String.format( "Unable to create a type reference for a collection because a type reference for element type '%s' could not be found.", elementType.getName( ) ) );
 	            } else {
-	            	translator = new JsonArrayToCollectionTranslator( elementTranslator, theType );
+	            	typeReference = new JsonTypeReference( 
+	            			theType, "list", // TODO: need to generate better
+	            			new JsonArrayToCollectionTranslator( elementTypeReference.getFromJsonTranslator(), theType ),
+	            			new CollectionToJsonArrayTranslator( elementTypeReference.getToJsonTranslator() ) );
 	            	// we don't save this translator in our translator map since it requires more than a class to do a lookup
 	            }
         	} else if( theType.isArray( ) ) {
-				Translator elementTranslator = getFromJsonElementTranslator( theType.getComponentType( ), null );
-	            if( elementTranslator == null ) {
-	            	throw new IllegalStateException( String.format( "Unable to create translator for an array because a translator for element type '%s' could not be found.", theType.getComponentType( ).getName( ) ) );
+        		JsonTypeReference elementTypeReference = getTypeReference( theType.getComponentType( ), null );
+	            if( elementTypeReference == null ) {
+	            	throw new IllegalStateException( String.format( "Unable to create a type reference for an array because a type reference for element type '%s' could not be found.", theType.getComponentType( ).getName( ) ) );
 	            } else {
-					translator = new JsonArrayToArrayTranslator( theType.getComponentType(), elementTranslator ); 
+	            	typeReference = new JsonTypeReference( 
+	            			theType, "list", // TODO: need to generate better
+	            			new JsonArrayToArrayTranslator( theType.getComponentType(), elementTypeReference.getFromJsonTranslator() ),
+	            			new ArrayToJsonArrayTranslator( elementTypeReference.getToJsonTranslator() ) );
 	        		// save so we don't continually create
-	        		fromJsonElementTranslators.put( theType, translator );
+	        		translators.put( theType, typeReference );
 	            }
         	} else if( theType.isEnum( ) ) {
-        		translator = new JsonElementToStringToChainTranslator( new StringToEnumTranslator( theType ) );
-        		// save so we don't continually create
-        		fromJsonElementTranslators.put( theType, translator );
+            	typeReference = new JsonTypeReference( 
+            			theType, "enum : string", // TODO: need to generate better
+            			new JsonElementToStringToChainTranslator( new StringToEnumTranslator( theType ) ),
+            			new ObjectToJsonPrimitiveTranslator( ) );
+            	// save so we don't continually create
+            	translators.put( theType, typeReference );
 			} else {
 				JsonTypeMap typeMap = generateTypeMap( theType );
 				if( typeMap == null ) {
-					throw new IllegalStateException( String.format( "Unable to create a translator for complex type '%s' because a json map could not be generated.", theType.getName() ) );
+					throw new IllegalStateException( String.format( "Unable to create a type reference for complex type '%s' because a json type map could not be generated.", theType.getName() ) );
 				} else {
 					// TODO: if/when we have generic types parameters here we will no longer be
 					//       able to cache like this
-					translator = new JsonObjectToObjectTranslator( typeMap );
-	        		// save so we don't continually create
-	        		fromJsonElementTranslators.put( theType, translator );
+	            	typeReference = new JsonTypeReference( 
+	            			theType, typeMap.getReflectedType().getName(),
+	            			new JsonObjectToObjectTranslator( typeMap ),
+	            			new ObjectToJsonObjectTranslator( typeMap ) );
+	            	// save so we don't continually create
+	            	translators.put( theType, typeReference );
 				}
 			}
 		}
-		return translator;
+		return typeReference;
 	}
-
-	
-	
-	/**
-	 * Holds the base types we support for simple translation to a type.
-	 */
-	private static final HashMap<Class<?>, String> baseTypeToStringMap = new HashMap<Class<?>, String>();
-
-    static {
-		baseTypeToStringMap.put( int.class, "int32" );
-		baseTypeToStringMap.put( Integer.class, "int32" );
-		baseTypeToStringMap.put( long.class, "int64" );
-		baseTypeToStringMap.put( Long.class, "int64" );
-		baseTypeToStringMap.put( float.class, "float32" );
-		baseTypeToStringMap.put( Float.class, "float32" );
-		baseTypeToStringMap.put( double.class, "float64" );
-		baseTypeToStringMap.put( Double.class, "float64" );
-
-		baseTypeToStringMap.put( boolean.class, "boolean" );
-		baseTypeToStringMap.put( Boolean.class, "boolean" );
-
-		baseTypeToStringMap.put( String.class, "string" );
-		baseTypeToStringMap.put( DateTime.class, "datetime" );
-		baseTypeToStringMap.put( Period.class, "period" );
-		baseTypeToStringMap.put( UUID.class, "string : UUID" );
-		
-		baseTypeToStringMap.put( Void.TYPE, "void" );
-    }
 
 	/**
 	 * This method is called to get or generate a translator for the class, and its generic details.
@@ -549,7 +494,9 @@ public final class JsonTranslationFacility implements Facility {
 	 * @return an external facing name to represent the type
 	 */
 	public String generateTypeName( Class<?> theType, Type theGenericType, Set<JsonTypeMap> theFoundTypeMaps ) {
-		String typeString = baseTypeToStringMap.get( theType );
+		// TODO: this shoudl be disappearing once the other work related to polymorphic/custom types are done
+		JsonTypeReference nameInfo = this.translators.get( theType );
+		String typeString = nameInfo != null ? nameInfo.getName() : null;
 
 		if( typeString  == null ) {
     		if( Map.class.isAssignableFrom( theType ) && ( theGenericType instanceof ParameterizedType ) ) {
@@ -620,7 +567,8 @@ public final class JsonTranslationFacility implements Facility {
 
 
 	public void getTypes( Class<?> theType, Type theGenericType, HashMap<String, JsonTypeMap> theDataTypes ) {
-		String typeString = baseTypeToStringMap.get( theType );
+		JsonTypeReference nameInfo = this.translators.get( theType );
+		String typeString = nameInfo != null ? nameInfo.getName() : null;
 
 		if( typeString  == null ) {
     		if( Map.class.isAssignableFrom( theType ) && ( theGenericType instanceof ParameterizedType ) ) {

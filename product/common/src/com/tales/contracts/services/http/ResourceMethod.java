@@ -37,7 +37,6 @@ import com.google.common.base.Strings;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-
 import com.tales.contracts.Subcontract;
 import com.tales.contracts.services.ContractStatus;
 import com.tales.contracts.services.http.ResourceMethodParameter.ContextValue;
@@ -48,6 +47,7 @@ import com.tales.parts.translators.TranslationException;
 import com.tales.parts.translators.Translator;
 import com.tales.serialization.Readability;
 import com.tales.serialization.UrlEncoding;
+import com.tales.serialization.json.JsonTypeReference;
 import com.tales.services.Status;
 import com.tales.services.NameManager;
 import com.tales.services.OperationContext;
@@ -268,7 +268,7 @@ public class ResourceMethod extends Subcontract {
 
 		Class<?> returnType = method.getReturnType();
 		Type genericReturnType = method.getGenericReturnType( );
-		Translator translator;
+		JsonTypeReference typeReference;
 		if( Void.TYPE.equals( returnType ) ) {
 			// void returns are very simple
 			this.methodReturn = new ResourceMethodReturn( returnType, method.getGenericReturnType(), this );
@@ -283,20 +283,20 @@ public class ResourceMethod extends Subcontract {
 				returnType = ( Class<?> )genericReturnType;
 			}
 
-			translator = theResourceFacility.getJsonFacility().getToJsonElementTranslator( returnType, genericReturnType );
-			if( translator == null ) {
+			typeReference = theResourceFacility.getJsonFacility().getTypeReference( returnType, genericReturnType );
+			if( typeReference == null ) {
 				throw new IllegalStateException( String.format( "Return type '%s' on method '%s.%s' could not be analyzed because a translator could not be found.", returnType.getSimpleName(), method.getDeclaringClass().getName(), method.getName() ) );
 			} else {
-				this.methodReturn = new ResourceMethodReturn( returnType, genericReturnType, true, translator, this );
+				this.methodReturn = new ResourceMethodReturn( returnType, genericReturnType, true, typeReference.getToJsonTranslator(), this );
 			}
 
 		} else {
 			// otherwise the type is just something we are looking to return
-			translator = theResourceFacility.getJsonFacility().getToJsonElementTranslator( returnType, genericReturnType );
-			if( translator == null ) {
+			typeReference = theResourceFacility.getJsonFacility().getTypeReference( returnType, genericReturnType );
+			if( typeReference == null ) {
 				throw new IllegalStateException( String.format( "Return type '%s' on method '%s.%s' could not be analyzed because a translator could not be found.", returnType.getSimpleName(), method.getDeclaringClass().getName(), method.getName() ) );
 			} else {
-				this.methodReturn = new ResourceMethodReturn( returnType, genericReturnType, false, translator, this );
+				this.methodReturn = new ResourceMethodReturn( returnType, genericReturnType, false, typeReference.getToJsonTranslator(), this );
 			}
 		}
 	}

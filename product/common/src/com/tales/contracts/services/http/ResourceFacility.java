@@ -26,12 +26,12 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-
 import com.tales.contracts.data.DataContractTypeSource;
 import com.tales.parts.naming.LowerCaseEntityNameValidator;
 import com.tales.parts.translators.Translator;
 import com.tales.serialization.Readability;
 import com.tales.serialization.json.JsonTranslationFacility;
+import com.tales.serialization.json.JsonTypeReference;
 import com.tales.serialization.json.translators.ChainToJsonElementToStringTranslator;
 import com.tales.serialization.json.translators.StringToJsonElementToChainTranslator;
 import com.tales.services.DependencyException;
@@ -155,12 +155,12 @@ public final class ResourceFacility implements Facility {
 		translator = this.jsonTranslation.getFromStringTranslator( theType );
 		if( translator == null ) {
 			// did not find one so we are now look for something that will be more complicated
-			translator = this.jsonTranslation.getFromJsonElementTranslator( theType, theGenericType );
-			if( translator != null ) {
+			JsonTypeReference typeReference = this.jsonTranslation.getTypeReference(theType, theGenericType);
+			if( typeReference != null ) {
 				// NOTE: we don't store these because we cannot index off of type/generic type (yet)
 				//       and because of that, jsonTranslators is unable to cache their results
 				//       but it would be nice to cache
-				translator = new StringToJsonElementToChainTranslator( translator );
+				translator = new StringToJsonElementToChainTranslator( typeReference.getFromJsonTranslator() );
 			}
 		}
 		return translator;
@@ -182,12 +182,12 @@ public final class ResourceFacility implements Facility {
 		translator = this.jsonTranslation.getToStringTranslator( theType );
 		if( translator == null ) {
 			// did not find one so we are now look for something that will be more complicated
-			translator = this.jsonTranslation.getToJsonElementTranslator( theType, theGenericType );
-			if( translator != null ) {
+			JsonTypeReference typeReference = this.jsonTranslation.getTypeReference(theType, theGenericType);
+			if( typeReference != null ) {
 				// NOTE: we don't store these because we cannot index off of type/generic type (yet)
 				//       and because of that, jsonTranslators is unable to cache their results
 				//       but it would be nice to cache
-				translator = new ChainToJsonElementToStringTranslator( translator );
+				translator = new ChainToJsonElementToStringTranslator( typeReference.getToJsonTranslator() );
 			}
 		}
 		return translator;
