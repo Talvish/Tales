@@ -20,6 +20,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -54,11 +55,13 @@ import com.tales.serialization.json.translators.JsonArrayToCollectionTranslator;
 import com.tales.serialization.json.translators.JsonArrayToMapTranslator;
 import com.tales.serialization.json.translators.JsonElementToStringToChainTranslator;
 import com.tales.serialization.json.translators.JsonObjectToObjectTranslator;
+import com.tales.serialization.json.translators.JsonObjectToPolymorphicObjectTranslator;
 import com.tales.serialization.json.translators.JsonObjectToVoidTranslator;
 import com.tales.serialization.json.translators.MapToJsonArrayTranslator;
 import com.tales.serialization.json.translators.NumberToJsonPrimitiveTranslator;
 import com.tales.serialization.json.translators.ObjectToJsonObjectTranslator;
 import com.tales.serialization.json.translators.ObjectToJsonPrimitiveTranslator;
+import com.tales.serialization.json.translators.PolymorphicObjectToJsonObjectTranslator;
 import com.tales.serialization.json.translators.StringToJsonPrimitiveTranslator;
 import com.tales.serialization.json.translators.VoidToJsonObjectTranslator;
 import com.tales.system.Facility;
@@ -188,8 +191,14 @@ public final class JsonTranslationFacility implements Facility {
 				new JsonElementToStringToChainTranslator( stringTranslators.getFromStringTranslator( UUID.class ) ),
 				objectToJsonTranslator ) );
 		
+		// this is the standard void 'type' required when using reflection
 		this.translators.put( Void.TYPE, new JsonTypeReference(
 				Void.TYPE, "void", 
+				jsonToVoidTransator,
+				voidToJsonTranslator ) );
+		// this void 'type' seems to be what is used when using voids as the type in generics
+		this.translators.put( Void.class, new JsonTypeReference(
+				Void.class, "void", 
 				jsonToVoidTransator,
 				voidToJsonTranslator ) );
 	}
@@ -283,6 +292,7 @@ public final class JsonTranslationFacility implements Facility {
 
 			JsonTypeMap typeMap = new JsonTypeMap( reflectedType );
 			JsonTypeReference typeReference;
+			List<JsonTypeReference> typeReferences;
 		
 			Collection<FieldDescriptor<?,?>> fields = this.typeSource.getSerializedFields( reflectedType );
 			ArrayList<JsonMemberMap> members = new ArrayList<JsonMemberMap>( fields.size() );
@@ -290,20 +300,29 @@ public final class JsonTranslationFacility implements Facility {
 			// now we iterate over the fields found by the analysis
 			for( FieldDescriptor<?,?> field : fields ) {
 				if( field.isObject( ) && field.getValueTypes().size() > 1 ) {
+					// need a list of type references and then when
+					// done we pass the type information
+					typeReferences = new ArrayList<>( field.getValueTypes( ).size( ) );
 					for( ValueType<?,?> valueType : field.getValueTypes( ) ) {
 						// we need to get translators made for each of the value types						
 						typeReference = getTypeReference( valueType.getType(), valueType.getGenericType( ) );		
 		                if( typeReference == null ) {
-							throw new IllegalStateException( String.format( "Type '%s' on field '%s.%s' could not be analyzed because the type reference could not be found.", field.getSite().getType(), theType.getName( ), field.getSite().getName( ) ) );
+							throw new IllegalStateException( String.format( "Type '%s' on field '%s.%s' could not be analyzed because the type reference could not be found.", valueType.getType(), theType.getName( ), field.getSite().getName( ) ) );
 		                } else if( !memberNameValidator.isValid( field.getName( ) ) ) {
 		            		throw new IllegalStateException( String.format( "Field '%s.%s' is using the name '%s' that does not conform to validator '%s'.", reflectedType.getType().getName(), field.getSite().getName(), field.getName( ), memberNameValidator.getClass().getSimpleName() ) );
+		            	} else {
+		            		typeReferences.add( typeReference );
 		            	}
 					}
-					
+					members.add( new JsonMemberMap( field, new TranslatedDataSite(
+							field.getSite(), 
+							new PolymorphicObjectToJsonObjectTranslator( typeReferences ), 
+							new JsonObjectToPolymorphicObjectTranslator( typeReferences ) ), typeMap ) );					
 				} else {
-					typeReference = getTypeReference( field.getSite( ).getType(), field.getSite().getGenericType() );
+					ValueType<?,?> valueType = field.getValueTypes( ).get( 0 );
+					typeReference = getTypeReference( valueType.getType(), valueType.getGenericType( ) );
 	                if( typeReference == null ) {
-						throw new IllegalStateException( String.format( "Type '%s' on field '%s.%s' could not be analyzed because the type reference could not be found.", field.getSite().getType(), theType.getName( ), field.getSite().getName( ) ) );
+						throw new IllegalStateException( String.format( "Type '%s' on field '%s.%s' could not be analyzed because the type reference could not be found.", valueType.getType(), theType.getName( ), field.getSite().getName( ) ) );
 	                } else if( !memberNameValidator.isValid( field.getName( ) ) ) {
 	            		throw new IllegalStateException( String.format( "Field '%s.%s' is using the name '%s' that does not conform to validator '%s'.", reflectedType.getType().getName(), field.getSite().getName(), field.getName( ), memberNameValidator.getClass().getSimpleName() ) );
 	            	}
@@ -412,41 +431,48 @@ public final class JsonTranslationFacility implements Facility {
 	 */
 	public JsonTypeReference getTypeReference( Class<?> theType, Type theGenericType ) {
 		JsonTypeReference typeReference = translators.get( theType );
-		
 		// TODO: this doesn't save items when there is a generic type, so this generates dead objects for some types like collections
 		if( typeReference == null ) {
-	    	if( Map.class.isAssignableFrom( theType ) && ( theGenericType instanceof ParameterizedType ) ) {
-	            Class<?> keyType = ( Class<?> )( ( ParameterizedType ) theGenericType ).getActualTypeArguments( )[ 0 ];
-	            Class<?> valueType = ( Class<?> )( ( ParameterizedType ) theGenericType ).getActualTypeArguments( )[ 1 ];
-	            JsonTypeReference keyTypeReference = getTypeReference( keyType, null );
-	            JsonTypeReference valueTypeReference = getTypeReference( valueType, null );
-
-	            if( keyTypeReference == null ) {
-	            	throw new IllegalStateException( String.format( "Unable to create a type reference for a map because a type reference for key type '%s' could not be found.", keyType.getName( ) ) );
-	            } else if( valueTypeReference == null ) {
-	            	throw new IllegalStateException( String.format( "Unable to create a type reference for a map because a type refernece for value type '%s' could not be found.", valueType.getName( ) ) );
-	            } else {
-	            	typeReference = new JsonTypeReference( 
-	            			theType, "map", // TODO: need to generate better
-	            			new JsonArrayToMapTranslator( keyTypeReference.getFromJsonTranslator(), valueTypeReference.getFromJsonTranslator(), theType ),
-	            			new MapToJsonArrayTranslator( keyTypeReference.getToJsonTranslator(), valueTypeReference.getToJsonTranslator() ) );
-	            	// we don't save this reference since it requires more than a class to do a lookup
-	            }
+	    	if( Map.class.isAssignableFrom( theType ) ) {
+	    		if( !( theGenericType instanceof ParameterizedType ) ) {
+	            	throw new IllegalStateException( String.format( "Unable to create a type reference for a map because the parameterized type was not given when '%s' generic types are expected.", theType.getTypeParameters().length ) );
+		    	} else {
+		            Class<?> keyType = ( Class<?> )( ( ParameterizedType ) theGenericType ).getActualTypeArguments( )[ 0 ];
+		            Class<?> valueType = ( Class<?> )( ( ParameterizedType ) theGenericType ).getActualTypeArguments( )[ 1 ];
+		            JsonTypeReference keyTypeReference = getTypeReference( keyType, null );
+		            JsonTypeReference valueTypeReference = getTypeReference( valueType, null );
+	
+		            if( keyTypeReference == null ) {
+		            	throw new IllegalStateException( String.format( "Unable to create a type reference for a map because a type reference for key type '%s' could not be found.", keyType.getName( ) ) );
+		            } else if( valueTypeReference == null ) {
+		            	throw new IllegalStateException( String.format( "Unable to create a type reference for a map because a type refernece for value type '%s' could not be found.", valueType.getName( ) ) );
+		            } else {
+		            	typeReference = new JsonTypeReference( 
+		            			theType, "map", // TODO: need to generate better
+		            			new JsonArrayToMapTranslator( keyTypeReference.getFromJsonTranslator(), valueTypeReference.getFromJsonTranslator(), theType ),
+		            			new MapToJsonArrayTranslator( keyTypeReference.getToJsonTranslator(), valueTypeReference.getToJsonTranslator() ) );
+		            	// we don't save this reference since it requires more than a class to do a lookup
+		            }
+		    	}
 	            
-	    	} else if( Collection.class.isAssignableFrom( theType ) && ( theGenericType instanceof ParameterizedType ) ) {
-        		// start be seeing if we have a collection and if so generate some translators
-                Class<?> elementType = ( Class<?> )( ( ( ParameterizedType ) theGenericType ).getActualTypeArguments( )[ 0 ] );
-                JsonTypeReference elementTypeReference = getTypeReference( elementType, null );
-	            
-                if( elementTypeReference == null ) {
-	            	throw new IllegalStateException( String.format( "Unable to create a type reference for a collection because a type reference for element type '%s' could not be found.", elementType.getName( ) ) );
-	            } else {
-	            	typeReference = new JsonTypeReference( 
-	            			theType, "list", // TODO: need to generate better
-	            			new JsonArrayToCollectionTranslator( elementTypeReference.getFromJsonTranslator(), theType ),
-	            			new CollectionToJsonArrayTranslator( elementTypeReference.getToJsonTranslator() ) );
-	            	// we don't save this translator in our translator map since it requires more than a class to do a lookup
-	            }
+	    	} else if( Collection.class.isAssignableFrom( theType ) ) {
+	    		if( !( theGenericType instanceof ParameterizedType ) ) {
+	            	throw new IllegalStateException( String.format( "Unable to create a type reference for a collection because the parameterized type was not given when '%s' generic types are expected.", theType.getTypeParameters().length ) );
+		    	} else {
+	        		// start be seeing if we have a collection and if so generate some translators
+	                Class<?> elementType = ( Class<?> )( ( ( ParameterizedType ) theGenericType ).getActualTypeArguments( )[ 0 ] );
+	                JsonTypeReference elementTypeReference = getTypeReference( elementType, null );
+		            
+	                if( elementTypeReference == null ) {
+		            	throw new IllegalStateException( String.format( "Unable to create a type reference for a collection because a type reference for element type '%s' could not be found.", elementType.getName( ) ) );
+		            } else {
+		            	typeReference = new JsonTypeReference( 
+		            			theType, "list", // TODO: need to generate better
+		            			new JsonArrayToCollectionTranslator( elementTypeReference.getFromJsonTranslator(), theType ),
+		            			new CollectionToJsonArrayTranslator( elementTypeReference.getToJsonTranslator() ) );
+		            	// we don't save this translator in our translator map since it requires more than a class to do a lookup
+		            }
+		    	}
         	} else if( theType.isArray( ) ) {
         		JsonTypeReference elementTypeReference = getTypeReference( theType.getComponentType( ), null );
 	            if( elementTypeReference == null ) {
@@ -467,19 +493,23 @@ public final class JsonTranslationFacility implements Facility {
             	// save so we don't continually create
             	translators.put( theType, typeReference );
 			} else {
-				JsonTypeMap typeMap = generateTypeMap( theType );
-				if( typeMap == null ) {
-					throw new IllegalStateException( String.format( "Unable to create a type reference for complex type '%s' because a json type map could not be generated.", theType.getName() ) );
-				} else {
-					// TODO: if/when we have generic types parameters here we will no longer be
-					//       able to cache like this
-	            	typeReference = new JsonTypeReference( 
-	            			theType, typeMap.getReflectedType().getName(),
-	            			new JsonObjectToObjectTranslator( typeMap ),
-	            			new ObjectToJsonObjectTranslator( typeMap ) );
-	            	// save so we don't continually create
-	            	translators.put( theType, typeReference );
-				}
+	    		if( theType.getTypeParameters().length > 0 && !( theGenericType instanceof ParameterizedType ) ) {
+	            	throw new IllegalStateException( String.format( "Unable to create a type reference for '%s' because the parameterized type was not given when '%s' generic types are expected.", theType.getName( ), theType.getTypeParameters().length ) );
+		    	} else {
+					JsonTypeMap typeMap = generateTypeMap( theType );
+					if( typeMap == null ) {
+						throw new IllegalStateException( String.format( "Unable to create a type reference for complex type '%s' because a json type map could not be generated.", theType.getName() ) );
+					} else {
+						// TODO: if/when we have generic types parameters here we will no longer be
+						//       able to cache like this
+		            	typeReference = new JsonTypeReference( 
+		            			theType, typeMap.getReflectedType().getName(),
+		            			new JsonObjectToObjectTranslator( typeMap ),
+		            			new ObjectToJsonObjectTranslator( typeMap ) );
+		            	// save so we don't continually create
+		            	translators.put( theType, typeReference );
+					}
+		    	}
 			}
 		}
 		return typeReference;

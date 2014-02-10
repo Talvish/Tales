@@ -150,6 +150,7 @@ public class DataContractManager implements Facility {
 	        
 	        // TODO: BELOW we should probably track the types in question and then come back to it later after we have processed all field
 	        
+	        // TODO: should highly consider failing these if they are generic but have not generic parameters
 			if( Map.class.isAssignableFrom( fieldType ) && ( fieldGenericType instanceof ParameterizedType ) ) {
 				// if we have a map (hashtable, treemap, etc)
 				// we need to get type information for the keys and values

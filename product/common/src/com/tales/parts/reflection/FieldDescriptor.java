@@ -47,7 +47,7 @@ public abstract class FieldDescriptor<T extends TypeDescriptor<T, F>, F extends 
 	protected final T declaringType;
 	protected final T containingType;
     protected final String name;
-    protected final FieldValueType fieldValueType; // TODO: this would need to be object, collection, map
+    protected final FieldValueType fieldValueType;
     protected final MemberSite site;
     
     protected final List<ValueType<T,F>> keyTypes;
