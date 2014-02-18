@@ -65,6 +65,34 @@ public class DataStructureResource {
 	}
 
 	/**
+	 * Returns a polymorphic structure.
+	 */
+	@ResourceOperation( name="get_polymorphic_structure", path="GET : get_polymorphic_structure" )
+	public PolymorphicStructure getPolymorphicStructure( ) {
+		return new PolymorphicStructure(
+				new SimpleStructure( "a value", 121231230090l, 3.14f ),
+				new ComplexStructure( new SimpleStructure( "old", 32l, 14.4f ), 16 ) );
+	}
+	
+	/**
+	 * Receives a polymorphc structure.
+	 */
+	@ResourceOperation( name="set_polymorphic_structure", path="GET | POST : set_polymorphic_structure")
+	public PolymorphicStructure setPolymorphicStructure( @RequestParam( name="value" )PolymorphicStructure theValue ) {
+		return theValue;
+	}
+
+//	/**
+//	 * Returns a polymorphic structure.
+//	 */
+//	@ResourceOperation( name="get_generic_structure", path="GET : get_generic_structure" )
+//	public GenericStructure<String> getGenericStructure( ) {
+//		return new GenericStructure<String>(
+//				"string",
+//				2 );
+//	}
+	
+	/**
 	 * Returns a list of strings. Demonstrates both Java generics and list responses.
 	 */
 	@ResourceOperation( name="get_list", path="GET : get_list" )

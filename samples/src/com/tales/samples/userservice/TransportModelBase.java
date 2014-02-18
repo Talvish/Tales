@@ -25,7 +25,8 @@ import com.tales.contracts.data.DataMember;
 
 @DataContract( name ="com.tales.transport.model_base")
 public class TransportModelBase {
-	@DataMember( name = "id" ) private UUID id;
+	@DataMember( name = "id") private UUID id;
+	//@DataMember( name = "id", valueTypes={User.class} ) private Object id;
 	@DataMember( name = "creation_timestamp" ) private DateTime creationTimestamp;
 	@DataMember( name = "modification_timestamp" ) private DateTime modificationTimestamp;
 	

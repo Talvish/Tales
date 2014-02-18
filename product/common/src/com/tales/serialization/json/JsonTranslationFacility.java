@@ -292,7 +292,8 @@ public final class JsonTranslationFacility implements Facility {
 
 			JsonTypeMap typeMap = new JsonTypeMap( reflectedType );
 			JsonTypeReference typeReference;
-			List<JsonTypeReference> typeReferences;
+			List<JsonTypeReference> keyTypeReferences;
+			List<JsonTypeReference> valueTypeReferences;
 		
 			Collection<FieldDescriptor<?,?>> fields = this.typeSource.getSerializedFields( reflectedType );
 			ArrayList<JsonMemberMap> members = new ArrayList<JsonMemberMap>( fields.size() );
@@ -302,7 +303,7 @@ public final class JsonTranslationFacility implements Facility {
 				if( field.isObject( ) && field.getValueTypes().size() > 1 ) {
 					// need a list of type references and then when
 					// done we pass the type information
-					typeReferences = new ArrayList<>( field.getValueTypes( ).size( ) );
+					valueTypeReferences = new ArrayList<>( field.getValueTypes( ).size( ) );
 					for( ValueType<?,?> valueType : field.getValueTypes( ) ) {
 						// we need to get translators made for each of the value types						
 						typeReference = getTypeReference( valueType.getType(), valueType.getGenericType( ) );		
@@ -311,13 +312,45 @@ public final class JsonTranslationFacility implements Facility {
 		                } else if( !memberNameValidator.isValid( field.getName( ) ) ) {
 		            		throw new IllegalStateException( String.format( "Field '%s.%s' is using the name '%s' that does not conform to validator '%s'.", reflectedType.getType().getName(), field.getSite().getName(), field.getName( ), memberNameValidator.getClass().getSimpleName() ) );
 		            	} else {
-		            		typeReferences.add( typeReference );
+		            		valueTypeReferences.add( typeReference );
 		            	}
 					}
 					members.add( new JsonMemberMap( field, new TranslatedDataSite(
 							field.getSite(), 
-							new PolymorphicObjectToJsonObjectTranslator( typeReferences ), 
-							new JsonObjectToPolymorphicObjectTranslator( typeReferences ) ), typeMap ) );					
+							new PolymorphicObjectToJsonObjectTranslator( valueTypeReferences ), 
+							new JsonObjectToPolymorphicObjectTranslator( valueTypeReferences ) ), typeMap ) );					
+				} else if( field.isCollection( ) && field.getValueTypes().size( ) >  1 ) {
+					// so we need to grab the type of the element that was used
+					
+					// first let's grab the type references
+					valueTypeReferences = new ArrayList<>( field.getValueTypes( ).size( ) );
+					for( ValueType<?,?> valueType : field.getValueTypes( ) ) {
+						// we need to get translators made for each of the value types						
+						typeReference = getTypeReference( valueType.getType(), valueType.getGenericType( ) );		
+		                if( typeReference == null ) {
+							throw new IllegalStateException( String.format( "Type '%s' on field '%s.%s' could not be analyzed because the type reference could not be found.", valueType.getType(), theType.getName( ), field.getSite().getName( ) ) );
+		                } else if( !memberNameValidator.isValid( field.getName( ) ) ) {
+		            		throw new IllegalStateException( String.format( "Field '%s.%s' is using the name '%s' that does not conform to validator '%s'.", reflectedType.getType().getName(), field.getSite().getName(), field.getName( ), memberNameValidator.getClass().getSimpleName() ) );
+		            	} else {
+		            		valueTypeReferences.add( typeReference );
+		            	}
+					}
+					// then we create the member map but we
+					// must distinguish between the arrays and
+					// standard library collections
+					if( field.getSite().getType().isArray() ) {
+						members.add( new JsonMemberMap( field, new TranslatedDataSite(
+								field.getSite(), 
+								new ArrayToJsonArrayTranslator( new PolymorphicObjectToJsonObjectTranslator( valueTypeReferences ) ), 
+								new JsonArrayToArrayTranslator( field.getSite().getType( ).getComponentType(), new JsonObjectToPolymorphicObjectTranslator( valueTypeReferences ) ) ), typeMap ) );
+
+					} else {
+						members.add( new JsonMemberMap( field, new TranslatedDataSite(
+								field.getSite(), 
+								new CollectionToJsonArrayTranslator( new PolymorphicObjectToJsonObjectTranslator( valueTypeReferences ) ), 
+								new JsonArrayToCollectionTranslator( new JsonObjectToPolymorphicObjectTranslator( valueTypeReferences ), field.getSite().getType( ) ) ), typeMap ) );
+					}
+					
 				} else {
 					ValueType<?,?> valueType = field.getValueTypes( ).get( 0 );
 					typeReference = getTypeReference( valueType.getType(), valueType.getGenericType( ) );

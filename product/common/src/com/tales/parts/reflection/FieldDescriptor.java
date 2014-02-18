@@ -63,7 +63,7 @@ public abstract class FieldDescriptor<T extends TypeDescriptor<T, F>, F extends 
     		MemberSite theFieldSite,
     		T theDeclaringType, 
     		T theContainingType ) {
-    	this( theName, FieldValueType.OBJECT, theObjectTypes, null, theFieldSite, theDeclaringType, theContainingType );
+    	this( theName, theFieldValueType, theObjectTypes, null, theFieldSite, theDeclaringType, theContainingType );
     }
 
     /**
