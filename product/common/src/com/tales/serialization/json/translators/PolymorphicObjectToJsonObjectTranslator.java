@@ -28,13 +28,14 @@ import com.tales.parts.translators.Translator;
 import com.tales.serialization.json.JsonTypeReference;
 
 public class PolymorphicObjectToJsonObjectTranslator implements Translator {
-	private Map<Class<?>, JsonTypeReference> typeReferences = new HashMap<>( 2 );
+	private final Map<Class<?>, JsonTypeReference> typeReferences = new HashMap<>( 2 );
 
 	/**
 	 * Constructor taking the needed references.
 	 */
 	public PolymorphicObjectToJsonObjectTranslator( List<JsonTypeReference> theTypeReferences ) {
 		Preconditions.checkNotNull( theTypeReferences );
+		Preconditions.checkArgument( theTypeReferences.size( ) > 0, "Need at least one value type reference." );
 
 		for( JsonTypeReference typeReference : theTypeReferences ) {
 			Preconditions.checkArgument( !typeReferences.containsKey( typeReference.getType()), String.format( "Attempting to add type reference '%s' more than once.", typeReference.getType( ).getName()));

@@ -15,6 +15,8 @@
 // ***************************************************************************
 package com.tales.serialization.json.translators;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -23,9 +25,9 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
-
 import com.tales.parts.translators.TranslationException;
 import com.tales.parts.translators.Translator;
+import com.tales.serialization.json.JsonTypeReference;
 
 
 /**
@@ -35,11 +37,16 @@ import com.tales.parts.translators.Translator;
  *
  */
 public class MapToJsonArrayTranslator implements Translator {
+	private final Map<Class<?>, JsonTypeReference> keyTypeReferences = new HashMap<>( 2 );
+	private final Map<Class<?>, JsonTypeReference> valueTypeReferences = new HashMap<>( 2 );
+	
 	private final Translator keyTranslator;
 	private final Translator valueTranslator;
 	
 	/**
-	 * Constructor taking the needed translator.
+	 * Constructor taking just the translators needed for the map.
+	 * This constructor is used when only one type is possible for
+	 * each of the key and value types.
 	 */
 	public MapToJsonArrayTranslator( Translator theKeyTranslator, Translator theValueTranslator ) {
 		Preconditions.checkNotNull( theKeyTranslator );
@@ -47,6 +54,40 @@ public class MapToJsonArrayTranslator implements Translator {
 		
 		keyTranslator = theKeyTranslator;
 		valueTranslator = theValueTranslator;
+	}
+	
+	/**
+	 * Constructor taking the list of supported key and value types.
+	 */
+	public MapToJsonArrayTranslator( List<JsonTypeReference> theKeyTypeReferences, List<JsonTypeReference> theValueTypeReferences ) {
+		Preconditions.checkNotNull( theKeyTypeReferences );
+		Preconditions.checkArgument( theKeyTypeReferences.size( ) > 0, "Need at least one key type reference." );
+		Preconditions.checkNotNull( theValueTypeReferences );
+		Preconditions.checkArgument( theValueTypeReferences.size( ) > 0, "Need at least one value type reference." );
+
+		for( JsonTypeReference keyTypeReference : theKeyTypeReferences ) {
+			Preconditions.checkArgument( !valueTypeReferences.containsKey( keyTypeReference.getType()), String.format( "Attempting to add key type reference '%s' more than once.", keyTypeReference.getType( ).getName()));
+			keyTypeReferences.put( keyTypeReference.getType( ), keyTypeReference );
+		}
+		// if we only have one key type than pull out the translator directly 
+		// since it will speed things up at runtime during translation
+		if( theKeyTypeReferences.size() == 1 ) {
+			keyTranslator = theKeyTypeReferences.get( 0 ).getToJsonTranslator();
+		} else {
+			keyTranslator = null;
+		}
+		
+		for( JsonTypeReference valueTypeReference : theValueTypeReferences ) {
+			Preconditions.checkArgument( !valueTypeReferences.containsKey( valueTypeReference.getType()), String.format( "Attempting to add value type reference '%s' more than once.", valueTypeReference.getType( ).getName()));
+			valueTypeReferences.put( valueTypeReference.getType( ), valueTypeReference );
+		}
+		// if we only have one key type than pull out the translator directly 
+		// since it will speed things up at runtime during translation
+		if( theValueTypeReferences.size() == 1 ) {
+			valueTranslator = theValueTypeReferences.get( 0 ).getToJsonTranslator();
+		} else {
+			valueTranslator = null;
+		}
 	}
 
 	/**
@@ -64,11 +105,42 @@ public class MapToJsonArrayTranslator implements Translator {
 				Map<?,?> map = ( Map<?,?> )anObject;
 				JsonArray jsonArray = new JsonArray( );
 				JsonObject jsonEntry;
+				JsonTypeReference typeReference;
 				
 				for( Entry<?, ?> entry : map.entrySet() ) {
 					jsonEntry = new JsonObject();
-					jsonEntry.add( "key", ( JsonElement )keyTranslator.translate( entry.getKey() ) );
-					jsonEntry.add( "value", ( JsonElement )valueTranslator.translate( entry.getValue() ) );
+					
+					// translate the key side
+					if( keyTranslator == null ) { // meaning we have more than one so didn't pull out the only translator
+						// we need to find the translator to use
+						// then save out the key type
+						// and the key value
+						typeReference = keyTypeReferences.get( entry.getKey().getClass( ) );
+						if( typeReference == null ) {
+							throw new TranslationException( String.format( "An object of type '%s' was attempting to be converted to a json object as a key in a map, but this object isn't supported", entry.getKey().getClass( ).getName( ) ));
+						} else {
+							jsonEntry.addProperty( "key_type", typeReference.getName() );
+							jsonEntry.add( "key", ( JsonElement )typeReference.getToJsonTranslator().translate( entry.getKey( ) ) );
+						}
+					} else {
+						jsonEntry.add( "key", ( JsonElement )keyTranslator.translate( entry.getKey() ) );
+					}
+					
+					// translate the value side
+					if( valueTranslator == null ) { // meaning we have more than one so didn't pull out the only translator
+						// we need to find the translator to use
+						// then save out the key type
+						// and the key value
+						typeReference = valueTypeReferences.get( entry.getValue().getClass( ) );
+						if( typeReference == null ) {
+							throw new TranslationException( String.format( "An object of type '%s' was attempting to be converted to a json object as a value in a map, but this object isn't supported", entry.getValue().getClass( ).getName( ) ));
+						} else {
+							jsonEntry.addProperty( "value_type", typeReference.getName() );
+							jsonEntry.add( "value", ( JsonElement )typeReference.getToJsonTranslator().translate( entry.getValue( ) ) );
+						}
+					} else {
+						jsonEntry.add( "value", ( JsonElement )valueTranslator.translate( entry.getValue() ) );
+					}
 					jsonArray.add( jsonEntry );
 				}
 				returnValue = jsonArray;

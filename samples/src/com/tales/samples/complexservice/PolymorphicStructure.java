@@ -18,6 +18,7 @@ package com.tales.samples.complexservice;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Map;
 
 import com.tales.contracts.data.DataContract;
 import com.tales.contracts.data.DataMember;
@@ -34,6 +35,7 @@ public class PolymorphicStructure {
 	@DataMember( name = "polymorphic_member2", valueTypes = { ComplexStructure.class, SimpleStructure.class } ) Object polymorphicMember2;
 	@DataMember( name = "polymorphic_member3", valueTypes = { ComplexStructure.class, SimpleStructure.class } ) Collection<Object> polymorphicMember3;
 	@DataMember( name = "polymorphic_member4", valueTypes = { ComplexStructure.class, SimpleStructure.class } ) Object[] polymorphicMember4;
+	@DataMember( name = "polymorphic_member5", keyTypes = { Integer.class, String.class }, valueTypes = { ComplexStructure.class, SimpleStructure.class } ) Map<Object, Object> polymorphicMember5;
 	
 	private PolymorphicStructure( ) {		
 	}
@@ -49,5 +51,9 @@ public class PolymorphicStructure {
 		polymorphicMember4 = new Object[ 2 ];
 		polymorphicMember4[ 0 ] = theMember2;
 		polymorphicMember4[ 1 ] = theMember1;
+		
+		polymorphicMember5 = new HashMap<Object,Object>( );
+		polymorphicMember5.put( 1, theMember1 );
+		polymorphicMember5.put( "item2", theMember2 );
 	}
 }

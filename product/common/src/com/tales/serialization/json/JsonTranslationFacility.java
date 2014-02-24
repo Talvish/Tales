@@ -328,7 +328,7 @@ public final class JsonTranslationFacility implements Facility {
 						// we need to get translators made for each of the value types						
 						typeReference = getTypeReference( valueType.getType(), valueType.getGenericType( ) );		
 		                if( typeReference == null ) {
-							throw new IllegalStateException( String.format( "Type '%s' on field '%s.%s' could not be analyzed because the type reference could not be found.", valueType.getType(), theType.getName( ), field.getSite().getName( ) ) );
+							throw new IllegalStateException( String.format( "Element type '%s' on field '%s.%s' could not be analyzed because the type reference could not be found.", valueType.getType(), theType.getName( ), field.getSite().getName( ) ) );
 		                } else if( !memberNameValidator.isValid( field.getName( ) ) ) {
 		            		throw new IllegalStateException( String.format( "Field '%s.%s' is using the name '%s' that does not conform to validator '%s'.", reflectedType.getType().getName(), field.getSite().getName(), field.getName( ), memberNameValidator.getClass().getSimpleName() ) );
 		            	} else {
@@ -350,6 +350,46 @@ public final class JsonTranslationFacility implements Facility {
 								new CollectionToJsonArrayTranslator( new PolymorphicObjectToJsonObjectTranslator( valueTypeReferences ) ), 
 								new JsonArrayToCollectionTranslator( new JsonObjectToPolymorphicObjectTranslator( valueTypeReferences ), field.getSite().getType( ) ) ), typeMap ) );
 					}
+					
+				} else if( field.isMap( ) ) {
+					// this is a bit more interesting because maps already have
+					// an intermediate object holding key and value references so
+					// and also because there may be more than one value type but 
+					// not key type
+					
+					// first let's grab the value references
+					valueTypeReferences = new ArrayList<>( field.getValueTypes( ).size( ) );
+					for( ValueType<?,?> valueType : field.getValueTypes( ) ) {
+						// we need to get translators made for each of the value types						
+						typeReference = getTypeReference( valueType.getType(), valueType.getGenericType( ) );		
+		                if( typeReference == null ) {
+							throw new IllegalStateException( String.format( "Value type '%s' on field '%s.%s' could not be analyzed because the type reference could not be found.", valueType.getType(), theType.getName( ), field.getSite().getName( ) ) );
+		                } else if( !memberNameValidator.isValid( field.getName( ) ) ) {
+		            		throw new IllegalStateException( String.format( "Field '%s.%s' is using the name '%s' that does not conform to validator '%s'.", reflectedType.getType().getName(), field.getSite().getName(), field.getName( ), memberNameValidator.getClass().getSimpleName() ) );
+		            	} else {
+		            		valueTypeReferences.add( typeReference );
+		            	}
+					}
+					
+					// second, let's grab the key references
+					// first let's grab the type references
+					keyTypeReferences = new ArrayList<>( field.getKeyTypes( ).size( ) );
+					for( ValueType<?,?> keyType : field.getKeyTypes( ) ) {
+						// we need to get translators made for each of the key types						
+						typeReference = getTypeReference( keyType.getType(), keyType.getGenericType( ) );		
+		                if( typeReference == null ) {
+							throw new IllegalStateException( String.format( "Key type '%s' on field '%s.%s' could not be analyzed because the type reference could not be found.", keyType.getType(), theType.getName( ), field.getSite().getName( ) ) );
+		                } else if( !memberNameValidator.isValid( field.getName( ) ) ) {
+		            		throw new IllegalStateException( String.format( "Field '%s.%s' is using the name '%s' that does not conform to validator '%s'.", reflectedType.getType().getName(), field.getSite().getName(), field.getName( ), memberNameValidator.getClass().getSimpleName() ) );
+		            	} else {
+		            		keyTypeReferences.add( typeReference );
+		            	}
+					}
+					// okay so now we need to build the member reference
+					members.add( new JsonMemberMap( field, new TranslatedDataSite(
+							field.getSite(), 
+							new MapToJsonArrayTranslator( keyTypeReferences, valueTypeReferences ), 
+							new JsonArrayToMapTranslator( keyTypeReferences, valueTypeReferences, field.getSite( ).getType( ) ) ), typeMap ) );
 					
 				} else {
 					ValueType<?,?> valueType = field.getValueTypes( ).get( 0 );
