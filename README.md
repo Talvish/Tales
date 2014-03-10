@@ -9,7 +9,11 @@ There are a good number of capabilities in Tales and I aspire to document and cr
 
 This framework is one of the underpinnings of the services created at Getjar (http://www.getjar.com/). Getjar is a mobile monetization service supporting over 200 million users.
 
-The current version of Tales is in mid-update; I'm in the process of moving from Jetty 8.x/JDK 1.6 to Jetty 9.x/JDK 1.7. 
+The current version of Tales is in mid-update:
+a) In process of moving from Jetty 8.x/JDK 1.6 to Jetty 9.x/JDK 1.7
+b) Adding polymorphic data handling for transport/storage
+
+Right now the storage system is not compiling given recent changes that were pushed. 
 
 
 A bit of history
