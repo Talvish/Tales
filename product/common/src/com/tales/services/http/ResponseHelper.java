@@ -26,7 +26,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
@@ -58,7 +57,7 @@ public class ResponseHelper {
 	 * @param theMessage the message to indicate back to the caller
 	 */
 	public static void writeFailure( HttpServletRequest theRequest, HttpServletResponse theResponse, Status theStatusCode, String theMessage ) {
-		writeFailure( theRequest, theResponse, theStatusCode, null, theMessage, null );
+		_writeResponse( theRequest, theResponse, null, theStatusCode, null, theMessage, null );
 	}
 
 	/**
@@ -70,7 +69,7 @@ public class ResponseHelper {
 	 * @param theMessage the message to indicate back to the caller
 	 */
 	public static void writeFailure( HttpServletRequest theRequest, HttpServletResponse theResponse, Status theStatusCode, String theSubCode, String theMessage ) {
-		writeFailure( theRequest, theResponse, theStatusCode, theSubCode, theMessage, null );
+		_writeResponse( theRequest, theResponse, null, theStatusCode, theSubCode, theMessage, null );
 	}
 
 	/**
@@ -82,7 +81,7 @@ public class ResponseHelper {
 	 * @param theException the exception that indicates the the failure
 	 */
 	public static void writeFailure( HttpServletRequest theRequest, HttpServletResponse theResponse, Status theStatusCode,  String theMessage, Throwable theException ) {
-		writeFailure( theRequest, theResponse, theStatusCode, null, theMessage, theException );
+		_writeResponse( theRequest, theResponse, null, theStatusCode, null, theMessage, theException );
 	}
 
 	/**
@@ -95,7 +94,7 @@ public class ResponseHelper {
 	 * @param theException the exception that indicates the the failure
 	 */
 	public static void writeFailure( HttpServletRequest theRequest, HttpServletResponse theResponse, Status theStatusCode, String theSubcode, String theMessage, Throwable theException ) {
-		_writeFailure(theRequest, theResponse, theStatusCode, theSubcode, theMessage, theException);
+		_writeResponse(theRequest, theResponse, null, theStatusCode, theSubcode, theMessage, theException);
 	}
 
 	/**
@@ -107,53 +106,33 @@ public class ResponseHelper {
 	 * @param theMessage the message to indicate back to the caller
 	 * @param theException the exception that indicates the the failure
 	 */
-	private static void _writeFailure( HttpServletRequest theRequest, HttpServletResponse theResponse, Status theStatusCode, String theSubcode, String theMessage, Throwable theException ) {
+	private static void _writeResponse( HttpServletRequest theRequest, HttpServletResponse theResponse, JsonElement theObject, Status theCode, String theSubcode, String theMessage, Throwable theException ) {
 		try {
 			;
-			// TODO: ensure it is an error code coming in . . .
 			Preconditions.checkNotNull( theResponse, "Need a response object." );
-			Preconditions.checkNotNull( theStatusCode, "Need a failure status code." );
+			Preconditions.checkNotNull( theCode, "Need a status code." );
 			
 			OperationContext operationContext = ( OperationContext )theRequest.getAttribute( AttributeConstants.OPERATION_REQUEST_CONTEXT );
 
 			// get the status code to use based on the error from the communication request
-			theResponse.setStatus( HttpStatus.convert( theStatusCode ).getCode( ) );
+			theResponse.setStatus( HttpStatus.convert( theCode ).getCode( ) );
 			setCommonHeaders( theResponse );
-			
+
 			JsonObject bodyObject = new JsonObject( );
-			JsonObject errorObject = new JsonObject( );
+
+			// add the main value/result to return
+			bodyObject.add( "return", theObject );
+			// now add all the operation related values
+			addResultMetadata( theRequest, operationContext, theCode, theSubcode, theMessage, theException, bodyObject );			
 			
-			errorObject.addProperty( "code", theStatusCode.toString() );
-			if( !Strings.isNullOrEmpty( theSubcode ) ) {
-				errorObject.addProperty( "subcode", theSubcode );
-			}
-			errorObject.addProperty( "message", theMessage );
-			if( theException != null ) {
-				JsonObject exceptionObject = new JsonObject( );
-				
-				exceptionObject.addProperty( "type", theException.getClass().getName( ) );
-				exceptionObject.addProperty( "message", theException.getMessage( ) );
-
-				if( operationContext.getResponseDetails().equals( Details.ALL)) {
-					  StringWriter stackTraceWriter = new StringWriter( );
-					  theException.printStackTrace( new PrintWriter( stackTraceWriter ) );
-					  exceptionObject.addProperty( "stack_trace", stackTraceWriter.toString( ) );
-				}
-				errorObject.add( "exception", exceptionObject );
-			}
-			bodyObject.add( "error", errorObject );
-
-			// now add the operation object and send out the resposne
 			Gson targetGson = operationContext.getResponseTarget() == Readability.HUMAN ? humanGson: machineGson;
-
-			addOperation( theRequest, operationContext, bodyObject );			
 			theResponse.getWriter().write( targetGson.toJson( bodyObject ) );
 			
 		} catch( Exception e ) {
 			// if we cannot write back, then we have to log
 			// and we need to build up some form of alert and send as well
 			logger.warn(
-					String.format( "An error occurred while attempting to send a failure of type '%s' with message '%s' to the caller.", theStatusCode, theMessage ),
+					String.format( "An error occurred while attempting to send a response of type '%s' with message '%s' to the caller.", theCode, theMessage ),
 					e );
 		}
 		// IF we have DEBUG turned on then we can 
@@ -166,8 +145,6 @@ public class ResponseHelper {
 
 	}
 
-	// TODO: consider a Success object which is taken the success case
-	// 		 they are: OK, OK CREATED, OK_ASYC
 	/**
 	 * Shared helper method to write a success response to the caller, that has no data.
 	 * @param theFailure the type of failure seen
@@ -175,7 +152,7 @@ public class ResponseHelper {
 	 * @param theException the exception that indicates the the failure
 	 */
 	public static void writeSuccess( HttpServletRequest theRequest, HttpServletResponse theResponse) {
-		writeSuccess( theRequest, theResponse, new JsonObject( ) );
+		_writeResponse( theRequest, theResponse, new JsonObject( ), Status.OPERATION_COMPLETED, null, null, null );
 	}
 	
 	/**
@@ -186,52 +163,9 @@ public class ResponseHelper {
 	 * @param theException the exception that indicates the the failure
 	 */
 	public static void writeSuccess( HttpServletRequest theRequest, HttpServletResponse theResponse, JsonElement theObject ) {
-		try {
-			Preconditions.checkNotNull( theResponse, "Need a response object." );
-			Preconditions.checkNotNull( theObject, "Need an object to write back." );
-
-			_writeSuccess( theRequest, theResponse, Status.OPERATION_COMPLETED, theObject );
-			
-		} catch( Exception e ) {
-			// if we cannot write back, then we have to log
-			// and we need to build up some form of alert and send as well
-			logger.warn( "An error occurred while attempting to send a success to the caller", e ); 
-		}
+		_writeResponse( theRequest, theResponse, theObject, Status.OPERATION_COMPLETED, null, null, null );
 	}
 	
-	/**
-	 * Shared helper method to write a success response to the caller.
-	 * @param theResponse The response object used to write back to the caller
-	 */
-	private static void _writeSuccess( HttpServletRequest theRequest, HttpServletResponse theResponse, Status theStatusCode, JsonElement theObject ) {
-		try {
-			theResponse.setStatus( HttpStatus.convert( theStatusCode ).getCode( ) );
-			setCommonHeaders( theResponse );
-			
-			JsonObject bodyObject = new JsonObject( );
-			bodyObject.add( "return", theObject );			
-
-			// now save out the operation and write the response
-			OperationContext operationContext = ( OperationContext )theRequest.getAttribute( AttributeConstants.OPERATION_REQUEST_CONTEXT );
-			Gson targetGson = operationContext.getResponseTarget() == Readability.HUMAN ? humanGson: machineGson;
-
-			addOperation( theRequest, operationContext, bodyObject );
-			theResponse.getWriter().write( targetGson.toJson( bodyObject ) );
-			
-		} catch( Exception e ) {
-			// if we cannot write back, then we have to log
-			// and we need to build up some form of alert and send as well
-			logger.warn( "An error occurred while attempting to send a success to the caller", e ); 
-		}
-		// IF we have DEBUG turned on then we can 
-		//    send more over the wire
-		//    so DEBUG option is something we record 
-		//    for the response back
-		// so we need categorization of the type of failures we want to
-		// to send and the information we are going to send with it
-		// document what it is
-	}
-
 	/**
 	 * Writes out the response as given by the result from a resource method call.
 	 * @param theResult
@@ -245,22 +179,15 @@ public class ResponseHelper {
 		for( Entry<String,String> entry: theResult.getHeaders().entrySet() ) {
 			theResponse.addHeader( entry.getKey(), entry.getValue() );
 		}
-
-		if( theResult.failed() ) {
-			_writeFailure(
-					theRequest, 
-					theResponse, 
-					theResult.getStatusCode( ), 
-					theResult.getFailureSubcode(), 
-					theResult.getFailureMessage(), 
-					theResult.getFailureException() );
-		} else {
-			_writeSuccess( 
-					theRequest,
-					theResponse,
-					theResult.getStatusCode( ), 
-					theResult.getValue() );
-		}
+		
+		_writeResponse(
+				theRequest, 
+				theResponse, 
+				theResult.getValue( ),
+				theResult.getCode( ), 
+				theResult.getSubcode( ), 
+				theResult.getMessage( ), 
+				theResult.getException( ) );
 	}
 	
 	/**
@@ -268,9 +195,36 @@ public class ResponseHelper {
 	 * @param theContext the operation context of request 
 	 * @param theContainer the container json object to write the operation information into
 	 */
-	private static void addOperation( HttpServletRequest theRequest, OperationContext theContext, JsonObject theContainer ) {
+	private static void addResultMetadata( HttpServletRequest theRequest, OperationContext theContext, Status theCode, String theSubcode, String theMessage, Throwable theException, JsonObject theContainer ) {
 		JsonObject operationObject = new JsonObject( );
 
+		// first we work on the status object to add to the container
+		JsonObject statusObject = new JsonObject( );
+		
+		statusObject.addProperty( "code", theCode.toString() );
+
+		if( theSubcode != null ) {
+			statusObject.addProperty( "subcode", theSubcode );
+		}
+		if( theMessage != null ) {
+			statusObject.addProperty( "message", theMessage );
+		}
+		if( theException != null ) {
+			JsonObject exceptionObject = new JsonObject( );
+			
+			exceptionObject.addProperty( "type", theException.getClass().getName( ) );
+			exceptionObject.addProperty( "message", theException.getMessage( ) );
+
+			if( theContext.getResponseDetails().equals( Details.ALL)) {
+				  StringWriter stackTraceWriter = new StringWriter( );
+				  theException.printStackTrace( new PrintWriter( stackTraceWriter ) );
+				  exceptionObject.addProperty( "stack_trace", stackTraceWriter.toString( ) );
+			}
+			statusObject.add( "exception", exceptionObject );
+		}
+		theContainer.add( "status", statusObject );
+		
+		// then we look at the operation object to add to the container
 		operationObject.addProperty( "request_id", theContext.getCurrentRequestId( ) );
 		if( theContext.getResponseDetails() == Details.ALL ) {
 			operationObject.addProperty( "root_request_id", theContext.getRootRequestId( ) );

@@ -115,7 +115,7 @@ public class ConfigurationManager implements Facility {
 		try {
 			return ( String )setting.getValue( );
 		} catch( ClassCastException e ) {
-			throw new ConfigurationException( String.format( "The value for setting '%1$s' is not the requested type." ), e );
+			throw new ConfigurationException( String.format( "The value for setting '%1$s' is not the requested type.", theName ), e );
 		}
 	}
 
@@ -131,7 +131,7 @@ public class ConfigurationManager implements Facility {
 		try {
 			return ( String )setting.getValue( );
 		} catch( ClassCastException e ) {
-			throw new ConfigurationException( String.format( "The value for setting '%1$s' is not the requested type." ), e );
+			throw new ConfigurationException( String.format( "The value for setting '%1$s' is not the requested type.", theName ), e );
 		}
 	}
 	
@@ -146,7 +146,7 @@ public class ConfigurationManager implements Facility {
 		try {
 			return ( Integer )setting.getValue( );
 		} catch( ClassCastException e ) {
-			throw new ConfigurationException( String.format( "The value for setting '%1$s' is not the requested type." ), e );
+			throw new ConfigurationException( String.format( "The value for setting '%1$s' is not the requested type.", theName ), e );
 		}
 	}
 
@@ -162,7 +162,7 @@ public class ConfigurationManager implements Facility {
 		try {
 			return ( Integer )setting.getValue( );
 		} catch( ClassCastException e ) {
-			throw new ConfigurationException( String.format( "The value for setting '%1$s' is not the requested type." ), e );
+			throw new ConfigurationException( String.format( "The value for setting '%1$s' is not the requested type.", theName ), e );
 		}
 	}
 	
@@ -177,7 +177,7 @@ public class ConfigurationManager implements Facility {
 		try {
 			return ( Long )setting.getValue( );
 		} catch( ClassCastException e ) {
-			throw new ConfigurationException( String.format( "The value for setting '%1$s' is not the requested type." ), e );
+			throw new ConfigurationException( String.format( "The value for setting '%1$s' is not the requested type.", theName ), e );
 		}
 	}
 
@@ -193,7 +193,7 @@ public class ConfigurationManager implements Facility {
 		try {
 			return ( Long )setting.getValue( );
 		} catch( ClassCastException e ) {
-			throw new ConfigurationException( String.format( "The value for setting '%1$s' is not the requested type." ), e );
+			throw new ConfigurationException( String.format( "The value for setting '%1$s' is not the requested type.", theName ), e );
 		}
 	}
 	
@@ -208,7 +208,7 @@ public class ConfigurationManager implements Facility {
 		try {
 			return ( Double )setting.getValue( );
 		} catch( ClassCastException e ) {
-			throw new ConfigurationException( String.format( "The value for setting '%1$s' is not the requested type." ), e );
+			throw new ConfigurationException( String.format( "The value for setting '%1$s' is not the requested type.", theName ), e );
 		}
 	}
 
@@ -224,7 +224,7 @@ public class ConfigurationManager implements Facility {
 		try {
 			return ( Double )setting.getValue( );
 		} catch( ClassCastException e ) {
-			throw new ConfigurationException( String.format( "The value for setting '%1$s' is not the requested type." ), e );
+			throw new ConfigurationException( String.format( "The value for setting '%1$s' is not the requested type.", theName ), e );
 		}
 	}
 	
@@ -239,7 +239,7 @@ public class ConfigurationManager implements Facility {
 		try {
 			return ( Boolean )setting.getValue( );
 		} catch( ClassCastException e ) {
-			throw new ConfigurationException( String.format( "The value for setting '%1$s' is not the requested type." ), e );
+			throw new ConfigurationException( String.format( "The value for setting '%1$s' is not the requested type.", theName ), e );
 		}
 	}
 
@@ -255,7 +255,7 @@ public class ConfigurationManager implements Facility {
 		try {
 			return ( Boolean )setting.getValue( );
 		} catch( ClassCastException e ) {
-			throw new ConfigurationException( String.format( "The value for setting '%1$s' is not the requested type." ), e );
+			throw new ConfigurationException( String.format( "The value for setting '%1$s' is not the requested type.", theName ), e );
 		}
 	}
 	
@@ -270,7 +270,7 @@ public class ConfigurationManager implements Facility {
 		try {
 			return ( DateTime )setting.getValue( );
 		} catch( ClassCastException e ) {
-			throw new ConfigurationException( String.format( "The value for setting '%1$s' is not the requested type." ), e );
+			throw new ConfigurationException( String.format( "The value for setting '%1$s' is not the requested type.", theName ), e );
 		}
 	}
 	
@@ -286,7 +286,7 @@ public class ConfigurationManager implements Facility {
 		try {
 			return ( DateTime )setting.getValue( );
 		} catch( ClassCastException e ) {
-			throw new ConfigurationException( String.format( "The value for setting '%1$s' is not the requested type." ), e );
+			throw new ConfigurationException( String.format( "The value for setting '%1$s' is not the requested type.", theName ), e );
 		}
 	}
 
@@ -303,7 +303,7 @@ public class ConfigurationManager implements Facility {
 		try {
 			return ( List<T> )setting.getValue( );
 		} catch( ClassCastException e ) {
-			throw new ConfigurationException( String.format( "The value for setting '%1$s' is not the requested type." ), e );
+			throw new ConfigurationException( String.format( "The value for setting '%1$s' is not the requested type.", theName ), e );
 		}
 	}
  	
@@ -321,7 +321,7 @@ public class ConfigurationManager implements Facility {
 		try {
 			return ( Map<K,V> )setting.getValue( );
 		} catch( ClassCastException e ) {
-			throw new ConfigurationException( String.format( "The value for setting '%1$s' is not the requested type." ), e );
+			throw new ConfigurationException( String.format( "The value for setting '%1$s' is not the requested type.", theName ), e );
 		}
 	}
 

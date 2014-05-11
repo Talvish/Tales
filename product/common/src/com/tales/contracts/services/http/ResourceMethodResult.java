@@ -35,35 +35,52 @@ public class ResourceMethodResult extends HttpResult<JsonElement> {
 		Preconditions.checkNotNull( theOriginal, "the original result must not be null" );
 		this.value = theValue;
 		this.headers = theOriginal.headers;
-		this.statusCode = theOriginal.statusCode;
-		this.failureSubcode = theOriginal.failureSubcode;
-		this.failureMessage = theOriginal.failureMessage;
-		this.failureException = theOriginal.failureException;
+		this.code = theOriginal.code;
+		this.subcode = theOriginal.subcode;
+		this.message = theOriginal.message;
+		this.exception = theOriginal.exception;
 	}
 
 
 	ResourceMethodResult( JsonElement theValue ) {
 		Preconditions.checkNotNull( theValue, "need a value" );
 		this.value = theValue;
-		this.statusCode = Status.OPERATION_COMPLETED;
-		this.failureSubcode = null;
-		this.failureMessage = null;
-		this.failureException = null;
+		this.code = Status.OPERATION_COMPLETED;
+		this.subcode = null;
+		this.message = null;
+		this.exception = null;
 	}
 
 	/**
-	 * Constructor for the failure case.
+	 * Constructor typically for the failure case.
 	 * @param theFailure the reason for the failure
-	 * @param theFailureSubcode a code, handler specific, outlining the problem
-	 * @param theFailureMessage the failure message to display
-	 * @param theFailureException the exception, which may be null
+	 * @param theSubcode a code, handler specific, outlining the problem
+	 * @param theMessage the failure message to display
+	 * @param theException the exception, which may be null
 	 */
-	ResourceMethodResult( Status theFailure, String theFailureSubcode, String theFailureMessage, Throwable theFailureException ) {
-		Preconditions.checkNotNull( theFailure, "need a failure value" );
+	ResourceMethodResult( Status theCode, String theSubcode, String theMessage, Throwable theException ) {
+		Preconditions.checkNotNull( theCode, "need a status code" );
 		this.value = null;
-		this.statusCode = theFailure;
-		this.failureSubcode = theFailureSubcode;
-		this.failureMessage = theFailureMessage;
-		this.failureException = theFailureException;
+		this.code = theCode;
+		this.subcode = theSubcode;
+		this.message = theMessage;
+		this.exception = theException;
+	}
+
+	/**
+	 * Constructor typically for the failure case.
+	 * @param theFailure the reason for the failure
+	 * @param theSubcode a code, handler specific, outlining the problem
+	 * @param theMessage the failure message to display
+	 * @param theException the exception, which may be null
+	 */
+	ResourceMethodResult( JsonElement theValue, Status theCode, String theSubcode, String theMessage, Throwable theException ) {
+		Preconditions.checkNotNull( theValue, "need a value" );
+		Preconditions.checkNotNull( theCode, "need a status code" );
+		this.value = null;
+		this.code = theCode;
+		this.subcode = theSubcode;
+		this.message = theMessage;
+		this.exception = theException;
 	}
 }

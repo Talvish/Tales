@@ -850,7 +850,7 @@ public class ResourceMethod extends Subcontract {
 					this.getName( ), 
 					( ( double )executionTime ) * 0.000001, 
 					loggedParameters,
-					result == null ? "unknown" : result.getStatusCode(),
+					result == null ? "unknown" : result.getCode(),
 					loggedParameterBuilder.toString() } );
 		}
 		return result;

@@ -334,7 +334,7 @@ public final class ResourceFacility implements Facility {
 					"Remapped a response for '%s.%s' to status '%s' with message: %s", 
 					theMethod.getResourceType().getType().getSimpleName(), 
 					theMethod.getMethod( ).getName( ),
-					result.getStatusCode( ),
+					result.getCode( ),
 					theException.getMessage() ) );
 		}
 

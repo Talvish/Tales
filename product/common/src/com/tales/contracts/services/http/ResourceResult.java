@@ -43,29 +43,46 @@ public class ResourceResult<T> extends HttpResult<T> {
 	}
 	
 	/**
-	 * Sets the HTTP status code to return.
+	 * Sets the value and HTTP status.
 	 * @param theStatus the status value to use.
 	 */
-	public void setSuccess( Status theStatusCode, T theValue ) {
+	public void setResult( T theValue, Status theStatusCode ) {
 		Preconditions.checkNotNull( theStatusCode, "need a status code" );
 		Preconditions.checkArgument( !theStatusCode.isFailure( ), "the status code must not be a failure" );
-		this.statusCode = theStatusCode;
+		this.code = theStatusCode;
 		this.value = theValue;
 	}
 	
 	/**
-	 * Sets the failure case for the result.
+	 * Sets the HTTP status, along with a lot of status information.
 	 * @param theStatusCode the reason for the failure
 	 * @param theStatusSubcode a code, handler specific, outlining the problem
 	 * @param theFailureMessage the failure message to display
 	 * @param theFailureException the exception, which may be null
 	 */
-	public void setFailure( Status theStatusCode, String theStatusSubcode, String theFailureMessage, Throwable theFailureException ) {
+	public void setResult( Status theStatusCode, String theStatusSubcode, String theFailureMessage, Throwable theFailureException ) {
 		Preconditions.checkNotNull( theStatusCode, "need a status code" );
 		Preconditions.checkArgument(  theStatusCode.isFailure( ), "the status code must be a failure" );
-		this.statusCode = theStatusCode;
-		this.failureSubcode = theStatusSubcode;
-		this.failureMessage = theFailureMessage;
-		this.failureException = theFailureException;
+		this.code = theStatusCode;
+		this.subcode = theStatusSubcode;
+		this.message = theFailureMessage;
+		this.exception = theFailureException;
+	}
+	
+	/**
+	 * Sets the value, HTTP status, along with a lot of status information.
+	 * @param theStatusCode the reason for the failure
+	 * @param theStatusSubcode a code, handler specific, outlining the problem
+	 * @param theFailureMessage the failure message to display
+	 * @param theFailureException the exception, which may be null
+	 */
+	public void setResult( T theValue, Status theStatusCode, String theStatusSubcode, String theFailureMessage, Throwable theFailureException ) {
+		Preconditions.checkNotNull( theStatusCode, "need a status code" );
+		Preconditions.checkArgument(  theStatusCode.isFailure( ), "the status code must be a failure" );
+		this.value = theValue;
+		this.code = theStatusCode;
+		this.subcode = theStatusSubcode;
+		this.message = theFailureMessage;
+		this.exception = theFailureException;
 	}
 }

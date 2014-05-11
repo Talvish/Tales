@@ -39,12 +39,10 @@ public abstract class HttpResult<T> {
 	
 	// share items 
 	protected Map<String,String> headers = new HashMap<String,String>( );
-	protected Status statusCode = Status.UNKNOWN;
-	
-	// failure items
-	protected String failureSubcode;
-	protected String failureMessage;
-	protected Throwable failureException;
+	protected Status code = Status.UNKNOWN;
+	protected String subcode;
+	protected String message;
+	protected Throwable exception;
 	
 	private static final String[] defaultCachingEnabledOptions = new String[] { HeaderConstants.CACHE_CONTROL_PUBLIC_DIRECTIVE };
 	
@@ -121,42 +119,32 @@ public abstract class HttpResult<T> {
 	 * The overall status code.
 	 * @return The status code.
 	 */
-	public Status getStatusCode( ) {
-		return statusCode;
-	}
-	
-	// ******* below are failure items
-	
-	/**
-	 * Indicates if the result is a failure.
-	 * @return true if a failure, false otherwise
-	 */
-	public boolean failed( ) {
-		return statusCode.isFailure( );
+	public Status getCode( ) {
+		return code;
 	}
 	
 	/**
-	 * The failure subcode, which is a simple free-form
+	 * The  subcode, which is a simple free-form
 	 * value that the handler of the request can return.
-	 * @return the failure subcode
+	 * @return the subcode
 	 */
-	public String getFailureSubcode( ) {
-		return failureSubcode;
+	public String getSubcode( ) {
+		return subcode;
 	}
 	
 	/**
 	 * An exception, which is non-null if an exception occurred.
 	 * @return the failure exception or null
 	 */
-	public Throwable getFailureException( ) {
-		return failureException;
+	public Throwable getException( ) {
+		return exception;
 	}
 	
 	/**
-	 * The failure message to display.
+	 * The message to display.
 	 * @return the failure message, which may also be null.
 	 */
-	public String getFailureMessage( ) {
-		return failureMessage;
+	public String getMessage( ) {
+		return message;
 	}
 }
