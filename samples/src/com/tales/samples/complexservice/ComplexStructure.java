@@ -29,6 +29,7 @@ public class ComplexStructure {
 	@DataMember( name = "structure_member" ) SimpleStructure structureMember;
 	@DataMember( name = "integer_member" ) private Integer integerMember;
 	
+	@SuppressWarnings("unused")
 	private ComplexStructure( ) {		
 	}
 	

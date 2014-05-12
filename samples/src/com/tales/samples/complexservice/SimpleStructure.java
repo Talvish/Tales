@@ -30,6 +30,7 @@ public class SimpleStructure {
 	@DataMember( name="long_member" ) private Long longMember		= null;
 	@DataMember( name="float_member" ) private float floatMember	= 1.0f; 
 	
+	@SuppressWarnings("unused")
 	private SimpleStructure( ) {		
 	}
 	

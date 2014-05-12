@@ -269,6 +269,14 @@ public class ContractsServlet extends AdministrationServlet {
 				for( JsonMemberMap memberMap : typeMap.getMembers( ) ) {
 					typeMemberObject = new JsonObject( );
 					typeMemberObject.addProperty( "name", memberMap.getReflectedField().getName( ) );
+					if( memberMap.getReflectedField().isMap( ) ) { // we are a hashmap of some kind
+						// we have key types, value types
+					} else if( memberMap.getReflectedField( ).isCollection() ) { // we are an array or collection
+						// we have value types
+					} else { // we are an object
+						//
+					}
+				
 					// TODO: more than one type actually exists here, so we need to re-think this
 					typeMemberObject.addProperty( "type", theJsonFacility.generateTypeName( memberMap.getReflectedField().getSite().getType(), memberMap.getReflectedField().getSite().getGenericType(), null ) );
 					typeMemberArray.add( typeMemberObject );

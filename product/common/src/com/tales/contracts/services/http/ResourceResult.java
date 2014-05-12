@@ -48,41 +48,85 @@ public class ResourceResult<T> extends HttpResult<T> {
 	 */
 	public void setResult( T theValue, Status theStatusCode ) {
 		Preconditions.checkNotNull( theStatusCode, "need a status code" );
-		Preconditions.checkArgument( !theStatusCode.isFailure( ), "the status code must not be a failure" );
 		this.code = theStatusCode;
 		this.value = theValue;
-	}
-	
-	/**
-	 * Sets the HTTP status, along with a lot of status information.
-	 * @param theStatusCode the reason for the failure
-	 * @param theStatusSubcode a code, handler specific, outlining the problem
-	 * @param theFailureMessage the failure message to display
-	 * @param theFailureException the exception, which may be null
-	 */
-	public void setResult( Status theStatusCode, String theStatusSubcode, String theFailureMessage, Throwable theFailureException ) {
-		Preconditions.checkNotNull( theStatusCode, "need a status code" );
-		Preconditions.checkArgument(  theStatusCode.isFailure( ), "the status code must be a failure" );
-		this.code = theStatusCode;
-		this.subcode = theStatusSubcode;
-		this.message = theFailureMessage;
-		this.exception = theFailureException;
+		this.subcode = null;
+		this.message = null;
+		this.exception = null;
 	}
 	
 	/**
 	 * Sets the value, HTTP status, along with a lot of status information.
 	 * @param theStatusCode the reason for the failure
 	 * @param theStatusSubcode a code, handler specific, outlining the problem
-	 * @param theFailureMessage the failure message to display
-	 * @param theFailureException the exception, which may be null
+	 * @param theMessage the failure message to display
+	 * @param theException the exception, which may be null
 	 */
-	public void setResult( T theValue, Status theStatusCode, String theStatusSubcode, String theFailureMessage, Throwable theFailureException ) {
+	public void setResult( T theValue, Status theStatusCode, String theStatusSubcode, String theMessage ) {
 		Preconditions.checkNotNull( theStatusCode, "need a status code" );
-		Preconditions.checkArgument(  theStatusCode.isFailure( ), "the status code must be a failure" );
 		this.value = theValue;
 		this.code = theStatusCode;
 		this.subcode = theStatusSubcode;
-		this.message = theFailureMessage;
-		this.exception = theFailureException;
+		this.message = theMessage;
+		this.exception = null;
+	}
+	
+	/**
+	 * Sets the value, HTTP status, along with a lot of status information.
+	 * @param theStatusCode the reason for the failure
+	 * @param theStatusSubcode a code, handler specific, outlining the problem
+	 * @param theMessage the failure message to display
+	 * @param theException the exception, which may be null
+	 */
+	public void setResult( T theValue, Status theStatusCode, String theStatusSubcode, String theMessage, Throwable theException ) {
+		Preconditions.checkNotNull( theStatusCode, "need a status code" );
+		this.value = theValue;
+		this.code = theStatusCode;
+		this.subcode = theStatusSubcode;
+		this.message = theMessage;
+		this.exception = theException;
+	}
+
+	/**
+	 * Sets the HTTP status, along with a lot of status information.
+	 * @param theStatusCode the reason for the failure
+	 * @param theStatusSubcode a code, handler specific, outlining the problem
+	 * @param theMessage the failure message to display
+	 */
+	public void setResult( Status theStatusCode ) {
+		Preconditions.checkNotNull( theStatusCode, "need a status code" );
+		this.code = theStatusCode;
+		this.subcode = null;
+		this.message = null;
+		this.exception = null;
+	}
+	
+	/**
+	 * Sets the HTTP status, along with a lot of status information.
+	 * @param theStatusCode the reason for the failure
+	 * @param theStatusSubcode a code, handler specific, outlining the problem
+	 * @param theMessage the failure message to display
+	 */
+	public void setResult( Status theStatusCode, String theStatusSubcode, String theMessage ) {
+		Preconditions.checkNotNull( theStatusCode, "need a status code" );
+		this.code = theStatusCode;
+		this.subcode = theStatusSubcode;
+		this.message = theMessage;
+		this.exception = null;
+	}
+	
+	/**
+	 * Sets the HTTP status, along with a lot of status information.
+	 * @param theStatusCode the reason for the failure
+	 * @param theStatusSubcode a code, handler specific, outlining the problem
+	 * @param theMessage the failure message to display
+	 * @param theException the exception, which may be null
+	 */
+	public void setResult( Status theStatusCode, String theStatusSubcode, String theMessage, Throwable theException ) {
+		Preconditions.checkNotNull( theStatusCode, "need a status code" );
+		this.code = theStatusCode;
+		this.subcode = theStatusSubcode;
+		this.message = theMessage;
+		this.exception = theException;
 	}
 }

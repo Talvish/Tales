@@ -23,8 +23,6 @@ import com.tales.contracts.services.http.ResourceResult;
 import com.tales.services.Conditions;
 import com.tales.services.DependencyException;
 import com.tales.services.DependencyException.Problem;
-import com.tales.services.InvalidParameterException;
-import com.tales.services.InvalidStateException;
 import com.tales.services.Status;
 
 /***
@@ -41,7 +39,7 @@ public class ResponseResource {
 	public ResourceResult<String> returnCustomSuccess( @RequestParam( name="value" )String theValue ) {
 		ResourceResult<String> result = new ResourceResult<String>( );
 	
-		result.setSuccess( Status.OPERATION_CREATED, theValue );
+		result.setResult( theValue, Status.OPERATION_CREATED );
 		return result;
 	}
 	
@@ -54,7 +52,7 @@ public class ResponseResource {
 	
 		result.addHeader( "Custom-Header", "custom value" );
 		result.addHeader( "Accept-Language", "en-ca" );
-		result.setSuccess( Status.OPERATION_COMPLETED, null ); // since a void, null is the only acceptable value
+		result.setResult( Status.OPERATION_COMPLETED ); 
 		return result;
 	}
 	
@@ -65,7 +63,7 @@ public class ResponseResource {
 	public ResourceResult<String> returnCustomFailure( ) {
 		ResourceResult<String> result = new ResourceResult<String>( );
 	
-		result.setFailure( Status.CALLER_UNAUTHORIZED, "custom_error", "This call is unauthorized.", null);
+		result.setResult( Status.CALLER_UNAUTHORIZED, "custom_error", "This call is unauthorized.", null);
 		return result;
 	}
 

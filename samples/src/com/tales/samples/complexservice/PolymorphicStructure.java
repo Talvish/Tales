@@ -37,6 +37,7 @@ public class PolymorphicStructure {
 	@DataMember( name = "polymorphic_member4", valueTypes = { ComplexStructure.class, SimpleStructure.class } ) Object[] polymorphicMember4;
 	@DataMember( name = "polymorphic_member5", keyTypes = { Integer.class, String.class }, valueTypes = { ComplexStructure.class, SimpleStructure.class } ) Map<Object, Object> polymorphicMember5;
 	
+	@SuppressWarnings("unused")
 	private PolymorphicStructure( ) {		
 	}
 	
