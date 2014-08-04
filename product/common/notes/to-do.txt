@@ -1,0 +1,10 @@
+Multi-type contracts
+-------------------------
+- support the multi-type options for parameters and returns from operations
+  - need to have the key, value parameters for types
+  - the response object would need to be aware of the ResourceResult type to verify the type of result class works and can be cast to properly
+
+- need to support simple type translator support where there are names that need to be used as references in the multi-type objects and in the contract
+
+- profile: http://yourkit.com/home/index.jsp
+
