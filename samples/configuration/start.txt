@@ -1,2 +1,7 @@
 java -jar tales.simpleservice.jar -settings.file=settings.properties
 java -jar tales.userservice.jar -settings.file=settings.properties
+
+
+
+
+http://localhost:8081/service/contracts?version=20121221&override.response.readability=HUMAN

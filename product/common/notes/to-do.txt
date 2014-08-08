@@ -8,3 +8,11 @@ Multi-type contracts
 
 - profile: http://yourkit.com/home/index.jsp
 
+Switch Servlets Contacts to Resource Contracts
+------------------------------------------------
+Examples:
+/status/
+/status/status/values/{name}
+/status/interfaces/{name}
+/status/interfaces/{name}/status/contracts/{name}
+/status/interfaces/{name}/status/contracts/{name}/values/{name} 
