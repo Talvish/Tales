@@ -1,3 +1,9 @@
+# Directories #
+*/bin/*
+build/*
+bin
+
+# Compiled Files #
 *.class
 
 # Package Files #
