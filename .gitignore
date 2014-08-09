@@ -1,11 +1,12 @@
 # Directories #
-*/bin/*
-build/*
-bin
+bin/
+build/
+gen/
+target/
+tmp/
+.settings/
 
-# Compiled Files #
-*.class
-
-# Package Files #
-*.war
+# Java Compiled/Package Files #
 *.ear
+*.jar
+*.war

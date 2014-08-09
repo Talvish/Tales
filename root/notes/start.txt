@@ -1,0 +1,12 @@
+# cut and paste start
+java -jar tales.simpleservice.jar -settings.file=settings.properties
+java -jar tales.userservice.jar -settings.file=settings.properties
+
+
+# locations to remember
+http://localhost:8081/service/contracts?version=20121221&override.response.readability=HUMAN
+
+# helper links I need
+http://stackoverflow.com/questions/2022032/building-a-runnable-jar-with-maven-2
+https://search.maven.org/#search 
+http://central.sonatype.org/pages/requirements.html 

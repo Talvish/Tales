@@ -1,9 +1,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <artifactId>tales.common</artifactId>
+  <artifactId>tales.storage</artifactId>
   <packaging>jar</packaging>
-  <name>Tales Common Library</name>
-  <description>The base set of elements needed for tales.</description>
+  <name>Tales Storage Library</name>
+  <description>The storage library, which currently is HBase specific..</description>
   <url>https://github.com/Talvish/Tales</url>
  
   <parent>
@@ -36,39 +36,27 @@
     	<artifactId>guava-jdk5</artifactId>
 	</dependency>	
 	<dependency>
-	    <groupId>com.google.code.gson</groupId>
-    	<artifactId>gson</artifactId>
-	</dependency>
-	<dependency>
 	    <groupId>org.slf4j</groupId>
     	<artifactId>slf4j-api</artifactId>
 	</dependency>
 	
 	<dependency>
-    	<groupId>org.eclipse.jetty</groupId>
-    	<artifactId>jetty-client</artifactId>
-    	<version>9.2.2.v20140723</version>
-	</dependency>	
+    	<groupId>org.apache.hadoop</groupId>
+   		<artifactId>hadoop-core</artifactId>
+    	<version>1.0.0</version>
+    </dependency>
+	
 	<dependency>
-    	<groupId>org.eclipse.jetty</groupId>
-    	<artifactId>jetty-deploy</artifactId>
-    	<version>9.2.2.v20140723</version>
-	</dependency>	
-	<dependency>
-    	<groupId>org.eclipse.jetty</groupId>
-    	<artifactId>jetty-servlet</artifactId>
-    	<version>9.2.2.v20140723</version>
-	</dependency>
-	<dependency>
-    	<groupId>org.eclipse.jetty</groupId>
-    	<artifactId>jetty-servlets</artifactId>
-    	<version>9.2.2.v20140723</version>
-	</dependency>	
-		<dependency>
-    	<groupId>org.eclipse.jetty</groupId>
-    	<artifactId>jetty-jsp</artifactId>
-    	<version>9.2.2.v20140723</version>
+    	<groupId>org.apache.hbase</groupId>
+    	<artifactId>hbase</artifactId>
+    	<version>0.92.0</version>
 	</dependency>
 	
+	
+	<dependency>
+		<groupId>tales</groupId>
+		<artifactId>tales.common</artifactId>
+		<version>${project.version}</version>
+	</dependency>	
   </dependencies>  
 </project>
