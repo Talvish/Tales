@@ -300,12 +300,35 @@ public final class ResourceFacility implements Facility {
 				result = mapper.toResult( theMethod, theException );
 			}
 			
+			if( result == null ) {
+				String message = String.format( 
+						"Unmanaged exception '%s' occurred while running '%s.%s'.", 
+						theException.getClass( ).getSimpleName( ), 
+						theMethod.getResourceType().getType().getSimpleName(), 
+						theMethod.getMethod( ).getName( ) ); 
+				logger.error( message, theException );
+				result = new ResourceMethodResult( 
+						Status.LOCAL_ERROR, 
+						FailureSubcodes.UNHANDLED_EXCEPTION,
+						message,
+						theException );
+			} else {
+				// we don't log the exception here since it was elected to be handled
+				// we could consider moving to add configuration to switch is important
+				logger.info( String.format( 
+						"Remapped a response for '%s.%s' to status '%s' with message: %s", 
+						theMethod.getResourceType().getType().getSimpleName(), 
+						theMethod.getMethod( ).getName( ),
+						result.getCode( ),
+						theException.getMessage() ) );
+			}
+			
 		} catch( Exception e ) {
 			String message = String.format( 
 					 "While attempting to handle exception '%s', which occurred while running '%s.%s', exception '%s' occurred.", 
-					theException.getClass( ).getSimpleName( ), 
-					theMethod.getResourceType().getType().getSimpleName(), 
-					theMethod.getMethod( ).getName( ),
+					theException == null ? "<unknown>" : theException.getClass( ).getSimpleName( ), 
+					theMethod == null ? "<unknown>" : theMethod.getResourceType().getType().getSimpleName(), 
+					theMethod == null ? "<unknown>" : theMethod.getMethod( ).getName( ),
 					e.getClass( ).getSimpleName( ) ); 
 			logger.error( message, theException );
 			result = new ResourceMethodResult( 
@@ -313,29 +336,6 @@ public final class ResourceFacility implements Facility {
 					FailureSubcodes.UNHANDLED_EXCEPTION,
 					message,
 					theException );
-		}
-		
-		if( result == null ) {
-			String message = String.format( 
-					"Unmanaged exception '%s' occurred while running '%s.%s'.", 
-					theException.getClass( ).getSimpleName( ), 
-					theMethod.getResourceType().getType().getSimpleName(), 
-					theMethod.getMethod( ).getName( ) ); 
-			logger.error( message, theException );
-			result = new ResourceMethodResult( 
-					Status.LOCAL_ERROR, 
-					FailureSubcodes.UNHANDLED_EXCEPTION,
-					message,
-					theException );
-		} else {
-			// we don't log the exception here since it was elected to be handled
-			// we could consider moving to add configuration to switch is important
-			logger.info( String.format( 
-					"Remapped a response for '%s.%s' to status '%s' with message: %s", 
-					theMethod.getResourceType().getType().getSimpleName(), 
-					theMethod.getMethod( ).getName( ),
-					result.getCode( ),
-					theException.getMessage() ) );
 		}
 
 		return result;
