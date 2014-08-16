@@ -28,7 +28,7 @@
     </developer>
   </developers>
   <scm>
-    <connection>scm:git:git@github.com:Talvish/Tales.gitt</connection>
+    <connection>scm:git:git@github.com:Talvish/Tales.git</connection>
     <developerConnection>scm:git:git@github.com:example/Talvish/Tales.git</developerConnection>
     <url>git@github.com:Talvish/Tales.git</url>
   </scm>
