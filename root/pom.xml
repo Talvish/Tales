@@ -69,6 +69,7 @@
     <module>../samples/sample_multiversion_service</module>
     <module>../samples/sample_simple_service</module>
     <module>../samples/sample_user_service</module>
+    <module>../samples/sample_website_service</module>
   </modules>
     
 </project>

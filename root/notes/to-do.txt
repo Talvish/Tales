@@ -8,6 +8,10 @@ Multi-type contracts
 
 - profile: http://yourkit.com/home/index.jsp
 
+- consider adding some form of access-origin header support for resource servlet's automatically in case called by javascript
+  - see: http://www.w3.org/TR/cors/
+  - see: http://stackoverflow.com/questions/1653308/access-control-allow-origin-multiple-origin-domains/12414239#12414239 
+
 Switch Servlets Contacts to Resource Contracts
 ------------------------------------------------
 Examples:
