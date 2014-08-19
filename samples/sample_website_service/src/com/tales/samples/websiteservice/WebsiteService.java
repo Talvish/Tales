@@ -18,6 +18,7 @@ package com.tales.samples.websiteservice;
 import java.util.HashMap;
 
 import com.google.common.base.Strings;
+import com.tales.services.http.HttpInterface;
 import com.tales.services.http.HttpService;
 import com.tales.services.http.ServiceConstants;
 import com.tales.services.http.WebsiteInterface;
@@ -31,7 +32,7 @@ import com.tales.system.configuration.PropertySource;
 public class WebsiteService extends HttpService {
 
 	protected WebsiteService( ) {
-		super( "website_service", "Website Service", "A public tales service show a very simple website." );
+		super( "website_service", "Website Service", "A public tales service show a very simple website calling a service." );
 	}
 	
 	@Override
@@ -51,9 +52,14 @@ public class WebsiteService extends HttpService {
 		jspInitParameters.put( "keepgenerated", "TRUE" );
 		//jspInitParameters.put( "scratchdir", "generated_servlets" );
 
-		WebsiteInterface httpInterface = new WebsiteInterface( ServiceConstants.WEBSITE_INTERFACE_NAME, "website", jspInitParameters, this );
+		WebsiteInterface siteInterface = new WebsiteInterface( ServiceConstants.WEBSITE_INTERFACE_NAME, "website", jspInitParameters, this );
+		
+		this.interfaceManager.register( siteInterface );
+		
+		HttpInterface httpInterface = new HttpInterface( ServiceConstants.PUBLIC_INTERFACE_NAME, this );
 		
 		this.interfaceManager.register( httpInterface );
+		httpInterface.bind( new SimpleResource( ), "/simple_contract" );
 	}
 	
     public static void main( String[ ] args ) throws Exception {
