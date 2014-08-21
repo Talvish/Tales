@@ -18,6 +18,7 @@ package com.tales.samples.websiteservice;
 import java.util.HashMap;
 
 import com.google.common.base.Strings;
+import com.tales.services.OperationContext.Details;
 import com.tales.services.http.HttpInterface;
 import com.tales.services.http.HttpService;
 import com.tales.services.http.ServiceConstants;
@@ -50,11 +51,12 @@ public class WebsiteService extends HttpService {
 		
 		HashMap<String,String> jspInitParameters = new HashMap<String, String>( );
 		jspInitParameters.put( "keepgenerated", "TRUE" );
-		//jspInitParameters.put( "scratchdir", "generated_servlets" );
+		jspInitParameters.put( "scratchdir", "generated_servlets" );
 
 		WebsiteInterface siteInterface = new WebsiteInterface( ServiceConstants.WEBSITE_INTERFACE_NAME, "website", jspInitParameters, this );
 		
 		this.interfaceManager.register( siteInterface );
+		siteInterface.setDefaultResponseDetails( Details.ALL );
 		
 		HttpInterface httpInterface = new HttpInterface( ServiceConstants.PUBLIC_INTERFACE_NAME, this );
 		
