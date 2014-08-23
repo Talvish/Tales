@@ -51,6 +51,10 @@ public class ResourceMethodParameter {
 		 */
 		REQUEST,
 		/**
+		 * Parameter came from a cookie
+		 */
+		COOKIE,
+		/**
 		 * Parameter represents the context, such as HttpServletRequest or HttpServletResponse.
 		 */
 		CONTEXT,
@@ -100,7 +104,7 @@ public class ResourceMethodParameter {
 	}
 	
 	/**
-	 * Constructor called when there is a request parameter or header parameter referenced.
+	 * Constructor called when there is a request parameter, header or cookie parameter referenced.
 	 */
 	ResourceMethodParameter( ParameterSource theSource, Class<?> theType, Type theGenericType, int theMethodParamOffset, String theValueName, Translator theValueTranslator, boolean isSensitive, ResourceMethod theMethod ) {
 		this( theSource, theType, theGenericType, theMethodParamOffset, theValueName, -1, theValueTranslator, isSensitive, theMethod );
@@ -117,7 +121,7 @@ public class ResourceMethodParameter {
 		Preconditions.checkNotNull( theGenericType, "need a generic type" );
 		Preconditions.checkArgument( theMethodParamOffset >= 0, "need a non-negative parameter offset" );
 		Preconditions.checkArgument( theSource == ParameterSource.CONTEXT || ( theSource != ParameterSource.CONTEXT && !Strings.isNullOrEmpty( theValueName ) ), "need a value name" );
-		Preconditions.checkArgument( theSource == ParameterSource.HEADER || theSource == ParameterSource.CONTEXT || ( theSource != ParameterSource.HEADER && NameManager.getResourceMethodNameValidator().isValid( theValueName ) ), String.format( "Parameter '%s' on resource method '%s' does not conform to validator '%s'.", theValueName, theMethod.getName( ), NameManager.getResourceMethodNameValidator().getClass().getSimpleName() ) );
+		Preconditions.checkArgument( theSource == ParameterSource.HEADER || theSource == ParameterSource.COOKIE || theSource == ParameterSource.CONTEXT || ( theSource != ParameterSource.HEADER && NameManager.getResourceMethodNameValidator().isValid( theValueName ) ), String.format( "Parameter '%s' on resource method '%s' does not conform to validator '%s'.", theValueName, theMethod.getName( ), NameManager.getResourceMethodNameValidator().getClass().getSimpleName() ) );
 		Preconditions.checkArgument( theSource == ParameterSource.CONTEXT || ( theSource != ParameterSource.CONTEXT && theValueTranslator != null ), "need a translator" );
 		source = theSource;
 		type = theType;

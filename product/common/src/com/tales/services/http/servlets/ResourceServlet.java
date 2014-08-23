@@ -27,7 +27,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.google.common.base.Preconditions;
-
 import com.tales.contracts.ContractVersion;
 import com.tales.contracts.services.http.ResourceFacility;
 import com.tales.contracts.services.http.ResourceMethod;
@@ -182,7 +181,7 @@ public class ResourceServlet extends HttpServlet {
 //		}
 //	    // if one of the methods didn't run then we throw a failure back
 //		if( result == null ) {
-//			ResponseHelper.writeFailure(theRequest, theResponse, Failure.CALLER_NOT_FOUND, FailureSubcodes.UNKNOWN_REQUEST, String.format( "Could not find an appropriate operation to execte on '%s'.", resourceType.getRootPath( ) ), null );
+//			ResponseHelper.writeFailure(theRequest, theResponse, Failure.CALLER_NOT_FOUND, FailureSubcodes.UNKNOWN_REQUEST, String.format( "Could not find an appropriate operation to execute on '%s'.", resourceType.getRootPath( ) ), null );
 //		}
 //   	}
 	
@@ -262,7 +261,7 @@ public class ResourceServlet extends HttpServlet {
 
 		// if one of the methods didn't run then we throw a failure back
 		if( result == null ) {
-			ResponseHelper.writeFailure(theRequest, theResponse, Status.CALLER_NOT_FOUND, FailureSubcodes.UNKNOWN_REQUEST, String.format( "Could not find an appropriate operation to execte on '%s'.", resourceType.getRootPath( ) ), null );
+			ResponseHelper.writeFailure(theRequest, theResponse, Status.CALLER_NOT_FOUND, FailureSubcodes.UNKNOWN_REQUEST, String.format( "Path '%s' maps to resource '%s' but an operation could not be found.", theRequest.getRequestURL().toString( ), this.resourceType.getName( ) ), null );
 		}
    	}
 	

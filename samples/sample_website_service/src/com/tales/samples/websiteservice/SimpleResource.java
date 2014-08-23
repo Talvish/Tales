@@ -15,6 +15,10 @@
 // ***************************************************************************
 package com.tales.samples.websiteservice;
 
+import com.google.common.base.Strings;
+
+import com.tales.contracts.services.http.CookieParam;
+import com.tales.contracts.services.http.HeaderParam;
 import com.tales.contracts.services.http.RequestParam;
 import com.tales.contracts.services.http.ResourceContract;
 import com.tales.contracts.services.http.ResourceOperation;
@@ -34,10 +38,10 @@ public class SimpleResource {
 	 * An HTTP GET operation that simple returns the string 'hello world'.
 	 */
 	@ResourceOperation( name="hello_world", path="GET : hello" )
-	public ResourceResult<String> hello( ) {
+	public ResourceResult<String> hello( @HeaderParam( name="Origin" )String theOrigin ) {
 		ResourceResult<String> result = new ResourceResult<String>();
 		result.setResult( "hello world", Status.OPERATION_COMPLETED );
-		result.addHeader( "Access-Control-Allow-Origin", "*" );
+		result.addHeader( "Access-Control-Allow-Origin", theOrigin );
 		
 		// TODO: make it so we can not have to do this origin setting thing
 		//       but instead make it so it validates 
@@ -53,10 +57,19 @@ public class SimpleResource {
 	 * @return
 	 */
 	@ResourceOperation( name="echo", path="GET | POST : echo")
-	public ResourceResult<String> echo( @RequestParam( name="value" )String theValue ) {
+	public ResourceResult<String> echo( @RequestParam( name="query_echo" )String theValue, @HeaderParam( name="Origin" )String theOrigin, @CookieParam(name = "cookie_echo") String theCookieValue ) {
 		ResourceResult<String> result = new ResourceResult<String>();
-		result.setResult( theValue, Status.OPERATION_COMPLETED );
-		result.addHeader( "Access-Control-Allow-Origin", "*" );
+		result.addHeader( "Access-Control-Allow-Origin", theOrigin );
+		
+		if( Strings.isNullOrEmpty( theCookieValue ) ) {
+			result.setResult( theValue, Status.OPERATION_COMPLETED );
+			
+		} else {
+			result.setResult( theCookieValue, Status.OPERATION_COMPLETED );
+			
+		}
+		
+		
 		
 		// TODO: make it so we can not have to do this origin setting thing
 		//       but instead make it so it validates 

@@ -18,6 +18,9 @@ package com.tales.services.http;
 import javax.servlet.Servlet;
 import javax.servlet.http.HttpServletRequest;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.tales.contracts.services.http.HttpContract;
@@ -37,6 +40,8 @@ import com.tales.services.http.servlets.ResourceServlet;
  *
  */
 public class HttpInterface extends HttpInterfaceBase {
+	private static final Logger logger = LoggerFactory.getLogger( HttpInterfaceBase.class );
+	
 	/**
 	 * Constructor taking the items needed for the interface to start.
 	 * @param theName the name given to the interface
@@ -111,21 +116,32 @@ public class HttpInterface extends HttpInterfaceBase {
         Preconditions.checkState( !Strings.isNullOrEmpty( contractAnnotation.name() ), "must have a contract name" );
 		Preconditions.checkState( contractAnnotation.versions() != null && contractAnnotation.versions().length > 0, "must have at least one version" );
 
-    	// pull out the information from the object about what methods are being exposed
-		ResourceFacility resourceFacility = this.getService( ).getFacility( ResourceFacility.class );
-    	ResourceType resourceType = resourceFacility.generateResource( theResource, theRoot );
-    	// we need to create the servlet we will run within
-    	ResourceServlet servlet = new ResourceServlet( theResource, resourceType, resourceFacility, theKeySource );
     	// create a path that will ensure all methods on the object can run
-    	String path = resourceType.getRootPath( ); 
+    	String path = theRoot; 
     	if( path.endsWith( "/") ) {
     		path = path + "*";
     	} else if( !path.endsWith( "*" ) ) {
     		path = path + "/*";
     	} 
 
+    	String fullPath = this.getServletContext().getContextPath();
+    	if( fullPath.equals( "/" ) ) {
+    		fullPath = "";
+    	} else if( fullPath.endsWith( "/") ) {
+    		fullPath.substring( 0,  fullPath.length() - 2 );
+    	}
+    	fullPath = fullPath + path;
+		
+    	// pull out the information from the object about what methods are being exposed
+		ResourceFacility resourceFacility = this.getService( ).getFacility( ResourceFacility.class );
+    	ResourceType resourceType = resourceFacility.generateResource( theResource, fullPath );
+    	// we need to create the servlet we will run within
+    	ResourceServlet servlet = new ResourceServlet( theResource, resourceType, resourceFacility, theKeySource );
+    	
+    	logger.info( "Binding resource '{}' on interface '{}' to full path '{}'.", contractAnnotation.name(), this.getName(), fullPath );
+    	
     	// create the resource contract representing this
-    	HttpContract contract = new HttpResourceContract( contractAnnotation.name( ), contractAnnotation.description( ),contractAnnotation.versions( ), theResource, servlet, path, resourceType );
+    	HttpContract contract = new HttpResourceContract( contractAnnotation.name( ), contractAnnotation.description( ),contractAnnotation.versions( ), theResource, servlet, fullPath, resourceType );
     	// register for later validation
     	this.getContractManager( ).register( contract );
     	// and now properly save the servlet to a context

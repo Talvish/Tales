@@ -1,5 +1,5 @@
 // ***************************************************************************
-// *  Copyright 2012 Joseph Molnar
+// *  Copyright 2014 Joseph Molnar
 // *
 // *  Licensed under the Apache License, Version 2.0 (the "License");
 // *  you may not use this file except in compliance with the License.
@@ -21,15 +21,15 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * An indication that this is a parameter found on the query string or post body.
+ * An indication that this is a parameter found in a cookie.
  * @author jmolnar
  *
  */
 @Retention( RetentionPolicy.RUNTIME)
 @Target( ElementType.PARAMETER )
-public @interface HeaderParam {
+public @interface CookieParam {
 	/**
-	 * The name of the header.
+	 * The name of the cookie.
 	 */
     String name( );
     

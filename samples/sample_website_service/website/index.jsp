@@ -23,8 +23,10 @@
 
 <body>
     <div id="form">
-        <span id="label">echo: </span>
-        <input id="value" />
+        <span id="query_label">query: </span>
+        <input id="query_value" />
+        <span id="cookie_label">cookie: </span>
+        <input id="cookie_value" />
         <button id="submit">submit</button>
     </div>
     <div id="process"></div>
@@ -32,8 +34,11 @@
     <script>
     	$("#submit").click( function( ) {
     	    /** TODO: Not sure this encoding below is sufficient: http://stackoverflow.com/questions/6544564/url-encode-a-string-in-jquery-for-an-ajax-request **/
-    	    var echoValue = encodeURIComponent( $("#value").val( ) );
-    		var requestUrl = "<%=contractBaseURL%>/echo?value=" + echoValue + "&version=<%=contractVersion %>";
+    	    var queryValue = encodeURIComponent( $("#query_value").val( ) );
+    		var cookieValue = encodeURIComponent( $("#cookie_value").val( ) );
+    		var requestUrl = "<%=contractBaseURL%>/echo?query_echo=" + queryValue + "&version=<%=contractVersion %>";
+
+    		document.cookie="cookie_echo=" + cookieValue;
     		
     		$("#process").html( "request: " + requestUrl );
     		$("#output").html( "" );

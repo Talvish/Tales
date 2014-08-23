@@ -12,7 +12,36 @@ Multi-type contracts
   - see: http://www.w3.org/TR/cors/
   - see: http://stackoverflow.com/questions/1653308/access-control-allow-origin-multiple-origin-domains/12414239#12414239 
 
-Switch Servlets Contacts to Resource Contracts
+
+CORS Support
+------------
+- Ease the allow side by marking the resource as CORS aware
+- Verify the origin against a set of configurable origins
+- Make it so that if there is any form of error of any kind and there is an Origin header that it is sets the allows header
+- Don't set the allows header if there is no origin header
+
+Cookie Support
+--------------
+- Use resource annotation to indicate the method parameter should be set by a cookie
+- Make the cookie annotation handle not just returning the value, but the cookie itself
+- Make cookies part of the ResourceResult
+
+General Website handling
+---------------
+- Allow custom error handling pages
+- Allow binding websites (which could mean removing the WebsiteInterface)
+
+Signing Support
+-------------------
+- fix or remove what is there
+
+Async Support
+--------------------
+- Look at properly async handling and funneling
+
+
+
+Update Admin to use Resource Contracts
 ------------------------------------------------
 Examples:
 /status/

@@ -16,7 +16,6 @@
 package com.tales.services.http.servlets;
 
 import java.io.IOException;
-import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -29,17 +28,14 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import com.tales.contracts.services.http.ServletContract;
-import com.tales.parts.translators.Translator;
 import com.tales.serialization.Readability;
-import com.tales.services.Interface;
 import com.tales.services.OperationContext;
 import com.tales.services.Service;
 import com.tales.services.OperationContext.Details;
 import com.tales.services.http.AttributeConstants;
 import com.tales.services.http.ResponseHelper;
 import com.tales.system.alerts.Alert;
-import com.tales.system.status.StatusBlock;
-import com.tales.system.status.StatusValue;
+
 /**
  * This is a simple servlet that shows the alerts exposed by the associated service.
  * @author jmolnar

@@ -122,18 +122,14 @@ class HttpServletServer extends Server {
 				operationContext.getParentRequestId(),
 				operationContext.getCurrentRequestId() } );
 		super.handle(target, baseRequest, requestWrapper, response);
-
 		// error handling here isn't possible (try/catch around super.handle) since 
 		// jetty traps the exception prior to it coming back here
 
-		// NOTE: the following code doesn't seemn to work in Jetty 8.1.0 . . .
-		// but we can check to see if the request was handled and if not then we can
-		// put a custom response to this all so that jetty doesn't handle the response
-		// another we could have done this was to bind a pretend servlet to '/*' I believe
-		// since I believe the servlets with more specific mapping would generally pick up
-		// the item if it is bound to them ... but that didnt' feel quite right
+		
+		// the following code is a safety net should the nothing be able to service the request
+		// ideally this is called consistently, but can depend on the default servlet handling
 		if( !baseRequest.isHandled() ) {
-			ResponseHelper.writeFailure(requestWrapper, response, Status.CALLER_NOT_FOUND, FailureSubcodes.UNKNOWN_REQUEST, String.format( "unknown target '%s'", target ), null );
+			ResponseHelper.writeFailure(requestWrapper, response, Status.CALLER_NOT_FOUND, FailureSubcodes.UNKNOWN_REQUEST, String.format( "Path '%s' has not been assigned a context.", request.getRequestURL().toString( ) ), null );
 			this.boundInterface.getStatus().recordBadUrl();
 			baseRequest.setHandled( true );
 		}

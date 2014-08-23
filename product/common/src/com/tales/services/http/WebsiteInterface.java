@@ -31,7 +31,7 @@ import com.tales.services.Service;
  * @author Joseph Molnar
  *
  */
-public class WebsiteInterface extends HttpInterfaceBase {
+public class WebsiteInterface extends HttpInterface {
 
 	/**
 	 * Constructor taking parameters needed to start a website.
@@ -74,13 +74,13 @@ public class WebsiteInterface extends HttpInterfaceBase {
 		this.getServletContext().setClassLoader( Thread.currentThread().getContextClassLoader());
 
 		// first we setup the default contract/servlet for handling regular static images and files
-        HttpContract defaultContract = new HttpServletContract( theName + "_default", "The default servlet for handling non-JSP files", new String[] { "20130201" }, new DefaultServlet(), "/" );
+        HttpContract defaultContract = new HttpServletContract( theName + "_web_default", "The default servlet for handling non-JSP files", new String[] { "20130201" }, new DefaultServlet(), "/" );
     	this.getContractManager( ).register( defaultContract );
 		ContractServletHolder defaultHolder = new LaxContractServletHolder( defaultContract, this );
 		this.getServletContext().addServlet( defaultHolder, "/" );
 
 		// next we setup the jsp contract/servlet for handling jsp files
-        HttpContract jspContract = new HttpServletContract( theName + "_jsp", "The jsp servlet for handling JSP files", new String[] { "20130201" }, new JspServlet(), "/" );
+        HttpContract jspContract = new HttpServletContract( theName + "_web_jsp", "The jsp servlet for handling JSP files", new String[] { "20130201" }, new JspServlet(), "/" );
     	this.getContractManager( ).register( jspContract );
 		ContractServletHolder jspHolder = new LaxContractServletHolder( jspContract, this );
 		this.getServletContext().addServlet( jspHolder, "*.jsp" );

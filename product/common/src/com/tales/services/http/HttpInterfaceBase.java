@@ -35,6 +35,7 @@ import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.SslConnectionFactory;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletMapping;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Period;
@@ -46,11 +47,14 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.tales.contracts.services.ServiceContract;
 import com.tales.contracts.services.ContractManager;
+import com.tales.contracts.services.http.HttpContract;
+import com.tales.contracts.services.http.HttpServletContract;
 import com.tales.serialization.Readability;
 import com.tales.services.Interface;
 import com.tales.services.Service;
 import com.tales.services.ConfigurationConstants;
 import com.tales.services.OperationContext.Details;
+import com.tales.services.http.servlets.DefaultServlet;
 import com.tales.system.ExecutionLifecycleException;
 import com.tales.system.ExecutionLifecycleListener;
 import com.tales.system.ExecutionLifecycleListeners;
@@ -67,8 +71,6 @@ import com.tales.system.status.StatusManager;
  *
  */
 public abstract class HttpInterfaceBase implements Interface {
-	// TODO: see if we can make a base class out of this
-	
 	/**
 	 * Stored information regarding the status of the interface.
 	 * @author jmolnar
@@ -475,6 +477,19 @@ public abstract class HttpInterfaceBase implements Interface {
 		logger.info( "Starting interface '{}' on {}.", this.name, endpointListHelper( ) );
 		this.listeners.onStarting( this, this.lifecycleState );
 		try {
+			// we see if we have a servlet covering the 'defaults' (items not explicitly mapped out)
+			ServletMapping mapping = this.getServletContext().getServletHandler().getServletMapping( "/" ); 
+			if( mapping == null ) {
+				// now set a default servlet handler
+		        HttpContract defaultContract = new HttpServletContract( this.name + "_default", "Default, error throwing, servlet.", new String[] { "20130201" }, new DefaultServlet(), "/" );
+		    	this.getContractManager( ).register( defaultContract );
+				ContractServletHolder defaultHolder = new LaxContractServletHolder( defaultContract, this );
+				this.getServletContext().addServlet( defaultHolder, "/" );
+				logger.info( "Default servlet handling for interface '{}' under context '{}' is handled by the default Tales servlet.", this.getName(), this.servletContext.getContextPath( ) );
+			} else {
+				logger.info( "Default servlet handling for interface '{}' under context '{}' is handled by '{}'.", this.getName(), this.servletContext.getContextPath( ), mapping.getServletName() );
+			}
+
 			server.start();
 		} catch( Exception e ) {
 			throw new ExecutionLifecycleException( "Unable to start the underlying server.", e );
@@ -601,15 +616,6 @@ public abstract class HttpInterfaceBase implements Interface {
 	 * @param theEndpoint the endpoint to bind to
 	 */
     private void addNonSecureConnector( String theConnectorName, HttpEndpoint theEndpoint, ConnectorConfiguration theConfiguration ) {
-    	addNonSecureConnector( theConnectorName, theEndpoint.getHost(), theEndpoint.getPort(), theConfiguration );
-    }
-    
-    /**
-	 * This method is called to setup the non-secure connectors needed.
-     * @param theConnectorName the name to give the connector
-     * @param thePort the port number to use
-	 */
-    private void addNonSecureConnector( String theConnectorName, String theHost, int thePort, ConnectorConfiguration theConfiguration ) {
     	// here is how to get setup
     	// http://git.eclipse.org/c/jetty/org.eclipse.jetty.project.git/tree/examples/embedded/src/main/java/org/eclipse/jetty/embedded/ManyConnectors.java
 
@@ -634,18 +640,18 @@ public abstract class HttpInterfaceBase implements Interface {
     	}
 
     	// if we have a host, set it so we bind to a particular interface
-    	if( !theHost.equals( "*" ) ) {
-    		connector.setHost( theHost );
+    	if( !theEndpoint.getHost( ).equals( "*" ) ) {
+    		connector.setHost( theEndpoint.getHost( ) );
     	}
     	// now setup the port and name
-    	connector.setPort( thePort );
+    	connector.setPort( theEndpoint.getPort() );
     	connector.setName( theConnectorName );
 
     	// now we add the connector to the server
     	server.addConnector( connector );
 
     	// display our configuration for the connector
-		displayConnectorConfiguration( connector, httpConfiguration, theConfiguration );
+		displayConnectorConfiguration( connector, theEndpoint, httpConfiguration, theConfiguration );
     }
 
 	/**
@@ -654,18 +660,6 @@ public abstract class HttpInterfaceBase implements Interface {
 	 * @param theEndpoint the end point to bind to
 	 */
     private void addSecureConnector( String theConnectorName, HttpEndpoint theEndpoint, ConnectorConfiguration theConfiguration ) {
-    	addSecureConnector( theConnectorName, theEndpoint.getHost(), theEndpoint.getPort(), theConfiguration );
-    }
-    
-    /**
-	 * This method is called to setup the secure connectors needed.
-     * @param theConnectorName the name to give the connector
-     * @param thePort the port number to use
-	 * @return returns the connector object for the port and string
-	 */
-    private void addSecureConnector( String theConnectorName, String theHost, int thePort, ConnectorConfiguration theConfiguration ) {
-    	Preconditions.checkState( this.sslFactory != null, "Cannot create a secure socket if an SSL factory/keystore is not available" );
-
     	// here is how to get setup
     	// http://wiki.eclipse.org/Jetty/Howto/Configure_SSL (older version)
     	// http://git.eclipse.org/c/jetty/org.eclipse.jetty.project.git/tree/examples/embedded/src/main/java/org/eclipse/jetty/embedded/ManyConnectors.java
@@ -675,7 +669,7 @@ public abstract class HttpInterfaceBase implements Interface {
     	
     	// still need to setup the default security items
     	httpConfiguration.setSecureScheme( "https");
-    	httpConfiguration.setSecurePort( thePort );
+    	httpConfiguration.setSecurePort( theEndpoint.getPort( ) );
     	httpConfiguration.addCustomizer( new SecureRequestCustomizer( ) );
 
     	// now we create our connector
@@ -697,18 +691,18 @@ public abstract class HttpInterfaceBase implements Interface {
     	}
 
     	// if we have a host, set it so we bind to a particular interface
-    	if( !theHost.equals( "*" ) ) {
-    		connector.setHost( theHost );
+    	if( !theEndpoint.getHost( ).equals( "*" ) ) {
+    		connector.setHost( theEndpoint.getHost( ) );
     	}
     	// now setup the port and name
-    	connector.setPort( thePort );
+    	connector.setPort( theEndpoint.getPort() );
     	connector.setName( theConnectorName );
 
     	// now we add the connector to the server
     	server.addConnector( connector );
 
     	// display our configuration for the connector
-		displayConnectorConfiguration( connector, httpConfiguration, theConfiguration );
+		displayConnectorConfiguration( connector, theEndpoint, httpConfiguration, theConfiguration );
     }
     
     private HttpConfiguration generateJettyHttpConfiguration( ConnectorConfiguration theConfiguration ) {
@@ -737,9 +731,10 @@ public abstract class HttpInterfaceBase implements Interface {
     /**
      * Helper method that sets the connector configuration options on the specific connector.
      * @param theConnector the connector to setup
+     * @param theEndpoint the endpoint that was configured
      * @param theConfigurationName the name of the set of configuration values to use to setup
      */
-    private void displayConnectorConfiguration( ServerConnector theConnector, HttpConfiguration theHttpConfiguration, ConnectorConfiguration theConfiguration ) {
+    private void displayConnectorConfiguration( ServerConnector theConnector, HttpEndpoint theEndpoint, HttpConfiguration theHttpConfiguration, ConnectorConfiguration theConfiguration ) {
     	Preconditions.checkNotNull( theConnector, "need a jetty connector to apply settings to" );
     	Preconditions.checkNotNull( theHttpConfiguration, "need jetty http configuration if you are going to apply it" );
     	Preconditions.checkNotNull( theConfiguration, "need configuration if you are going to apply it" );
@@ -811,6 +806,6 @@ public abstract class HttpInterfaceBase implements Interface {
 		settingBuffer.append( "\n\tSocket Linger Time (default): " );
 		settingBuffer.append( theConnector.getSoLingerTime( ) );
 
-    	logger.info( "Interface '{}' is using configuration: {}", this.getName(), settingBuffer.toString() );
+    	logger.info( "Interface '{}' on endpoint '{}' is using configuration: {}", this.getName(), theEndpoint.toString(), settingBuffer.toString() );
     }
 }

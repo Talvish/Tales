@@ -22,10 +22,12 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -209,6 +211,9 @@ public class ResourceMethod extends Subcontract {
 					
 					} else if( paramAnnotation instanceof HeaderParam ) {
 						parameter = generateHeaderParameter( ( HeaderParam )paramAnnotation, paramClass, paramType, paramCount, theResourceFacility );
+						
+					} else if( paramAnnotation instanceof CookieParam ) {
+						parameter = generateCookieParameter( ( CookieParam )paramAnnotation, paramClass, paramType, paramCount, theResourceFacility );
 
 					} else if( paramAnnotation instanceof ContextParam ) {
 						parameter = generateContextParameter( ( ContextParam )paramAnnotation, paramClass, paramType, paramCount, theResourceFacility );
@@ -490,6 +495,30 @@ public class ResourceMethod extends Subcontract {
 		}
 		return parameter;
 	}
+	
+	/**
+	 * Helper method that creates a parameter for a cookie reference.
+	 * @param theParamAnnotation the annotation for the cookie parameter
+	 * @param theParamType the type of the parameter
+	 * @param theParamIndex the index of the parameter in the list of the method's parameters
+	 * @return a parameter object
+	 */	
+	private ResourceMethodParameter generateCookieParameter( CookieParam theParamAnnotation, Class<?> theParamType, Type theParamGenericType, int theParamIndex, ResourceFacility theResourceFacility ) {
+		ResourceMethodParameter parameter;
+		
+		Translator translator;
+		String paramName;
+		paramName = ( ( CookieParam )theParamAnnotation ).name( );
+
+		// get the translator to use
+		translator = theResourceFacility.getFromParameterTranslator(theParamType, theParamGenericType);
+		if( translator == null ) {
+			throw new IllegalStateException( String.format( "Could not find a translator for parameter %s of type '%s' on method '%s.%s'.", theParamIndex + 1, theParamType.getSimpleName(), method.getDeclaringClass().getName(), method.getName() ) );
+		} else {
+			parameter = new ResourceMethodParameter( ParameterSource.COOKIE, theParamType, theParamGenericType, theParamIndex, paramName, translator, theParamAnnotation.sensitive(), this );
+		}
+		return parameter;
+	}
 
 	/**
 	 * Helper method that creates a parameter for a header reference.
@@ -725,6 +754,8 @@ public class ResourceMethod extends Subcontract {
 			String stringValue;
 			Object actualValue;
 			ParameterSource parameterSource;
+			HashMap<String, Cookie> cookieMap = null; // set to null since we don't always use it
+			
 			// NOTE: I could support the idea of default values here, which would be kind cool
 
 			// NOTE: if I want to support the idea of supporting overloads then I could
@@ -735,6 +766,8 @@ public class ResourceMethod extends Subcontract {
 			for( ResourceMethodParameter parameter : this.methodParameters ) {
 				try {
 					parameterSource = parameter.getSource( );
+					stringValue = null;
+					actualValue = null;
 					if( parameterSource == ParameterSource.CONTEXT ) {
 						// if we have a context parameter, we need to set the context value
 						if( parameter.getContextValue() == ContextValue.HTTP_REQUEST ) {
@@ -753,9 +786,32 @@ public class ResourceMethod extends Subcontract {
 						} else if( parameterSource == ParameterSource.REQUEST ) {
 							// this means it is a reference to a query string param or post body url encoded item
 							stringValue = theRequest.getParameter( parameter.getValueName() );
-						} else {
+						} else if( parameterSource == ParameterSource.HEADER ) {
 							// this means we have a header reference
 							stringValue = theRequest.getHeader( parameter.getValueName() );
+						} else if( parameterSource == ParameterSource.COOKIE ) {
+							if( cookieMap == null ) {
+								// if the cookie map hasn't been created, we cache the
+								// results since we might be looking for them again
+								Cookie[] cookies = theRequest.getCookies( );
+								if( cookies != null ) {
+									cookieMap = new HashMap<String, Cookie>( cookies.length );
+									
+									for( Cookie cookie : cookies ) {
+										cookieMap.put( parameter.getValueName(), cookie );
+									}
+								} else {
+									// the getCookies call can return null ...
+									cookieMap = new HashMap<String, Cookie>( 0 );
+								}
+							}
+							// we know the map was created and so we find the cookie
+							Cookie cookie = cookieMap.get( parameter.getValueName( ) );
+							if( cookie != null ) {
+								stringValue = cookie.getValue( );
+							}
+						} else {
+							throw new IllegalStateException( String.format( "Parameter '%s' for request '%s', using path '%s', is using an unsupported source of '%s'.", parameter.getValueName(), this.getName(), this.parameterPath, parameterSource ) );
 						}
 						
 						// the following is for logging purposes
