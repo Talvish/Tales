@@ -338,7 +338,8 @@ public abstract class HttpInterfaceBase implements Interface {
 			count += 1;
 		}
 		endpoints = Collections.unmodifiableCollection( modifiableEndpoints );
-		
+
+		// we need to setup the overall context
 		servletContext = new ServletContextHandler( server, "/", false, false ); // set the context on the root; no sessions, security
 
 		// now we set the max form content size based on the connector definition
@@ -350,12 +351,14 @@ public abstract class HttpInterfaceBase implements Interface {
 		} else {
     		logger.info( "Interface '{}' is set to use the default max form content size of '{}'.", this.name, servletContext.getMaxFormContentSize( ) );
 		}
-		contractManager = new ContractManager();
 		
 		// save these for servlets to access
 		servletContext.setAttribute( AttributeConstants.INTERFACE_SERVLET_CONTEXT, this );
 		servletContext.setAttribute( AttributeConstants.SERVICE_SERVLET_CONTEXT, service );
 
+		// make sure we have a contract manager
+		contractManager = new ContractManager();
+		
 		// get the status blocks setup
 		statusManager.register( "http_interface", status );
 	}
@@ -400,6 +403,13 @@ public abstract class HttpInterfaceBase implements Interface {
 		return this.service;
 	}
 	
+	/**
+	 * Returns the underlying Jetty server managing the servlets
+	 * @return the underlying Jetty server
+	 */
+	protected final HttpServletServer getServer( ) {
+		return this.server;
+	}
 	/**
 	 * Returns the status information for the interface.
 	 * @return
@@ -480,7 +490,7 @@ public abstract class HttpInterfaceBase implements Interface {
 			// we see if we have a servlet covering the 'defaults' (items not explicitly mapped out)
 			ServletMapping mapping = this.getServletContext().getServletHandler().getServletMapping( "/" ); 
 			if( mapping == null ) {
-				// now set a default servlet handler
+				// if we dont' have a default handler, we set one up to handle the 404
 		        HttpContract defaultContract = new HttpServletContract( this.name + "_default", "Default, error throwing, servlet.", new String[] { "20130201" }, new DefaultServlet(), "/" );
 		    	this.getContractManager( ).register( defaultContract );
 				ContractServletHolder defaultHolder = new LaxContractServletHolder( defaultContract, this );

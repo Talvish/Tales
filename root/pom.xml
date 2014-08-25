@@ -4,7 +4,7 @@
   <artifactId>tales.root</artifactId>
   <packaging>pom</packaging>
   <version>${version.main}-${version.build}</version>
-  <name>Tales Parent</name>
+  <name>Tales Root</name>
   <description>The parent project for tales.</description>
   <url>https://github.com/Talvish/Tales</url>
   

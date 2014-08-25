@@ -18,7 +18,7 @@ package com.tales.samples.websiteservice;
 import java.util.HashMap;
 
 import com.google.common.base.Strings;
-
+import com.tales.serialization.Readability;
 import com.tales.services.OperationContext.Details;
 import com.tales.services.http.HttpService;
 import com.tales.services.http.ServiceConstants;
@@ -51,19 +51,14 @@ public class WebsiteService extends HttpService {
 		
 		HashMap<String,String> jspInitParameters = new HashMap<String, String>( );
 		jspInitParameters.put( "keepgenerated", "TRUE" );
-		jspInitParameters.put( "scratchdir", "generated_servlets" );
 
 		WebsiteInterface siteInterface = new WebsiteInterface( ServiceConstants.PUBLIC_INTERFACE_NAME, "website", jspInitParameters, this );
 		
 		this.interfaceManager.register( siteInterface );
 		
 		siteInterface.setDefaultResponseDetails( Details.ALL );
+		siteInterface.setDefaultResponseReadability( Readability.HUMAN );
 		siteInterface.bind( new SimpleResource( ), "/simple_contract" );
-		
-		//HttpInterface httpInterface = new HttpInterface( ServiceConstants.PUBLIC_INTERFACE_NAME, this );
-		
-		//this.interfaceManager.register( httpInterface );
-		//httpInterface.bind( new SimpleResource( ), "/simple_contract" );
 	}
 	
     public static void main( String[ ] args ) throws Exception {

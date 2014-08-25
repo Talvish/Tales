@@ -33,6 +33,7 @@ import com.tales.contracts.services.http.ServletContract;
 import com.tales.services.KeySource;
 import com.tales.services.Service;
 import com.tales.services.http.servlets.ResourceServlet;
+import com.tales.system.ExecutionLifecycleState;
 
 /**
  * This class represents a host/port that servlets can be bound to. 
@@ -106,6 +107,7 @@ public class HttpInterface extends HttpInterfaceBase {
      * @param theRoot the root path being bound to
      */
     private void _bind( Object theResource, String theRoot, KeySource<HttpServletRequest> theKeySource ) {
+    	Preconditions.checkState( this.getState() == ExecutionLifecycleState.CREATED || this.getState() == ExecutionLifecycleState.STARTING, "Cannot bind to an interface '%s' while it is in the '%s' state.", this.getName(), this.getState( ) );
     	Preconditions.checkNotNull( theResource, "must provide a resource object ");
     	Preconditions.checkArgument( !Strings.isNullOrEmpty( theRoot ), "need a path to bind to" );
     	Preconditions.checkArgument( theRoot.startsWith( "/" ), "the path '%s' must be a reference from the root (i.e. start with '/')", theRoot );
@@ -138,7 +140,7 @@ public class HttpInterface extends HttpInterfaceBase {
     	// we need to create the servlet we will run within
     	ResourceServlet servlet = new ResourceServlet( theResource, resourceType, resourceFacility, theKeySource );
     	
-    	logger.info( "Binding resource '{}' on interface '{}' to full path '{}'.", contractAnnotation.name(), this.getName(), fullPath );
+    	logger.info( "Binding resource '{}' on interface '{}' to http path '{}'.", contractAnnotation.name(), this.getName(), fullPath );
     	
     	// create the resource contract representing this
     	HttpContract contract = new HttpResourceContract( contractAnnotation.name( ), contractAnnotation.description( ),contractAnnotation.versions( ), theResource, servlet, fullPath, resourceType );

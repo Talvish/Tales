@@ -29,6 +29,8 @@ Cookie Support
 General Website handling
 ---------------
 - Allow custom error handling pages
+  - servlet context's have error handlers (sent in the constructor) that can be set that could potentially handle this, could 
+    support a way to register a location to cover
 - Allow binding websites (which could mean removing the WebsiteInterface)
 
 Signing Support
