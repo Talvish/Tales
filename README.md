@@ -5,7 +5,7 @@ Tales is an extensible service framework built in Java that provides a) contract
 
 There are three primary objectives for this framework. I want service teams to a) concentrate on building core functionality instead of service scaffolding, b) manage services in a consistent fashion, and c) have the freedom to tailor the framework for their specific needs.
 
-There are a good number of capabilities in Tales and I aspire to document and create more samples over time. There are also updates I would like to make given the feedback and experience of seeing it in production use over the last couple of years. 
+There are a good number of capabilities in Tales and I aspire to document and create more samples over time. There are also updates I would like to make given the feedback and experience of seeing it in production use over the last few of years. 
 
 This framework is one of the underpinnings of the services created at Getjar (http://www.getjar.com/). Getjar is a mobile monetization service supporting over 200 million users.
 
@@ -13,7 +13,7 @@ The current version of Tales is in mid-update:
 a) In process of moving from Jetty 8.x/JDK 1.6 to Jetty 9.x/JDK 1.8, and 
 b) Adding polymorphic data handling for transport/storage
 
-Right now the storage system is not compiling given recent changes that were pushed and I don't expect to be update soon. 
+Note: Right now the storage system is not compiling and I don't expect to be updating it soon. 
 
 
 A bit of history
