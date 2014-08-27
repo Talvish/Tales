@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -42,6 +43,7 @@ import com.google.gson.JsonParseException;
 import com.tales.contracts.Subcontract;
 import com.tales.contracts.services.ContractStatus;
 import com.tales.contracts.services.http.ResourceMethodParameter.ContextValue;
+import com.tales.contracts.services.http.ResourceMethodParameter.CookieValue;
 import com.tales.contracts.services.http.ResourceMethodParameter.ParameterSource;
 import com.tales.parts.RegularExpressionHelper;
 import com.tales.parts.sites.DataSiteException;
@@ -506,16 +508,19 @@ public class ResourceMethod extends Subcontract {
 	private ResourceMethodParameter generateCookieParameter( CookieParam theParamAnnotation, Class<?> theParamType, Type theParamGenericType, int theParamIndex, ResourceFacility theResourceFacility ) {
 		ResourceMethodParameter parameter;
 		
-		Translator translator;
 		String paramName;
 		paramName = ( ( CookieParam )theParamAnnotation ).name( );
 
-		// get the translator to use
-		translator = theResourceFacility.getFromParameterTranslator(theParamType, theParamGenericType);
-		if( translator == null ) {
-			throw new IllegalStateException( String.format( "Could not find a translator for parameter %s of type '%s' on method '%s.%s'.", theParamIndex + 1, theParamType.getSimpleName(), method.getDeclaringClass().getName(), method.getName() ) );
+		if( Cookie.class.isAssignableFrom( theParamType )) {
+			parameter = new ResourceMethodParameter( ParameterSource.COOKIE, theParamType, theParamGenericType, theParamIndex, paramName, null, theParamAnnotation.sensitive(), this );
 		} else {
-			parameter = new ResourceMethodParameter( ParameterSource.COOKIE, theParamType, theParamGenericType, theParamIndex, paramName, translator, theParamAnnotation.sensitive(), this );
+			// get the translator to use
+			Translator translator = theResourceFacility.getFromParameterTranslator(theParamType, theParamGenericType);
+			if( translator == null ) {
+				throw new IllegalStateException( String.format( "Could not find a translator for parameter %s of type '%s' on method '%s.%s'.", theParamIndex + 1, theParamType.getSimpleName(), method.getDeclaringClass().getName(), method.getName() ) );
+			} else {
+				parameter = new ResourceMethodParameter( ParameterSource.COOKIE, theParamType, theParamGenericType, theParamIndex, paramName, translator, theParamAnnotation.sensitive(), this );
+			}
 		}
 		return parameter;
 	}
@@ -754,7 +759,7 @@ public class ResourceMethod extends Subcontract {
 			String stringValue;
 			Object actualValue;
 			ParameterSource parameterSource;
-			HashMap<String, Cookie> cookieMap = null; // set to null since we don't always use it
+			Map<String, Cookie> cookieMap = null; // set to null since we don't always use it
 			
 			// NOTE: I could support the idea of default values here, which would be kind cool
 
@@ -778,6 +783,14 @@ public class ResourceMethod extends Subcontract {
 							// then they want the context
 							parameters[ parameter.getMethodParamOffset() ] = theContext;
 						}
+					} else if( parameterSource == ParameterSource.COOKIE && parameter.getCookieValue() == CookieValue.COOKIE ) {
+						// see if we have the map, otherwise we create the map
+						if( cookieMap == null ) {
+							cookieMap = processCookies( theRequest.getCookies() );
+						}
+						// we know the map was created and so we find the cookie, which may be null
+						parameters[ parameter.getMethodParamOffset() ] = cookieMap.get( parameter.getValueName( ) );
+						
 					} else {
 						// if we have a value parameter source, then we need to retrieve and convert
 						if( parameterSource == ParameterSource.PATH ) {
@@ -790,20 +803,10 @@ public class ResourceMethod extends Subcontract {
 							// this means we have a header reference
 							stringValue = theRequest.getHeader( parameter.getValueName() );
 						} else if( parameterSource == ParameterSource.COOKIE ) {
+							// at this point we know this is a value we are looking for, not a Cookie type
+							// see if we have the map, otherwise we create the map
 							if( cookieMap == null ) {
-								// if the cookie map hasn't been created, we cache the
-								// results since we might be looking for them again
-								Cookie[] cookies = theRequest.getCookies( );
-								if( cookies != null ) {
-									cookieMap = new HashMap<String, Cookie>( cookies.length );
-									
-									for( Cookie cookie : cookies ) {
-										cookieMap.put( parameter.getValueName(), cookie );
-									}
-								} else {
-									// the getCookies call can return null ...
-									cookieMap = new HashMap<String, Cookie>( 0 );
-								}
+								cookieMap = processCookies( theRequest.getCookies() );
 							}
 							// we know the map was created and so we find the cookie
 							Cookie cookie = cookieMap.get( parameter.getValueName( ) );
@@ -910,6 +913,28 @@ public class ResourceMethod extends Subcontract {
 					loggedParameterBuilder.toString() } );
 		}
 		return result;
+	}
+	
+	/**
+	 * Helper method that takes the cookies from the request 
+	 * and creates a map from them.
+	 * @param theCookies the cookies from the request
+	 * @return the map of cookies, mapping name to cookie and if no cookies are found this will return an empty map.
+	 */
+	private Map<String, Cookie> processCookies( Cookie[] theCookies ) {
+		Map<String, Cookie> cookieMap;
+		
+		if( theCookies != null ) {
+			cookieMap = new HashMap<String, Cookie>( theCookies.length );
+			
+			for( Cookie cookie : theCookies ) {
+				cookieMap.put( cookie.getName( ), cookie );
+			}
+		} else {
+			// the getCookies call can return null ...
+			cookieMap = new HashMap<String, Cookie>( 0 );
+		}
+		return cookieMap;
 	}
 
 //	/**

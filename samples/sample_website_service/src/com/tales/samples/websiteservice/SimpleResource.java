@@ -40,12 +40,8 @@ public class SimpleResource {
 	@ResourceOperation( name="hello_world", path="GET : hello" )
 	public ResourceResult<String> hello( @HeaderParam( name="Origin" )String theOrigin ) {
 		ResourceResult<String> result = new ResourceResult<String>();
-		result.setResult( "hello world", Status.OPERATION_COMPLETED );
-		result.addHeader( "Access-Control-Allow-Origin", theOrigin );
 		
-		// TODO: make it so we can not have to do this origin setting thing
-		//       but instead make it so it validates 
-		//       look here: http://stackoverflow.com/questions/1653308/access-control-allow-origin-multiple-origin-domains
+		result.setResult( "hello world", Status.OPERATION_COMPLETED );
 		return result;
 	}
 	
@@ -56,10 +52,13 @@ public class SimpleResource {
 	 * @param theValue
 	 * @return
 	 */
+
 	@ResourceOperation( name="echo", path="GET | POST : echo")
 	public ResourceResult<String> echo( @RequestParam( name="query_echo" )String theValue, @HeaderParam( name="Origin" )String theOrigin, @CookieParam(name = "cookie_echo") String theCookieValue ) {
+		// the "cookie_echo" parameter doesn't have to be a string, it can be other types and 
+		// it will get translated ... it can also be type Cookie, where you get the full
+		// servlet cookie type back to look at and do with as you please
 		ResourceResult<String> result = new ResourceResult<String>();
-		result.addHeader( "Access-Control-Allow-Origin", theOrigin );
 		
 		if( Strings.isNullOrEmpty( theCookieValue ) ) {
 			result.setResult( theValue, Status.OPERATION_COMPLETED );
@@ -68,12 +67,6 @@ public class SimpleResource {
 			result.setResult( theCookieValue, Status.OPERATION_COMPLETED );
 			
 		}
-		
-		
-		
-		// TODO: make it so we can not have to do this origin setting thing
-		//       but instead make it so it validates 
-		//       look here: http://stackoverflow.com/questions/1653308/access-control-allow-origin-multiple-origin-domains
 		return result;
 	}
 }

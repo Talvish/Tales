@@ -17,12 +17,14 @@ package com.tales.contracts.services.http;
 
 import java.lang.reflect.Type;
 
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.tales.parts.translators.Translator;
+import com.tales.services.Conditions;
 import com.tales.services.NameManager;
 import com.tales.services.OperationContext;
 
@@ -83,10 +85,32 @@ public class ResourceMethodParameter {
 		 */
 		OPERATION_CONTEXT,
 	}
+	
+	/**
+	 * Indicates the type of cookie.
+	 * @author jmolnar
+	 *
+	 */
+	public enum CookieValue {
+		/**
+		 * Indicates there isn't a cookie value.
+		 */
+		NONE,
+		/**
+		 * Indicates we are taking the value from the cookie and not the entire cookie.
+		 */
+		VALUE,
+		/**
+		 * Indicates we want the full cookie.
+		 */
+		COOKIE,
+	}
+	
 	// TODO: support translators in both directions AND getting/setting data (both directions)
 
 	private final ParameterSource source;
 	private final ContextValue contextValue;
+	private final CookieValue cookieValue;
 	private final ResourceMethod resourceMethod;
 	private final Class<?> type;
 	private final Type genericType;
@@ -122,7 +146,7 @@ public class ResourceMethodParameter {
 		Preconditions.checkArgument( theMethodParamOffset >= 0, "need a non-negative parameter offset" );
 		Preconditions.checkArgument( theSource == ParameterSource.CONTEXT || ( theSource != ParameterSource.CONTEXT && !Strings.isNullOrEmpty( theValueName ) ), "need a value name" );
 		Preconditions.checkArgument( theSource == ParameterSource.HEADER || theSource == ParameterSource.COOKIE || theSource == ParameterSource.CONTEXT || ( theSource != ParameterSource.HEADER && NameManager.getResourceMethodNameValidator().isValid( theValueName ) ), String.format( "Parameter '%s' on resource method '%s' does not conform to validator '%s'.", theValueName, theMethod.getName( ), NameManager.getResourceMethodNameValidator().getClass().getSimpleName() ) );
-		Preconditions.checkArgument( theSource == ParameterSource.CONTEXT || ( theSource != ParameterSource.CONTEXT && theValueTranslator != null ), "need a translator" );
+		Preconditions.checkArgument( theSource == ParameterSource.CONTEXT || theSource == ParameterSource.COOKIE || ( theSource != ParameterSource.CONTEXT && theSource != ParameterSource.COOKIE && theValueTranslator != null ), "need a translator" );
 		source = theSource;
 		type = theType;
 		genericType = theGenericType;
@@ -146,6 +170,16 @@ public class ResourceMethodParameter {
 		} else {
 			this.contextValue = ContextValue.NONE;
 		}
+		if( source == ParameterSource.COOKIE ) {
+			if( Cookie.class.isAssignableFrom( type ) ) {
+				this.cookieValue = CookieValue.COOKIE;
+			} else {
+				Conditions.checkParameter( theValueTranslator != null, "need a translator" );
+				this.cookieValue = CookieValue.VALUE;
+			}
+		} else {
+			this.cookieValue = CookieValue.NONE;
+		}
 	}
 	
 	/**
@@ -163,6 +197,15 @@ public class ResourceMethodParameter {
 	 */
 	public ContextValue getContextValue( ) {
 		return this.contextValue;
+	}
+	
+	/**
+	 * Returns the cookie value type. 
+	 * This is set when the parameter source is a cookie.
+	 * @return the cookie value type
+	 */
+	public CookieValue getCookieValue( ) {
+		return this.cookieValue;
 	}
 	
 	/**
