@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.gson.JsonObject;
 import com.tales.contracts.data.DataContractTypeSource;
 import com.tales.parts.naming.LowerCaseEntityNameValidator;
 import com.tales.parts.translators.Translator;
@@ -93,7 +94,13 @@ public final class ResourceFacility implements Facility {
 
 		registerExceptionHandler( InvalidParameterException.class, new ExceptionHandler<InvalidParameterException>() {
 			public ResourceMethodResult toResult( ResourceMethod theMethod, InvalidParameterException theException ) {
-				return new ResourceMethodResult( 
+				JsonObject parameter = null;
+				if( !Strings.isNullOrEmpty( theException.getName() ) ) {
+					parameter = new JsonObject( );
+					parameter.addProperty( "name", theException.getName( ) );
+				}
+				return new ResourceMethodResult(
+						parameter,
 						Status.CALLER_BAD_INPUT,
 						theException.getCode(),
 						String.format( 

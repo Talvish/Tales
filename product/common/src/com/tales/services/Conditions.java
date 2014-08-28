@@ -25,16 +25,16 @@ public class Conditions {
 	/**
 	 * Checks the condition and if false throws an InvalidParameterException.
 	 */
-	public static void checkParameter( boolean theCondition ) {
-		checkParameter( theCondition, "failed parameter check" );
+	public static void checkParameter( boolean theCondition, String theName ) {
+		checkParameter( theCondition, theName, "failed parameter check" );
 	}
 	
 	/**
 	 * Checks the condition and if false throws an InvalidParameterException.
 	 */
-	public static void checkParameter( boolean theCondition, String theMessage, Object... theMessageParameters ) {
+	public static void checkParameter( boolean theCondition, String theName, String theMessage, Object... theMessageParameters ) {
 		if( !theCondition ) {
-			throw new InvalidParameterException( String.format( theMessage, theMessageParameters ) );
+			throw new InvalidParameterException( theName, String.format( theMessage, theMessageParameters ) );
 		} 
 	}
 	
@@ -58,7 +58,7 @@ public class Conditions {
 	 * Checks the condition and if false throws a NotFoundException.
 	 */
 	public static void checkFound( boolean theCondition ) {
-		checkParameter( theCondition, "failed found check" );
+		checkFound( theCondition, "failed found check" );
 	}
 	
 	/**

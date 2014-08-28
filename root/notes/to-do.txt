@@ -48,6 +48,9 @@ Misc
 --------------------
 - Increase HTTP verb supporting, in particular OPTIONS, which may be needed for CORS support
 - We may want cookies and headers to be part of the matching spec for which method to run
+- Consider making it so parameters can get validation annotations
+- Currently bad parameters send back just a parameter name in the result body, more detail would be good and 
+  I want to think about where it should live
 
 
 Update Admin to use Resource Contracts

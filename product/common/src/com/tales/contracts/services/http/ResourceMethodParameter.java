@@ -174,7 +174,7 @@ public class ResourceMethodParameter {
 			if( Cookie.class.isAssignableFrom( type ) ) {
 				this.cookieValue = CookieValue.COOKIE;
 			} else {
-				Conditions.checkParameter( theValueTranslator != null, "need a translator" );
+				Conditions.checkParameter( theValueTranslator != null, "theValueTranslator", "need a translator" );
 				this.cookieValue = CookieValue.VALUE;
 			}
 		} else {

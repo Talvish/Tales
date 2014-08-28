@@ -70,7 +70,7 @@ public class UserResource {
 	@ResourceOperation( name="get_user", path="GET : users/{id}" )
 	public TransportUser getUser(  @PathParam( name="id" )UUID theId  ) {
 		// Conditions.checkParameter throws InvalidParameterException which tales turns into HTTP status code 400
-		Conditions.checkParameter( theId != null , "an id must be given" );
+		Conditions.checkParameter( theId != null , "id", "an id must be given" );
 		
 		User user = engine.getUser( theId );
 		// Conditions.checkFound throws a NotFoundException which tales turns into an HTTP status code 404
@@ -104,8 +104,8 @@ public class UserResource {
 			 @RequestParam( name="first_name" )String theFirstName, 
 			 @RequestParam( name="last_name" )String theLastName ) {
 		// Conditions.checkParameter throws InvalidParameterException which tales turns into HTTP status code 400
-		Conditions.checkParameter( !Strings.isNullOrEmpty( theFirstName ), "first name must be provided" );
-		Conditions.checkParameter( !Strings.isNullOrEmpty( theLastName ), "last name must be provided" );
+		Conditions.checkParameter( !Strings.isNullOrEmpty( theFirstName ), "first_name", "first name must be provided" );
+		Conditions.checkParameter( !Strings.isNullOrEmpty( theLastName ), "last_name", "last name must be provided" );
 		
 		return TransportUser.toTransportUser( engine.createUser( theFirstName, theLastName ) );
 		
@@ -120,9 +120,9 @@ public class UserResource {
 			@PathParam( name="id" )UUID theId, 
 			@RequestParam( name="user" )TransportUser theUser ) {
 		// Conditions.checkParameter throws InvalidParameterException which tales turns into HTTP status code 400
-		Conditions.checkParameter( theId != null, "an id must be given" );
-		Conditions.checkParameter( theUser != null, "a user must be given" );
-		Conditions.checkParameter( theId.equals( theUser.getId( ) ), "path id '%s' does not match the given user id '%s'", theId, theUser.getId() );
+		Conditions.checkParameter( theId != null, "id", "an id must be given" );
+		Conditions.checkParameter( theUser != null, "user", "a user must be given" );
+		Conditions.checkParameter( theId.equals( theUser.getId( ) ), "id", "path id '%s' does not match the given user id '%s'", theId, theUser.getId() );
 		
 		User user = engine.updateUser( TransportUser.toEngineUser( theUser ) );
 		// Conditions.checkFound throws a NotFoundException which tales turns into an HTTP status code 404
@@ -136,7 +136,7 @@ public class UserResource {
 	@ResourceOperation( name="delete_user", path="GET | POST : users/{id}/delete" ) // supporting GET just so a browser can easily be used for manual testing
 	public void deleteUser( @PathParam( name="id" )UUID theId ) {
 		// Conditions.checkParameter throws InvalidParameterException which tales turns into HTTP status code 400
-		Conditions.checkParameter( theId != null, "an id must be given" );
+		Conditions.checkParameter( theId != null, "id", "an id must be given" );
 		
 		boolean deleted = engine.deleteUser( theId );
 		// Conditions.checkFound throws a NotFoundException which tales turns into an HTTP status code 404

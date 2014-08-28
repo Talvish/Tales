@@ -77,7 +77,7 @@ public class ResourceMethodResult extends HttpResult<JsonElement> {
 	ResourceMethodResult( JsonElement theValue, Status theCode, String theSubcode, String theMessage, Throwable theException ) {
 		Preconditions.checkNotNull( theValue, "need a value" );
 		Preconditions.checkNotNull( theCode, "need a status code" );
-		this.value = null;
+		this.value = theValue;
 		this.code = theCode;
 		this.subcode = theSubcode;
 		this.message = theMessage;

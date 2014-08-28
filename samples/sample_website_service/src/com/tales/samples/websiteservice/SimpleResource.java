@@ -16,13 +16,13 @@
 package com.tales.samples.websiteservice;
 
 import com.google.common.base.Strings;
-
 import com.tales.contracts.services.http.CookieParam;
 import com.tales.contracts.services.http.HeaderParam;
 import com.tales.contracts.services.http.RequestParam;
 import com.tales.contracts.services.http.ResourceContract;
 import com.tales.contracts.services.http.ResourceOperation;
 import com.tales.contracts.services.http.ResourceResult;
+import com.tales.services.Conditions;
 import com.tales.services.Status;
 
 /***
@@ -55,6 +55,7 @@ public class SimpleResource {
 
 	@ResourceOperation( name="echo", path="GET | POST : echo")
 	public ResourceResult<String> echo( @RequestParam( name="query_echo" )String theValue, @HeaderParam( name="Origin" )String theOrigin, @CookieParam(name = "cookie_echo") String theCookieValue ) {
+		Conditions.checkParameter( !Strings.isNullOrEmpty( theValue ), "query_echo", "need the parameter");
 		// the "cookie_echo" parameter doesn't have to be a string, it can be other types and 
 		// it will get translated ... it can also be type Cookie, where you get the full
 		// servlet cookie type back to look at and do with as you please

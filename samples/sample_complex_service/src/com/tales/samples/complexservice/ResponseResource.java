@@ -73,8 +73,8 @@ public class ResponseResource {
 	 */
 	@ResourceOperation( name="throw_parameter_exception", path="GET : throw_parameter_exception" )
 	public void throwParameterException( @RequestParam( name="value" )String theValue ) {
-		Conditions.checkParameter( !Strings.isNullOrEmpty( theValue ), "The 'value' parameter must not be null or empty." );
-		Conditions.checkParameter( Strings.isNullOrEmpty( theValue ), "The 'value' parameter must be null." );
+		Conditions.checkParameter( !Strings.isNullOrEmpty( theValue ), "value", "The 'value' parameter must not be null or empty." );
+		Conditions.checkParameter( Strings.isNullOrEmpty( theValue ), "value", "The 'value' parameter must be null." );
 	}
 	
 	/**
