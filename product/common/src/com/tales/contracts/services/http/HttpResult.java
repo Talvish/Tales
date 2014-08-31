@@ -18,13 +18,14 @@ package com.tales.contracts.services.http;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.servlet.http.Cookie;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
 import com.google.common.base.Preconditions;
-
 import com.tales.services.Status;
 import com.tales.services.http.HeaderConstants;
 
@@ -39,6 +40,7 @@ public abstract class HttpResult<T> {
 	
 	// share items 
 	protected Map<String,String> headers = new HashMap<String,String>( );
+	protected Map<String,Cookie> cookies = new HashMap<String,Cookie>( );
 	protected Status code = Status.UNKNOWN;
 	protected String subcode;
 	protected String message;
@@ -113,6 +115,10 @@ public abstract class HttpResult<T> {
 	 */
 	public Map<String,String> getHeaders( ) {
 		return this.headers;
+	}
+	
+	public Map<String,Cookie> getCookies( ) {
+		return this.cookies;
 	}
 	
 	/**

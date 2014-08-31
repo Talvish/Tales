@@ -31,6 +31,8 @@ General Website handling
   - servlet context's have error handlers (sent in the constructor) that can be set that could potentially handle this, could 
     support a way to register a location to cover
 - Allow binding websites (which could mean removing the WebsiteInterface)
+- Support a way for facades to report more than one failure in parameters and report them all ack
+  maybe can use lambdas to do this but the exception should occur once
 
 Signing Support
 -------------------
@@ -51,7 +53,11 @@ Misc
 - Consider making it so parameters can get validation annotations
 - Currently bad parameters send back just a parameter name in the result body, more detail would be good and 
   I want to think about where it should live
-
+- A way to send back the set of parameters that are not working
+- support listening to changes in config
+- json-based config, for supporting sensitive params
+- network based config
+- map source config should copy the input 
 
 Update Admin to use Resource Contracts
 ------------------------------------------------

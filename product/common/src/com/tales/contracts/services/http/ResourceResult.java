@@ -15,8 +15,12 @@
 // ***************************************************************************
 package com.tales.contracts.services.http;
 
+import javax.servlet.http.Cookie;
+
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.tales.contracts.data.DataContract;
+import com.tales.services.Conditions;
 import com.tales.services.Status;
 
 /**
@@ -35,11 +39,25 @@ public class ResourceResult<T> extends HttpResult<T> {
 	
 	/**
 	 * Adds a header to return.
+	 * If a header with the same name already exists 
+	 * it will be replaced.
 	 * @param theName the name of the header
 	 * @param theValue the value to give the header
 	 */
 	public void addHeader( String theName, String theValue ) {
+		Conditions.checkParameter( !Strings.isNullOrEmpty( theName ), "need a name to add a header" );
 		headers.put( theName, theValue );
+	}
+	
+	/**
+	 * Adds a cookie to the return.
+	 * If a cookie with the same name already exists
+	 * it will be replaced.
+	 * @param theCookie the cookie to be added
+	 */
+	public void addCookie( Cookie theCookie ) {
+		Conditions.checkParameter( theCookie != null, "need a cookie to add a cookie" );
+		cookies.put( theCookie.getName(), theCookie );
 	}
 	
 	/**

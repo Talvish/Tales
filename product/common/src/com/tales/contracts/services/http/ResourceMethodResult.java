@@ -35,6 +35,7 @@ public class ResourceMethodResult extends HttpResult<JsonElement> {
 		Preconditions.checkNotNull( theOriginal, "the original result must not be null" );
 		this.value = theValue;
 		this.headers = theOriginal.headers;
+		this.cookies = theOriginal.cookies;
 		this.code = theOriginal.code;
 		this.subcode = theOriginal.subcode;
 		this.message = theOriginal.message;

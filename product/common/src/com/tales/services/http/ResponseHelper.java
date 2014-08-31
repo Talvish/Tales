@@ -19,6 +19,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Map.Entry;
 
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -30,7 +31,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-
 import com.tales.contracts.services.http.ResourceMethodResult;
 import com.tales.serialization.Readability;
 import com.tales.services.Status;
@@ -178,6 +178,11 @@ public class ResponseHelper {
 		// by the common header adding
 		for( Entry<String,String> entry: theResult.getHeaders().entrySet() ) {
 			theResponse.addHeader( entry.getKey(), entry.getValue() );
+		}
+		
+		// adds cookies, if any
+		for( Entry<String,Cookie> entry: theResult.getCookies().entrySet() ) {
+			theResponse.addCookie( entry.getValue() );
 		}
 		
 		_writeResponse(
