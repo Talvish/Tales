@@ -27,7 +27,7 @@ import com.tales.contracts.services.http.PathParam;
 import com.tales.contracts.services.http.RequestParam;
 import com.tales.contracts.services.http.ResourceContract;
 import com.tales.contracts.services.http.ResourceOperation;
-import com.tales.services.Conditions;
+import com.tales.system.Conditions;
 
 
 /**

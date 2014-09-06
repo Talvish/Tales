@@ -45,6 +45,7 @@ import com.tales.contracts.data.DataContractTypeSource;
 import com.tales.contracts.services.http.ResourceFacility;
 import com.tales.parts.ArgumentParser;
 import com.tales.parts.naming.LowerCaseEntityNameValidator;
+import com.tales.parts.naming.NameManager;
 import com.tales.parts.naming.NameValidator;
 import com.tales.parts.naming.SegmentedLowercaseEntityNameValidator;
 import com.tales.serialization.Readability;
@@ -177,6 +178,14 @@ public abstract class Service implements Runnable {
 		}
 	}
 	
+	public static String SERVICE_NAME_VALIDATOR = "service_name";
+	
+	static {
+		if( !NameManager.hasValidator( Service.SERVICE_NAME_VALIDATOR ) ) {
+			NameManager.setValidator( Service.SERVICE_NAME_VALIDATOR, new LowerCaseEntityNameValidator( ) );
+		}
+	}
+	
 	private static final Logger logger = LoggerFactory.getLogger( Service.class );
 
 	private final String canonicalName;
@@ -225,9 +234,11 @@ public abstract class Service implements Runnable {
 	 * @param theDescription a description of the service
 	 */
 	protected Service( String theCanonicalName, String theFriendlyName, String theDescription ) {
+		NameValidator nameValidator = NameManager.getValidator( Service.SERVICE_NAME_VALIDATOR );
+		
 		Preconditions.checkArgument( !Strings.isNullOrEmpty( theCanonicalName ) );	
 		Preconditions.checkArgument( !Strings.isNullOrEmpty( theFriendlyName ) );
-		Preconditions.checkArgument( NameManager.getServiceNameValidator().isValid( theCanonicalName ), String.format( "Canonical service name '%s' does not conform to validator '%s'.", theCanonicalName, NameManager.getServiceNameValidator().getClass().getSimpleName() ) );
+		Preconditions.checkArgument( nameValidator.isValid( theCanonicalName ), String.format( "Canonical service name '%s' does not conform to validator '%s'.", theCanonicalName, nameValidator.getClass().getSimpleName() ) );
 		
 		canonicalName = theCanonicalName;
 		friendlyName = theFriendlyName;

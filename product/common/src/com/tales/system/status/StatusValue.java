@@ -20,7 +20,9 @@ import java.lang.reflect.Method;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.tales.services.NameManager;
+import com.tales.parts.naming.LowerCaseEntityNameValidator;
+import com.tales.parts.naming.NameManager;
+import com.tales.parts.naming.NameValidator;
 
 // TODO: consider updating to use the DataSite ... more flexibility
 
@@ -32,6 +34,14 @@ import com.tales.services.NameManager;
  *
  */
 public class StatusValue {
+	public static String STATUS_VALUE_NAME_VALIDATOR = "status_value_name";
+	
+	static {
+		if( !NameManager.hasValidator( StatusValue.STATUS_VALUE_NAME_VALIDATOR ) ) {
+			NameManager.setValidator( StatusValue.STATUS_VALUE_NAME_VALIDATOR, new LowerCaseEntityNameValidator() );
+		}
+	}
+	
 	//private final enum valuetype // value, rate, average,
 	private final String name;
 	private final String description;
@@ -46,8 +56,10 @@ public class StatusValue {
 	 * @param theMethod the method use to extract the status value
 	 */
 	public StatusValue( String theName, String theDescription, Object theSource, Method theMethod ) {
+		NameValidator nameValidator = NameManager.getValidator( StatusValue.STATUS_VALUE_NAME_VALIDATOR );
+		
 		Preconditions.checkArgument( !Strings.isNullOrEmpty( theName ), "Status value has to have a name" );
-		Preconditions.checkArgument( NameManager.getStatusValueNameValidator().isValid( theName ), String.format( "Status value name '%s' does not conform to validator '%s'.", theName, NameManager.getStatusValueNameValidator().getClass().getSimpleName() ) );
+		Preconditions.checkArgument( nameValidator.isValid( theName ), String.format( "Status value name '%s' does not conform to validator '%s'.", theName, nameValidator.getClass().getSimpleName() ) );
 		Preconditions.checkNotNull( theSource, "Need the object that contains the status value." );
 		Preconditions.checkNotNull( theMethod, "Need the method to get the status value from the source." );
 		

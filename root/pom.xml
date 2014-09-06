@@ -65,6 +65,7 @@
   
   <modules>
     <module>../product/common</module>
+    <module>../product/services</module>
     <module>../samples/sample_complex_service</module>
     <module>../samples/sample_multiversion_service</module>
     <module>../samples/sample_simple_service</module>

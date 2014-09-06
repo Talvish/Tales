@@ -135,6 +135,11 @@
 		<version>${project.version}</version>
 	</dependency>
 	<dependency>
+		<groupId>tales</groupId>
+		<artifactId>tales.services</artifactId>
+		<version>${project.version}</version>
+	</dependency>
+	<dependency>
     	<groupId>ch.qos.logback</groupId>
     	<artifactId>logback-classic</artifactId>
     </dependency>	

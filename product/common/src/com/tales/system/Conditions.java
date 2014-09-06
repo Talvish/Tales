@@ -13,7 +13,7 @@
 // *  See the License for the specific language governing permissions and
 // *  limitations under the License.
 // ***************************************************************************
-package com.tales.services;
+package com.tales.system;
 
 /**
  * A simple helper method class in a similar vein to Google's Preconditions class but

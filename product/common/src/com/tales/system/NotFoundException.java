@@ -13,25 +13,25 @@
 // *  See the License for the specific language governing permissions and
 // *  limitations under the License.
 // ***************************************************************************
-package com.tales.services;
+package com.tales.system;
 
 /**
- * A {@code RuntimeException} thrown when there the data/code is in an invalid state to complete the work. 
+ * A {@code RuntimeException} thrown when there is something missing that was excepted to exist. 
  * @author jmolnar
  *
  */
-public class InvalidStateException extends RuntimeException {
-	private final String code;
-
+public class NotFoundException extends RuntimeException {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 4281900093201274751L;
+	private static final long serialVersionUID = 9112814286184594345L;
+	
+	private final String code;
 
 	/**
 	 * Empty constructor.
 	 */
-	public InvalidStateException() {
+	public NotFoundException() {
 		code = null;
 	}
 
@@ -39,7 +39,7 @@ public class InvalidStateException extends RuntimeException {
 	 * Constructor taking a message.
 	 * @param message the message for the exception.
 	 */
-	public InvalidStateException(String message) {
+	public NotFoundException(String message) {
 		super(message);
 		code = null;
 	}
@@ -48,7 +48,7 @@ public class InvalidStateException extends RuntimeException {
 	 * Constructor taking the exception that likely describes the failure.
 	 * @param cause the exception that describes the failure
 	 */
-	public InvalidStateException(Throwable cause) {
+	public NotFoundException(Throwable cause) {
 		super(cause);
 		code = null;
 	}
@@ -58,7 +58,7 @@ public class InvalidStateException extends RuntimeException {
 	 * @param cause the exception that describes the failure
 	 * @param message the message for the exception
 	 */
-	public InvalidStateException(String message, Throwable cause) {
+	public NotFoundException(String message, Throwable cause) {
 		super(message, cause);
 		code = null;
 	}
@@ -68,7 +68,7 @@ public class InvalidStateException extends RuntimeException {
 	 * @param message the message for the exception.
 	 * @param code a specific code the thrower decided to add
 	 */
-	public InvalidStateException(String message, String code ) {
+	public NotFoundException(String message, String code ) {
 		super(message);
 		this.code = code;
 	}
@@ -79,7 +79,7 @@ public class InvalidStateException extends RuntimeException {
 	 * @param code a specific code the thrower decided to add
 	 * @param message the message for the exception
 	 */
-	public InvalidStateException(String message, String code, Throwable cause) {
+	public NotFoundException(String message, String code, Throwable cause) {
 		super(message, cause);
 		this.code = code;
 	}

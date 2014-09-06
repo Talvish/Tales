@@ -13,64 +13,60 @@
 // *  See the License for the specific language governing permissions and
 // *  limitations under the License.
 // ***************************************************************************
-package com.tales.services;
+package com.tales.system;
 
 /**
- * A {@code RuntimeException} thrown when there is something missing that was excepted to exist. 
+ * A {@code RuntimeException} thrown when there is an invalid parameter going into a method, operations, etc. 
  * @author jmolnar
  *
  */
-public class NotFoundException extends RuntimeException {
+public class InvalidParameterException extends RuntimeException {
+	private final String name;
+	private final String code;
+
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 9112814286184594345L;
-	
-	private final String code;
+	private static final long serialVersionUID = -4874090416452846180L;
 
 	/**
 	 * Empty constructor.
 	 */
-	public NotFoundException() {
-		code = null;
+	public InvalidParameterException() {
+		this.code = null;
+		this.name = null;
 	}
 
 	/**
 	 * Constructor taking a message.
 	 * @param message the message for the exception.
 	 */
-	public NotFoundException(String message) {
+	public InvalidParameterException(String name, String message) {
 		super(message);
-		code = null;
+		this.code = null;
+		this.name = name;
 	}
-
+	
 	/**
 	 * Constructor taking the exception that likely describes the failure.
 	 * @param cause the exception that describes the failure
 	 */
-	public NotFoundException(Throwable cause) {
+	public InvalidParameterException(String name, Throwable cause) {
 		super(cause);
-		code = null;
+		this.code = null;
+		this.name = name;
 	}
 
-	/**
-	 * Constructor taking a message and the exception that likely describes the failure.
-	 * @param cause the exception that describes the failure
-	 * @param message the message for the exception
-	 */
-	public NotFoundException(String message, Throwable cause) {
-		super(message, cause);
-		code = null;
-	}
 
 	/**
 	 * Constructor taking a message.
 	 * @param message the message for the exception.
 	 * @param code a specific code the thrower decided to add
 	 */
-	public NotFoundException(String message, String code ) {
+	public InvalidParameterException( String name, String message, String code ) {
 		super(message);
 		this.code = code;
+		this.name = name;
 	}
 
 	/**
@@ -79,9 +75,18 @@ public class NotFoundException extends RuntimeException {
 	 * @param code a specific code the thrower decided to add
 	 * @param message the message for the exception
 	 */
-	public NotFoundException(String message, String code, Throwable cause) {
+	public InvalidParameterException( String name, String message, String code, Throwable cause) {
 		super(message, cause);
 		this.code = code;
+		this.name = name;
+	}
+	
+	/***
+	 * Returns the name of the parameter.
+	 * @return the name of the parameter
+	 */
+	public String getName( ) {
+		return name;
 	}
 	
 	/**

@@ -37,11 +37,11 @@ import com.tales.serialization.json.translators.ChainToJsonElementToStringTransl
 import com.tales.serialization.json.translators.StringToJsonElementToChainTranslator;
 import com.tales.services.DependencyException;
 import com.tales.services.Status;
-import com.tales.services.InvalidParameterException;
-import com.tales.services.InvalidStateException;
-import com.tales.services.NotFoundException;
 import com.tales.services.http.FailureSubcodes;
 import com.tales.system.Facility;
+import com.tales.system.InvalidParameterException;
+import com.tales.system.InvalidStateException;
+import com.tales.system.NotFoundException;
 
 
 // TODO: - do not force all members existing when you save (json types)

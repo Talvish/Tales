@@ -13,60 +13,64 @@
 // *  See the License for the specific language governing permissions and
 // *  limitations under the License.
 // ***************************************************************************
-package com.tales.services;
+package com.tales.system;
 
 /**
- * A {@code RuntimeException} thrown when there is an invalid parameter going into a method, operations, etc. 
+ * A {@code RuntimeException} thrown when there the data/code is in an invalid state to complete the work. 
  * @author jmolnar
  *
  */
-public class InvalidParameterException extends RuntimeException {
-	private final String name;
+public class InvalidStateException extends RuntimeException {
 	private final String code;
 
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = -4874090416452846180L;
+	private static final long serialVersionUID = 4281900093201274751L;
 
 	/**
 	 * Empty constructor.
 	 */
-	public InvalidParameterException() {
-		this.code = null;
-		this.name = null;
+	public InvalidStateException() {
+		code = null;
 	}
 
 	/**
 	 * Constructor taking a message.
 	 * @param message the message for the exception.
 	 */
-	public InvalidParameterException(String name, String message) {
+	public InvalidStateException(String message) {
 		super(message);
-		this.code = null;
-		this.name = name;
+		code = null;
 	}
-	
+
 	/**
 	 * Constructor taking the exception that likely describes the failure.
 	 * @param cause the exception that describes the failure
 	 */
-	public InvalidParameterException(String name, Throwable cause) {
+	public InvalidStateException(Throwable cause) {
 		super(cause);
-		this.code = null;
-		this.name = name;
+		code = null;
 	}
 
+	/**
+	 * Constructor taking a message and the exception that likely describes the failure.
+	 * @param cause the exception that describes the failure
+	 * @param message the message for the exception
+	 */
+	public InvalidStateException(String message, Throwable cause) {
+		super(message, cause);
+		code = null;
+	}
 
 	/**
 	 * Constructor taking a message.
 	 * @param message the message for the exception.
 	 * @param code a specific code the thrower decided to add
 	 */
-	public InvalidParameterException( String name, String message, String code ) {
+	public InvalidStateException(String message, String code ) {
 		super(message);
 		this.code = code;
-		this.name = name;
 	}
 
 	/**
@@ -75,18 +79,9 @@ public class InvalidParameterException extends RuntimeException {
 	 * @param code a specific code the thrower decided to add
 	 * @param message the message for the exception
 	 */
-	public InvalidParameterException( String name, String message, String code, Throwable cause) {
+	public InvalidStateException(String message, String code, Throwable cause) {
 		super(message, cause);
 		this.code = code;
-		this.name = name;
-	}
-	
-	/***
-	 * Returns the name of the parameter.
-	 * @return the name of the parameter
-	 */
-	public String getName( ) {
-		return name;
 	}
 	
 	/**

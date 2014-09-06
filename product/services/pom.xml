@@ -1,0 +1,91 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <artifactId>tales.services</artifactId>
+  <packaging>jar</packaging>
+  <name>Tales Services Library</name>
+  <description>The base set of classes needed to create Tales Services.</description>
+  <url>https://github.com/Talvish/Tales</url>
+ 
+  <parent>
+    <groupId>tales</groupId>
+    <artifactId>tales.root</artifactId>
+    <version>1.5.0-SNAPSHOT</version>
+    <relativePath>../tales.root/pom.xml</relativePath>
+  </parent>
+
+  <build>
+    <sourceDirectory>src</sourceDirectory>
+    <plugins>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.1</version>
+        <configuration>
+          <source>1.8</source>
+          <target>1.8</target>
+        </configuration>
+      </plugin>
+      <plugin>
+	    <groupId>org.apache.maven.plugins</groupId>
+		<artifactId>maven-source-plugin</artifactId>
+	    <executions>
+		  <execution>
+		    <id>attach-sources</id>
+		    <goals>
+			  <goal>jar</goal>
+		    </goals>
+		  </execution>
+	    </executions>
+	  </plugin>
+    </plugins>
+  </build>
+  <dependencies>
+  	<dependency>
+		<groupId>tales</groupId>
+		<artifactId>tales.common</artifactId>
+		<version>${project.version}</version>
+	</dependency>
+  	<dependency>
+    	<groupId>joda-time</groupId>
+    	<artifactId>joda-time</artifactId>
+	</dependency>  
+	<dependency>
+    	<groupId>com.google.guava</groupId>
+    	<artifactId>guava-jdk5</artifactId>
+	</dependency>	
+	<dependency>
+	    <groupId>com.google.code.gson</groupId>
+    	<artifactId>gson</artifactId>
+	</dependency>
+	<dependency>
+	    <groupId>org.slf4j</groupId>
+    	<artifactId>slf4j-api</artifactId>
+	</dependency>
+	
+	<dependency>
+    	<groupId>org.eclipse.jetty</groupId>
+    	<artifactId>jetty-client</artifactId>
+    	<version>9.2.2.v20140723</version>
+	</dependency>	
+	<dependency>
+    	<groupId>org.eclipse.jetty</groupId>
+    	<artifactId>jetty-deploy</artifactId>
+    	<version>9.2.2.v20140723</version>
+	</dependency>	
+	<dependency>
+    	<groupId>org.eclipse.jetty</groupId>
+    	<artifactId>jetty-servlet</artifactId>
+    	<version>9.2.2.v20140723</version>
+	</dependency>
+	<dependency>
+    	<groupId>org.eclipse.jetty</groupId>
+    	<artifactId>jetty-servlets</artifactId>
+    	<version>9.2.2.v20140723</version>
+	</dependency>	
+		<dependency>
+    	<groupId>org.eclipse.jetty</groupId>
+    	<artifactId>jetty-jsp</artifactId>
+    	<version>9.2.2.v20140723</version>
+	</dependency>
+	
+  </dependencies>  
+</project>

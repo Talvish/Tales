@@ -20,7 +20,9 @@ import org.joda.time.DateTimeZone;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.tales.services.NameManager;
+import com.tales.parts.naming.NameManager;
+import com.tales.parts.naming.NameValidator;
+import com.tales.parts.naming.SegmentedLowercaseEntityNameValidator;
 
 
 /**
@@ -29,6 +31,14 @@ import com.tales.services.NameManager;
  * @author jmolnar
  */
 public class LoadedSetting {
+	public static String SETTING_NAME_VALIDATOR = "setting_name";
+	
+	static {
+		if( !NameManager.hasValidator( LoadedSetting.SETTING_NAME_VALIDATOR ) ) {
+			NameManager.setValidator( LoadedSetting.SETTING_NAME_VALIDATOR, new SegmentedLowercaseEntityNameValidator( ) );
+		}
+	}
+	
 	private final String name;
 	private final Object value;
 	private final String description;
@@ -44,8 +54,10 @@ public class LoadedSetting {
 	}
 
 	public LoadedSetting( String theName, Object theValue, String theStringValue, String theDescription, boolean isSensitive, String theSource ) {
+		NameValidator nameValidator = NameManager.getValidator( LoadedSetting.SETTING_NAME_VALIDATOR );
+		
 		Preconditions.checkArgument( !Strings.isNullOrEmpty(theName), "missing a name");
-		Preconditions.checkArgument( NameManager.getConfigurationNameValidator().isValid( theName ), String.format( "Configuration name '%s' from source '%s' does not conform to validator '%s'.", theName, theSource, NameManager.getConfigurationNameValidator().getClass().getSimpleName() ) );
+		Preconditions.checkArgument( nameValidator.isValid( theName ), String.format( "Configuration name '%s' from source '%s' does not conform to validator '%s'.", theName, theSource, nameValidator.getClass().getSimpleName() ) );
 		
 		this.name = theName;
 		this.value = theValue;

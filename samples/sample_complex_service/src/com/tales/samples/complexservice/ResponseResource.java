@@ -20,10 +20,10 @@ import com.tales.contracts.services.http.RequestParam;
 import com.tales.contracts.services.http.ResourceContract;
 import com.tales.contracts.services.http.ResourceOperation;
 import com.tales.contracts.services.http.ResourceResult;
-import com.tales.services.Conditions;
 import com.tales.services.DependencyException;
 import com.tales.services.DependencyException.Problem;
 import com.tales.services.Status;
+import com.tales.system.Conditions;
 
 /***
  * This contract shows customizing the return response.

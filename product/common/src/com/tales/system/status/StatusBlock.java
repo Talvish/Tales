@@ -21,7 +21,11 @@ import java.util.Collections;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.tales.services.NameManager;
+
+import com.tales.parts.naming.LowerCaseEntityNameValidator;
+import com.tales.parts.naming.NameManager;
+import com.tales.parts.naming.NameValidator;
+
 
 /**
  * This class represents a set of status values
@@ -30,6 +34,14 @@ import com.tales.services.NameManager;
  *
  */
 public class StatusBlock {
+	public static String STATUS_BLOCK_NAME_VALIDATOR = "status_block_name";
+	
+	static {
+		if( !NameManager.hasValidator( StatusBlock.STATUS_BLOCK_NAME_VALIDATOR ) ) {
+			NameManager.setValidator( StatusBlock.STATUS_BLOCK_NAME_VALIDATOR, new LowerCaseEntityNameValidator() );
+		}
+	}
+	
 	private final String name;
 	private final Collection<StatusValue> statusValues;
 
@@ -39,8 +51,10 @@ public class StatusBlock {
 	 * @param theStatusValues the status values to store in the block
 	 */
 	public StatusBlock( String theName, Collection<StatusValue> theStatusValues ) {
+		NameValidator nameValidator = NameManager.getValidator( StatusBlock.STATUS_BLOCK_NAME_VALIDATOR );
+		
 		Preconditions.checkArgument( !Strings.isNullOrEmpty(theName), "the status block needs a name" );
-		Preconditions.checkArgument( NameManager.getStatusBlockNameValidator().isValid( theName ), String.format( "Status block name '%s' does not conform to validator '%s'.", theName, NameManager.getStatusBlockNameValidator().getClass().getSimpleName() ) );
+		Preconditions.checkArgument( nameValidator.isValid( theName ), String.format( "Status block name '%s' does not conform to validator '%s'.", theName, nameValidator.getClass().getSimpleName() ) );
 		Preconditions.checkNotNull( theStatusValues, "the status block '%s' needs values", theName );
 		
 		name = theName;

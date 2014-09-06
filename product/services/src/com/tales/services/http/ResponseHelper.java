@@ -238,7 +238,7 @@ public class ResponseHelper {
 //			operationObject.addProperty( "caller_url", theContext.getCallingUrl( ) );
 //			operationObject.addProperty( "caller_user_agent", theContext.getCallingUserAgent( ) );
 			operationObject.addProperty( "response_details", theContext.getResponseDetails( ).toString( ) );
-			operationObject.addProperty( "response_target", theContext.getResponseTarget( ).toString( ) );
+			operationObject.addProperty( "response_readability", theContext.getResponseTarget( ).toString( ) );
 			operationObject.addProperty( "host_address", theRequest.getLocalAddr( ) );
 		}
 		//NOTE: this is effectively sharing the same value

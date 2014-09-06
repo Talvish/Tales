@@ -46,6 +46,9 @@ import com.tales.contracts.services.http.ResourceMethodParameter.ContextValue;
 import com.tales.contracts.services.http.ResourceMethodParameter.CookieValue;
 import com.tales.contracts.services.http.ResourceMethodParameter.ParameterSource;
 import com.tales.parts.RegularExpressionHelper;
+import com.tales.parts.naming.LowerCaseEntityNameValidator;
+import com.tales.parts.naming.NameManager;
+import com.tales.parts.naming.NameValidator;
 import com.tales.parts.sites.DataSiteException;
 import com.tales.parts.translators.TranslationException;
 import com.tales.parts.translators.Translator;
@@ -53,7 +56,6 @@ import com.tales.serialization.Readability;
 import com.tales.serialization.UrlEncoding;
 import com.tales.serialization.json.JsonTypeReference;
 import com.tales.services.Status;
-import com.tales.services.NameManager;
 import com.tales.services.OperationContext;
 import com.tales.services.http.FailureSubcodes;
 
@@ -65,7 +67,14 @@ import com.tales.services.http.FailureSubcodes;
 public class ResourceMethod extends Subcontract {
 	private static final Logger logger = LoggerFactory.getLogger( ResourceType.class );
 
-
+	public static String RESOURCE_METHOD_NAME_VALIDATOR = "resource_method_name";
+	
+	static {
+		if( !NameManager.hasValidator( ResourceMethod.RESOURCE_METHOD_NAME_VALIDATOR ) ) {
+			NameManager.setValidator( ResourceMethod.RESOURCE_METHOD_NAME_VALIDATOR, new LowerCaseEntityNameValidator( ) );
+		}
+	}
+	
 	// this allows us to indicate there are parameters in the path
 
 	private static final String ESCAPED_CHAR_REGEX = "\\\\.";
@@ -140,7 +149,10 @@ public class ResourceMethod extends Subcontract {
 			ResourceType theResourceType, 
 			ResourceFacility theResourceFacility ) {
 		super( theName, theDescription, theVersions, theResourceType );
-		Preconditions.checkArgument( NameManager.getResourceMethodNameValidator().isValid( theName ), String.format( "Resource method '%s' does not conform to validator '%s'.", theName, NameManager.getResourceMethodNameValidator().getClass().getSimpleName() ) );
+		
+		NameValidator nameValidator = NameManager.getValidator( ResourceMethod.RESOURCE_METHOD_NAME_VALIDATOR );
+
+		Preconditions.checkArgument( nameValidator.isValid( theName ), String.format( "Resource method '%s' does not conform to validator '%s'.", theName, nameValidator.getClass().getSimpleName() ) );
 		Preconditions.checkNotNull( theMethod, "need a reflected method" );
 		Preconditions.checkNotNull( theMode, "need a mode" );
 		Preconditions.checkNotNull( isRequestSigned, "need an indication for when the request is signed" );

@@ -23,9 +23,10 @@ import java.util.TreeMap;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-
 import com.tales.contracts.ContractVersion;
-import com.tales.services.NameManager;
+import com.tales.parts.naming.NameManager;
+import com.tales.parts.naming.NameValidator;
+import com.tales.parts.naming.SegmentedLowercaseEntityNameValidator;
 
 /**
  * This base class that represents a contract bound to an interface in a service.
@@ -36,6 +37,14 @@ import com.tales.services.NameManager;
 // 		 hide the servlet details, we could use the service version to route, within one 
 //       servlet, to the particular version implementation
 public abstract class Contract {
+	public static String CONTRACT_NAME_VALIDATOR = "contract_name";
+	
+	static {
+		if( !NameManager.hasValidator( Contract.CONTRACT_NAME_VALIDATOR ) ) {
+			NameManager.setValidator( Contract.CONTRACT_NAME_VALIDATOR, new SegmentedLowercaseEntityNameValidator( ) );
+		}
+	}
+	
 	private final String name;
 	private final String description; 
 	private final Map<String, ContractVersion> versions;
@@ -46,8 +55,10 @@ public abstract class Contract {
  	 * This will perform full validation on the versions.
  	 */
 	protected Contract( String theName, String theDescription, String[] theVersions ) {
+		NameValidator nameValidator = NameManager.getValidator( Contract.CONTRACT_NAME_VALIDATOR );
+		
         Preconditions.checkState( !Strings.isNullOrEmpty( theName ), "must have a contract name" );
-		Preconditions.checkArgument( NameManager.getContractNameValidator().isValid( theName ), String.format( "Contract name '%s' does not conform to validator '%s'.", theName, NameManager.getContractNameValidator().getClass().getSimpleName() ) );
+		Preconditions.checkArgument( nameValidator.isValid( theName ), String.format( "Contract name '%s' does not conform to validator '%s'.", theName, nameValidator.getClass().getSimpleName() ) );
 		Preconditions.checkState( theVersions != null && theVersions.length > 0, "must have at least one version" );
 		
 		// save all the basic items
@@ -62,8 +73,10 @@ public abstract class Contract {
  	 * This is the contract constructor taking the required parameters.
  	 */
 	protected Contract( String theName, String theDescription, Collection<ContractVersion> theVersions ) {
+		NameValidator nameValidator = NameManager.getValidator( Contract.CONTRACT_NAME_VALIDATOR );
+		
         Preconditions.checkState( !Strings.isNullOrEmpty( theName ), "must have a contract name" );
-		Preconditions.checkArgument( NameManager.getContractNameValidator().isValid( theName ), String.format( "Contract name '%s' does not conform to validator '%s'.", theName, NameManager.getContractNameValidator().getClass().getSimpleName() ) );
+		Preconditions.checkArgument( nameValidator.isValid( theName ), String.format( "Contract name '%s' does not conform to validator '%s'.", theName, nameValidator.getClass().getSimpleName() ) );
 		Preconditions.checkState( theVersions != null && theVersions.size( ) > 0, "must have at least one version" );
 		
 		// save all the basic items
@@ -79,8 +92,10 @@ public abstract class Contract {
  	 * This will not perform validation on the versions passed it. It will presume 
  	 */
 	protected Contract( String theName, String theDescription, Map<String, ContractVersion> theVersions ) {
+		NameValidator nameValidator = NameManager.getValidator( Contract.CONTRACT_NAME_VALIDATOR );
+		
         Preconditions.checkState( !Strings.isNullOrEmpty( theName ), "must have a contract name" );
-		Preconditions.checkArgument( NameManager.getContractNameValidator().isValid( theName ), String.format( "Contract name '%s' does not conform to validator '%s'.", theName, NameManager.getContractNameValidator().getClass().getSimpleName() ) );
+		Preconditions.checkArgument( nameValidator.isValid( theName ), String.format( "Contract name '%s' does not conform to validator '%s'.", theName, nameValidator.getClass().getSimpleName() ) );
 		Preconditions.checkState( theVersions != null && theVersions.size() > 0, "must have at least one version" );
 		
 		// save all the basic items

@@ -23,10 +23,12 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.tales.parts.naming.LowerCaseEntityNameValidator;
+import com.tales.parts.naming.NameManager;
+import com.tales.parts.naming.NameValidator;
 import com.tales.parts.translators.Translator;
-import com.tales.services.Conditions;
-import com.tales.services.NameManager;
 import com.tales.services.OperationContext;
+import com.tales.system.Conditions;
 
 /**
  * The details regarding a parameter on a method we are exposing in a resource.
@@ -106,6 +108,14 @@ public class ResourceMethodParameter {
 		COOKIE,
 	}
 	
+	public static String RESOURCE_METHOD_PARAMETER_NAME_VALIDATOR = "resource_method_parameter_name";
+	
+	static {
+		if( !NameManager.hasValidator( ResourceMethodParameter.RESOURCE_METHOD_PARAMETER_NAME_VALIDATOR ) ) {
+			NameManager.setValidator( ResourceMethodParameter.RESOURCE_METHOD_PARAMETER_NAME_VALIDATOR, new LowerCaseEntityNameValidator( ) );
+		}
+	}
+	
 	// TODO: support translators in both directions AND getting/setting data (both directions)
 
 	private final ParameterSource source;
@@ -138,6 +148,8 @@ public class ResourceMethodParameter {
 	 * Shared constructor called from above then request parameter is referenced, or directly if we have a path parameter.
 	 */
 	ResourceMethodParameter( ParameterSource theSource, Class<?> theType, Type theGenericType, int theMethodParamOffset, String theValueName, int thePathReference, Translator theValueTranslator, boolean isSensitive, ResourceMethod theMethod ) {
+		NameValidator nameValidator = NameManager.getValidator( ResourceMethodParameter.RESOURCE_METHOD_PARAMETER_NAME_VALIDATOR );
+		
 		Preconditions.checkNotNull( theSource, "the source of the parameter must be given");
 		Preconditions.checkArgument( theSource == ParameterSource.PATH && thePathReference >= 0 || theSource != ParameterSource.PATH && thePathReference == -1, "if a path param, than path parameter must be non-negative, otherwise the path parameter must be -1" );
 		Preconditions.checkNotNull( theMethod, "need a method" );
@@ -145,7 +157,7 @@ public class ResourceMethodParameter {
 		Preconditions.checkNotNull( theGenericType, "need a generic type" );
 		Preconditions.checkArgument( theMethodParamOffset >= 0, "need a non-negative parameter offset" );
 		Preconditions.checkArgument( theSource == ParameterSource.CONTEXT || ( theSource != ParameterSource.CONTEXT && !Strings.isNullOrEmpty( theValueName ) ), "need a value name" );
-		Preconditions.checkArgument( theSource == ParameterSource.HEADER || theSource == ParameterSource.COOKIE || theSource == ParameterSource.CONTEXT || ( theSource != ParameterSource.HEADER && NameManager.getResourceMethodNameValidator().isValid( theValueName ) ), String.format( "Parameter '%s' on resource method '%s' does not conform to validator '%s'.", theValueName, theMethod.getName( ), NameManager.getResourceMethodNameValidator().getClass().getSimpleName() ) );
+		Preconditions.checkArgument( theSource == ParameterSource.HEADER || theSource == ParameterSource.COOKIE || theSource == ParameterSource.CONTEXT || ( theSource != ParameterSource.HEADER && nameValidator.isValid( theValueName ) ), String.format( "Parameter '%s' on resource method '%s' does not conform to validator '%s'.", theValueName, theMethod.getName( ), nameValidator.getClass().getSimpleName() ) );
 		Preconditions.checkArgument( theSource == ParameterSource.CONTEXT || theSource == ParameterSource.COOKIE || ( theSource != ParameterSource.CONTEXT && theSource != ParameterSource.COOKIE && theValueTranslator != null ), "need a translator" );
 		source = theSource;
 		type = theType;
