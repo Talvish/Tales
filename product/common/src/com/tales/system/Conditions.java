@@ -23,18 +23,50 @@ package com.tales.system;
  */
 public class Conditions {
 	/**
-	 * Checks the condition and if false throws an InvalidParameterException.
+	 * Checks the condition and if false throws a generic InvalidParameterException.
 	 */
 	public static void checkParameter( boolean theCondition, String theName ) {
 		checkParameter( theCondition, theName, "failed parameter check" );
 	}
 	
 	/**
-	 * Checks the condition and if false throws an InvalidParameterException.
+	 * Checks the condition and if false throws a generic InvalidParameterException.
 	 */
 	public static void checkParameter( boolean theCondition, String theName, String theMessage, Object... theMessageParameters ) {
 		if( !theCondition ) {
 			throw new InvalidParameterException( theName, String.format( theMessage, theMessageParameters ) );
+		} 
+	}
+	
+	/**
+	 * Checks if the object is null and if so throws an InvalidParameterException indicating the parameter is null.
+	 */
+	public static void checkParameterNull( Object theObject, String theName ) {
+		checkParameterNull( theObject, theName, "failed parameter check" );
+	}
+	
+	/**
+	 * Checks if the object is null and if so throws an InvalidParameterException indicating the parameter is null.
+	 */
+	public static void checkParameterNull( Object theObject, String theName, String theMessage, Object... theMessageParameters ) {
+		if( theObject == null ) {
+			throw new InvalidParameterException( theName, String.format( theMessage, theMessageParameters ), "parameter_null" );
+		} 
+	}
+	
+	/**
+	 * Checks the condition and if false throws a generic InvalidParameterException indicating the parameter is out of range.
+	 */
+	public static void checkParameterRange( boolean theCondition, String theName ) {
+		checkParameterRange( theCondition, theName, "failed parameter check" );
+	}
+	
+	/**
+	 * Checks the condition and if false throws a generic InvalidParameterException indicating the parameter is out of range.
+	 */
+	public static void checkParameterRange( boolean theCondition, String theName, String theMessage, Object... theMessageParameters ) {
+		if( !theCondition ) {
+			throw new InvalidParameterException( theName, String.format( theMessage, theMessageParameters ), "parameter_out_of_range" );
 		} 
 	}
 	

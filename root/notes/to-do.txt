@@ -1,5 +1,5 @@
 Multi-type contracts
--------------------------
+------------------------------------------------
 - support the multi-type options for parameters and returns from operations
   - need to have the key, value parameters for types
   - the response object would need to be aware of the ResourceResult type to verify the type of result class works and can be cast to properly
@@ -14,7 +14,7 @@ Multi-type contracts
 
 
 CORS Support
-------------
+------------------------------------------------
 - Ease the allow side by marking the resource as CORS aware
 - Verify the origin against a set of configurable origins
 - Make it so that if there is any form of error of any kind and there is an Origin header that it is sets the allows header
@@ -22,11 +22,11 @@ CORS Support
 - look here: http://stackoverflow.com/questions/1653308/access-control-allow-origin-multiple-origin-domains
 
 Cookie Support
---------------
+------------------------------------------------
 - Make cookies part of the ResourceResult
 
 General Website handling
----------------
+------------------------------------------------
 - Allow custom error handling pages
   - servlet context's have error handlers (sent in the constructor) that can be set that could potentially handle this, could 
     support a way to register a location to cover
@@ -35,32 +35,58 @@ General Website handling
   maybe can use lambdas to do this but the exception should occur once
 
 Signing Support
--------------------
+------------------------------------------------
 - fix or remove what is there
 
 Services
--------------------
+------------------------------------------------
 - Change the 'stop'/'kill'/'suspend'/'resume' control commands to take time periods, which will wait prior to executing (send a 202 back?)
 
 Async Support
---------------------
+------------------------------------------------
 - Look at properly async handling and funneling
 
-Misc
---------------------
-- Increase HTTP verb supporting, in particular OPTIONS, which may be needed for CORS support
+Serialization
+------------------------------------------------
+- updated JsonTranslationFacility to handle generics better so technically you could ask for a List<a> different than a List<b> 
+  though would need to watch the generic of generic scenario
+
+Contracts
+------------------------------------------------
 - We may want cookies and headers to be part of the matching spec for which method to run
-- Consider making it so parameters can get validation annotations
+- cannot return the shape differently for parameters, but instead probably need a way to manage exception handling shape and place into the status response
+- support polymorphic parameters and return
 - Currently bad parameters send back just a parameter name in the result body, more detail would be good and 
-  I want to think about where it should live
 - A way to send back the set of parameters that are not working
+- Increase HTTP verb supporting, in particular OPTIONS, which may be needed for CORS support
+- Consider making it so parameters can get validation annotations I want to think about where it should live
+- add support for mention headers/cookies in the method contract
+  this will be used both to ensure they are set when sending out
+  but also for automatic generation of the clients
+
+Status
+------------------------------------------------
+- track status by version of Resource
+
+
+Config
+------------------------------------------------
 - support listening to changes in config
 - json-based config, for supporting sensitive params
 - network based config
 - map source config should copy the input to be save (in case something underlying changes them)
-- add support for mention headers/cookies in the method contract
-  this will be used both to ensure they are set when sending out
-  but also for automatic generation of the clients
+
+Client
+------------------------------------------------
+- support a helper that can convert from service status responses to local exceptions
+- make the client support async calls
+- update the logging comments to match the server  side (indicating sync/async)
+- add status blocks
+
+
+Misc
+------------------------------------------------
+- update Conditions/parameter checking to take into account things like null, out of range, expression, etc. so it can be reported back
 
 Update Admin to use Resource Contracts
 ------------------------------------------------

@@ -100,7 +100,8 @@ public final class ResourceFacility implements Facility {
 					parameter.addProperty( "name", theException.getName( ) );
 				}
 				return new ResourceMethodResult(
-						parameter,
+						// TODO: we were sending the parameter in BUT it causes client problems since since it changes the expected return type / kills the type compatibility 
+						// parameter		
 						Status.CALLER_BAD_INPUT,
 						theException.getCode(),
 						String.format( 
