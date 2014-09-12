@@ -27,11 +27,11 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.tales.contracts.services.http.ServletContract;
-import com.tales.services.Status;
 import com.tales.services.http.AttributeConstants;
 import com.tales.services.http.FailureSubcodes;
 import com.tales.services.http.HttpInterfaceBase;
 import com.tales.services.http.ResponseHelper;
+import com.tales.system.Status;
 
 
 /**

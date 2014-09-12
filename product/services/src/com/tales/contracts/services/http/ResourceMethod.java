@@ -55,9 +55,9 @@ import com.tales.parts.translators.Translator;
 import com.tales.serialization.Readability;
 import com.tales.serialization.UrlEncoding;
 import com.tales.serialization.json.JsonTypeReference;
-import com.tales.services.Status;
 import com.tales.services.OperationContext;
 import com.tales.services.http.FailureSubcodes;
+import com.tales.system.Status;
 
 /**
  * This class represents a method that is mapping from a http request 

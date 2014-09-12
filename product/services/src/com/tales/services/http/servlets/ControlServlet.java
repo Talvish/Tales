@@ -18,6 +18,7 @@ package com.tales.services.http.servlets;
 import java.io.IOException;
 
 
+
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -27,9 +28,9 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Strings;
 import com.tales.contracts.services.http.ServletContract;
-import com.tales.services.Status;
 import com.tales.services.http.FailureSubcodes;
 import com.tales.services.http.ResponseHelper;
+import com.tales.system.Status;
 
 
 /**

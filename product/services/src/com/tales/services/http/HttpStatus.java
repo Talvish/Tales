@@ -15,7 +15,7 @@
 // ***************************************************************************
 package com.tales.services.http;
 
-import com.tales.services.Status;
+import com.tales.system.Status;
 
 /**
  * Enum representing the supported status codes. 

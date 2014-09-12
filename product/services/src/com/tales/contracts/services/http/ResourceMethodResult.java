@@ -17,7 +17,7 @@ package com.tales.contracts.services.http;
 
 import com.google.common.base.Preconditions;
 import com.google.gson.JsonElement;
-import com.tales.services.Status;
+import com.tales.system.Status;
 
 /**
  * This class represents the result of an execution of a resource method.

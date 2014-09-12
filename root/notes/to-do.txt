@@ -82,6 +82,9 @@ Client
 - make the client support async calls
 - update the logging comments to match the server  side (indicating sync/async)
 - add status blocks
+- move the Conditions items out from common and into service since it really is meant for the 
+  facade handling of errors and automatic responses
+- status was moved to common (com.tales.system), probably need a better spot (items needed for service work that is shared) 
 
 
 Misc

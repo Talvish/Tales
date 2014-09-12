@@ -22,8 +22,8 @@ import com.tales.contracts.services.http.ResourceOperation;
 import com.tales.contracts.services.http.ResourceResult;
 import com.tales.services.DependencyException;
 import com.tales.services.DependencyException.Problem;
-import com.tales.services.Status;
 import com.tales.system.Conditions;
+import com.tales.system.Status;
 
 /***
  * This contract shows customizing the return response.

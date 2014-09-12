@@ -15,7 +15,7 @@
 // ***************************************************************************
 package com.tales.services;
 
-import com.tales.services.Status;
+import com.tales.system.Status;
 
 /**
  * An exception that can be thrown by the servlets or resources that indicate there is a problem

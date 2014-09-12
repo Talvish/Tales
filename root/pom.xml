@@ -65,10 +65,12 @@
   
   <modules>
     <module>../product/common</module>
+    <module>../product/client</module>
     <module>../product/services</module>
     <module>../samples/sample_complex_service</module>
     <module>../samples/sample_multiversion_service</module>
     <module>../samples/sample_simple_service</module>
+    <module>../samples/sample_user_client</module>
     <module>../samples/sample_user_service</module>
     <module>../samples/sample_website_service</module>
   </modules>
