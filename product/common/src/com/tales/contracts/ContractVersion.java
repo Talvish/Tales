@@ -64,6 +64,23 @@ public class ContractVersion {
 
 	private final String versionString;	
 	private final Date versionDate;
+
+	/**
+	 * Simple helper method that verifies the version is correctly formatted.
+	 * @param theVersion the version string to verify
+	 * @return returns true if valid, false if not (including if null or empty)
+	 */
+	public static boolean isValidVersion( String theVersion ) {
+		boolean isValid = false;
+		
+		if( !Strings.isNullOrEmpty( theVersion ) ) {
+			Matcher matcher = ONLY_VERSION_PATTERN.matcher( theVersion );
+			if( matcher.matches( ) ) {
+				isValid = true;
+			}
+		}
+		return isValid;
+	}
 	
 	/**
 	 * Constructs a version string from the data and revision.

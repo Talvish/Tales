@@ -40,6 +40,7 @@ import com.google.common.base.Strings;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+import com.tales.communication.Status;
 import com.tales.contracts.Subcontract;
 import com.tales.contracts.services.ContractStatus;
 import com.tales.contracts.services.http.ResourceMethodParameter.ContextValue;
@@ -57,7 +58,6 @@ import com.tales.serialization.UrlEncoding;
 import com.tales.serialization.json.JsonTypeReference;
 import com.tales.services.OperationContext;
 import com.tales.services.http.FailureSubcodes;
-import com.tales.system.Status;
 
 /**
  * This class represents a method that is mapping from a http request 

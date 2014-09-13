@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-
+import com.tales.communication.HttpEndpoint;
 import com.tales.contracts.ContractVersion;
 import com.tales.contracts.Subcontract;
 import com.tales.contracts.services.ServiceContract;
@@ -47,7 +47,6 @@ import com.tales.services.OperationContext;
 import com.tales.services.Service;
 import com.tales.services.OperationContext.Details;
 import com.tales.services.http.AttributeConstants;
-import com.tales.services.http.HttpEndpoint;
 import com.tales.services.http.HttpInterfaceBase;
 import com.tales.services.http.ResponseHelper;
 

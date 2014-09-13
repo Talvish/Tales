@@ -24,11 +24,10 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.eclipse.jetty.http.HttpMethod;
-
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
+import com.tales.communication.HttpVerb;
 import com.tales.parts.translators.Translator;
 import com.tales.serialization.UrlEncoding;
 import com.tales.serialization.json.JsonTypeReference;
@@ -62,7 +61,7 @@ public class ResourceMethod {
 	private final String methodPath;	// e.g. sign_in
 	private final String methodUrl;
 	private final Class<?> returnType;
-	private final HttpMethod httpVerb;
+	private final HttpVerb httpVerb;
 	
 	private final Map<String,Integer> pathParameterIndices = new HashMap<String,Integer>( );
 	private final List<String> pathParameterNames = new ArrayList<String>( );
@@ -89,9 +88,7 @@ public class ResourceMethod {
 	 * @param theMethodPath the partial path (doesn't include http scheme, domain, contract root, etc)
 	 * @param theClient the client responsible for creating this ResourceMethod
 	 */
-	protected ResourceMethod( String theName, Class<?> theReturnType, HttpMethod theHttpVerb, String theMethodPath, ResourceClient theClient ) {
-		// TODO: make it so the HTTP VERB comes from me not Jetty so we can hide the implementation
-		// TODO: verify now we want the method path to end (/ or not) and correct like we do with bind in the interface manager
+	protected ResourceMethod( String theName, Class<?> theReturnType, HttpVerb theHttpVerb, String theMethodPath, ResourceClient theClient ) {
 		Preconditions.checkArgument( !Strings.isNullOrEmpty( theName ),  "theName" );
 		Preconditions.checkNotNull( theReturnType, "theReturnType" );
 		Preconditions.checkNotNull( theHttpVerb, "theHttpVerb" );
@@ -162,7 +159,7 @@ public class ResourceMethod {
 	 * The HTTP verb (e.g. GET, POST, PUT, etc.) that this method will use.
 	 * @return the HTTP verb to be used to call the service
 	 */
-	public HttpMethod getHttpVerb( ) {
+	public HttpVerb getHttpVerb( ) {
 		return httpVerb;
 	}
 
@@ -195,8 +192,7 @@ public class ResourceMethod {
 		Preconditions.checkNotNull( pathParameters.get( index ) == null, "parameter '%s' at index '%s' was already defined", theName, index );
 		Preconditions.checkNotNull( theType, "type not specified for '%s'", theName );
 		
-		Translator translator = getSuitableTranslator( theType, theGenericType );
-		// TODO, this needs to be URL encoded
+		Translator translator = getSuitableTranslator( theType, theGenericType );  // this doesn't URL encode here, that is done when generating the path during the execute call 
 		
 		pathParameters.set( index, new ResourceMethodParameter( theName, index, theType, theGenericType, translator ) );
 		return this;
@@ -224,8 +220,7 @@ public class ResourceMethod {
 		Preconditions.checkArgument( pathParameters.get( theIndex ) == null, "the path parameter at index '%s' was already defined", theIndex );
 		Preconditions.checkNotNull( theType, "theType" );
 
-		Translator translator = getSuitableTranslator( theType, theGenericType );
-		// TODO: this needs to be URL encoded
+		Translator translator = getSuitableTranslator( theType, theGenericType );  // this doesn't URL encode here, that is done when generating the path during the execute call
 		
 		pathParameters.set( theIndex, new ResourceMethodParameter( "path_param_" + String.valueOf( theIndex ), theIndex, theType, theGenericType, translator ) );
 		return this;
@@ -382,10 +377,8 @@ public class ResourceMethod {
 		Matcher parameterMatcher = PARAMETER_PATTERN.matcher( thePath );
 		String paramName;
 		
-		pathBuilder.append( theClient.getServiceBase( ) ); // we expect the given values to be URL encoded as needed
-		if( !theClient.getServiceBase( ).endsWith( "/") ) {
-			pathBuilder.append( "/" );
-		}
+		pathBuilder.append( theClient.getEndpoint( ).toString( ) ); // we expect the given values to be URL encoded as needed, and we know that a trailing '/' isn't here
+		pathBuilder.append( "/" );
 		pathBuilder.append( theClient.getContractRoot( ) ); // we expect the given values to be URL encoded as needed
 		if( !theClient.getContractRoot( ).endsWith( "/") ) {
 			pathBuilder.append( "/" );

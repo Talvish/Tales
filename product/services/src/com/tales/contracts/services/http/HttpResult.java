@@ -26,8 +26,8 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
 import com.google.common.base.Preconditions;
+import com.tales.communication.Status;
 import com.tales.services.http.HeaderConstants;
-import com.tales.system.Status;
 
 /**
  * This class represents the result of an execution of a HTTP request.

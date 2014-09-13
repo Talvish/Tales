@@ -27,10 +27,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
+import com.tales.communication.Status;
 import com.tales.serialization.Readability;
 import com.tales.services.OperationContext;
 import com.tales.services.OperationContext.Details;
-import com.tales.system.Status;
 
 // NOTE: Given the overridden servlet holder to manage
 //       the error handling, perhaps we could move this

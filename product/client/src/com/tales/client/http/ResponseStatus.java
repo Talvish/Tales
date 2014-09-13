@@ -15,9 +15,9 @@
 // ***************************************************************************
 package com.tales.client.http;
 
+import com.tales.communication.Status;
 import com.tales.contracts.data.DataContract;
 import com.tales.contracts.data.DataMember;
-import com.tales.system.Status;
 
 /**
  * The status information of a request to a Tales-enabled service.

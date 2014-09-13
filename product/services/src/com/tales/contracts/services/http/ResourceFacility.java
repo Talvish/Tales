@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.gson.JsonObject;
+import com.tales.communication.Status;
 import com.tales.contracts.data.DataContractTypeSource;
 import com.tales.parts.naming.LowerCaseEntityNameValidator;
 import com.tales.parts.translators.Translator;
@@ -41,7 +42,6 @@ import com.tales.system.Facility;
 import com.tales.system.InvalidParameterException;
 import com.tales.system.InvalidStateException;
 import com.tales.system.NotFoundException;
-import com.tales.system.Status;
 
 
 // TODO: - do not force all members existing when you save (json types)

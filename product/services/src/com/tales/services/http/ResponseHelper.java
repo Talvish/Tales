@@ -31,11 +31,12 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.tales.communication.HttpStatus;
+import com.tales.communication.Status;
 import com.tales.contracts.services.http.ResourceMethodResult;
 import com.tales.serialization.Readability;
 import com.tales.services.OperationContext;
 import com.tales.services.OperationContext.Details;
-import com.tales.system.Status;
 
 /**
  * Simple class with static methods that provide methods for

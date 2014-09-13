@@ -45,6 +45,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.tales.communication.HttpEndpoint;
 import com.tales.contracts.services.ServiceContract;
 import com.tales.contracts.services.ContractManager;
 import com.tales.contracts.services.http.HttpContract;
@@ -325,7 +326,7 @@ public abstract class HttpInterfaceBase implements Interface {
 		ArrayList<HttpEndpoint> modifiableEndpoints = new ArrayList<HttpEndpoint>( endPoints.size() );
 		
 		for( String stringEndpoint : endPoints ) {
-			endpoint = new HttpEndpoint( stringEndpoint );
+			endpoint = new HttpEndpoint( stringEndpoint, false );
 			if( endpoint.getScheme().equals( "https") ) {
 				if( sslFactory == null ) {
 					throw new IllegalArgumentException( String.format( "The http interface '%s' is attempting to use SSL on endpoint '%s', but SSL is not configured for this interface.", this.name, endpoint.toString( ) ) );

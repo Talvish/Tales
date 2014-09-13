@@ -16,6 +16,7 @@
 package com.tales.samples.websiteservice;
 
 import com.google.common.base.Strings;
+import com.tales.communication.Status;
 import com.tales.contracts.services.http.CookieParam;
 import com.tales.contracts.services.http.HeaderParam;
 import com.tales.contracts.services.http.RequestParam;
@@ -23,7 +24,6 @@ import com.tales.contracts.services.http.ResourceContract;
 import com.tales.contracts.services.http.ResourceOperation;
 import com.tales.contracts.services.http.ResourceResult;
 import com.tales.system.Conditions;
-import com.tales.system.Status;
 
 /***
  * This a very simple contract with two operations. One that will

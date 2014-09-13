@@ -50,7 +50,7 @@ public class JsonElementToStringToChainTranslator implements Translator {
 		} else {
 			try {
 				returnValue = chainedTranslator.translate( ( ( JsonElement )anObject ).getAsString( ) );
-			} catch( ClassCastException e ) {
+			} catch( ClassCastException | IllegalStateException | UnsupportedOperationException e ) {
 				throw new TranslationException( e );
 			}
 		}

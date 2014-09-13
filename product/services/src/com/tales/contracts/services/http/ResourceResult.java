@@ -19,9 +19,9 @@ import javax.servlet.http.Cookie;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.tales.communication.Status;
 import com.tales.contracts.data.DataContract;
 import com.tales.system.Conditions;
-import com.tales.system.Status;
 
 /**
  * The result coming out of a resource method call.

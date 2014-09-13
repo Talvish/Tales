@@ -33,10 +33,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
+import com.tales.communication.HttpStatus;
+import com.tales.communication.Status;
 import com.tales.contracts.services.http.HttpContract;
 import com.tales.services.OperationContext;
 import com.tales.system.ExecutionLifecycleState;
-import com.tales.system.Status;
 
 /**
  * This is a servlet holder that has a contract

@@ -27,6 +27,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.google.common.base.Preconditions;
+import com.tales.communication.HttpStatus;
+import com.tales.communication.Status;
 import com.tales.contracts.ContractVersion;
 import com.tales.contracts.services.http.ResourceFacility;
 import com.tales.contracts.services.http.ResourceMethod;
@@ -38,9 +40,7 @@ import com.tales.services.OperationContext;
 import com.tales.services.http.AttributeConstants;
 import com.tales.services.http.FailureSubcodes;
 import com.tales.services.http.ParameterConstants;
-import com.tales.services.http.HttpStatus;
 import com.tales.services.http.ResponseHelper;
-import com.tales.system.Status;
 
 
 /**

@@ -27,9 +27,9 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
+import com.tales.communication.CommunicationException;
 import com.tales.parts.translators.TranslationException;
 import com.tales.serialization.UrlEncoding;
-import com.tales.system.CommunicationException;
 
 /**
  * The class representing a request to a Tales-enabled service.
@@ -67,7 +67,8 @@ public class ResourceRequest {
 			ResourceMethodParameter parameter;
 			for( int index = 0; index < thePathParameters.length; index += 1 ) {
 				parameter = theMethod.getPathParameters( ).get( index );
-				pathParameters[ index ] = UrlEncoding.encode( ( String )parameter.getTranslator().translate( thePathParameters[ index ] ) );
+				// we are URL encoding the path parameter here instead of relying on it happening in the translator
+				pathParameters[ index ] = UrlEncoding.encode( ( String )parameter.getTranslator().translate( thePathParameters[ index ] ) ); 
 			}
 		} else {
 			pathParameters = null;
@@ -75,7 +76,7 @@ public class ResourceRequest {
 			
 		request = client.getHttpClient()
 		.newRequest( String.format( method.getMethodUrl(), pathParameters ) )
-		.method( method.getHttpVerb() ); 
+		.method( method.getHttpVerb().getValue() ); 
 	}
 
 	/**
@@ -157,7 +158,7 @@ public class ResourceRequest {
 			// grab the response as a string, it should all be json, so let's interpret
 			JsonElement jsonResult = client.jsonParser.parse( response.getContentAsString() );
 			// now we need to convert what was returned as a result object ... BUT ..
-			ResourceResult<T> objectResult = ( ResourceResult<T> )client.getResourceType().getFromJsonTranslator().translate( jsonResult );
+			ResourceResult<T> objectResult = ( ResourceResult<T> )client.getResultType().getFromJsonTranslator().translate( jsonResult );
 			// the actual result is not interpreted since we don't the type at registration time so we deal with the result
 			// value separately
 			JsonElement jsonReturn = jsonResult.getAsJsonObject().get( "return" );
@@ -175,7 +176,7 @@ public class ResourceRequest {
 			throw new CommunicationException( String.format( "Invalid json response from '%s'.", this.method.getMethodUrl( ) ), e );
 			
 		} catch( TranslationException e ) {
-			throw new CommunicationException( String.format( "Unexpected data while converting response from '%s'.", this.method.getMethodUrl( ) ), e );
+			throw new CommunicationException( String.format( "Unexpected data while converting response from '%s'. Verify defined parameter and return types match what is sent on the wire.", this.method.getMethodUrl( ) ), e );
 			
 		} catch( TimeoutException e ) {
 			throw new CommunicationException( String.format( "Timed out while communicating with '%s'.", e.getClass().getSimpleName(), this.method.getMethodUrl( ) ), e );
@@ -194,7 +195,7 @@ public class ResourceRequest {
 					"Executed, synchronously, resource method '{}' from contract '{}' in {} ms.", new Object[] {
 							this.method.getName(),
 							this.client.contractRoot,
-							executionTime} );
+							( ( double )executionTime ) * 0.000001 } );
 		}
 	}
 }

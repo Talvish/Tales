@@ -13,7 +13,7 @@
 //*  See the License for the specific language governing permissions and
 //*  limitations under the License.
 //***************************************************************************
-package com.tales.system;
+package com.tales.communication;
 
 /**
 * Exception thrown when there is a communication failure to some online service/location.

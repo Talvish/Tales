@@ -63,6 +63,7 @@ Contracts
 - add support for mention headers/cookies in the method contract
   this will be used both to ensure they are set when sending out
   but also for automatic generation of the clients
+- change the contract to take an array of HttpVerbs instead of being part of the regex 
 
 Status
 ------------------------------------------------
@@ -85,11 +86,17 @@ Client
 - move the Conditions items out from common and into service since it really is meant for the 
   facade handling of errors and automatic responses
 - status was moved to common (com.tales.system), probably need a better spot (items needed for service work that is shared) 
-
+- support post body parameters
+  http://download.eclipse.org/jetty/stable-9/apidocs/
+  BytesContentProvider provider;
+  FormContentProvider provider;
+- support header overrides
+- add SSL support (add a method to indicate it is secure)
 
 Misc
 ------------------------------------------------
 - update Conditions/parameter checking to take into account things like null, out of range, expression, etc. so it can be reported back
+- change to not use DateTime but epoch time (for the pieces we care about)
 
 Update Admin to use Resource Contracts
 ------------------------------------------------
