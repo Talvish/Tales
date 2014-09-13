@@ -96,11 +96,26 @@ public class ResourceClient {
 	 * @param theContractRoot the contract root to talk to, which is of the form /name, e.g. /login
 	 * @param theContractVersion the version of the contract which is a date of the form yyyyMMDD, e.g. 20140925
 	 * @param theUserAgent the user agent that this client should use
+	 * @param allowUntrustedSSL indicates whether SSL will be trusted or not, which can be useful for self-certs, early development, etc
 	 */
-	public ResourceClient( String theEndpoint, String theContractRoot, String theContractVersion, String theUserAgent ) {
-		this( theEndpoint, theContractRoot, theContractVersion, theUserAgent, null, null );
+	public ResourceClient( String theEndpoint, String theContractRoot, String theContractVersion, String theUserAgent, boolean allowUntrustedSSL ) {
+		this( theEndpoint, theContractRoot, theContractVersion, theUserAgent, null, allowUntrustedSSL, null );
 	}
 	
+	/**
+	 * Creates a resource client that will use the specified HttpClient and JsonTypeFacility.
+	 * The endpoint and contract root should already have url encoded anything that needs url encoding.
+	 * This constructor assumes all SSL setup, if needed, has already been handled and setup in the HttpClient.
+	 * @param theEndpoint the end point to talk to which should be of the form http(s)?//name:port, e.g. http://localhost:8000
+	 * @param theContractRoot the contract root to talk to, which is of the form /name, e.g. /login
+	 * @param theContractVersion the version of the contract which is a date of the form yyyyMMDD, e.g. 20140925
+	 * @param theUserAgent the user agent that this client should use
+	 * @param theClient the HttpClient to use
+	 * @param theJsonFacility the JsonTypeFacility to use
+	 */
+	public ResourceClient( String theEndpoint, String theContractRoot, String theContractVersion, String theUserAgent, HttpClient theClient, JsonTranslationFacility theJsonFacility ) {
+		this( theEndpoint, theContractRoot, theContractVersion, theUserAgent, theClient, false, theJsonFacility );
+	}
 	/**
 	 * Creates a resource client that will use the specified HttpClient and JsonTypeFacility.
 	 * The endpoint and contract root should already have url encoded anything that needs url encoding.
@@ -111,7 +126,7 @@ public class ResourceClient {
 	 * @param theClient the HttpClient to use
 	 * @param theJsonFacility the JsonTypeFacility to use
 	 */
-	public ResourceClient( String theEndpoint, String theContractRoot, String theContractVersion, String theUserAgent, HttpClient theClient, JsonTranslationFacility theJsonFacility ) {
+	private ResourceClient( String theEndpoint, String theContractRoot, String theContractVersion, String theUserAgent, HttpClient theClient, boolean allowUntrustedSSL, JsonTranslationFacility theJsonFacility ) {
 		Preconditions.checkArgument( !Strings.isNullOrEmpty( theEndpoint ), "need a valid service endpoint" );
     	Preconditions.checkArgument( !Strings.isNullOrEmpty( theContractRoot ), "need a contract root" );
     	Preconditions.checkArgument( theContractRoot.startsWith( "/" ), "the contract root '%s' must be a reference from the root (i.e. start with '/')", theContractRoot );
@@ -124,54 +139,60 @@ public class ResourceClient {
 		contractVersion = theContractVersion;
 		userAgent = theUserAgent;
 		
-		// TODO: ssl updates
-		// if the client isn't null and the endpoint is ssl enabled, I should probably check the client is doing ssl
-		// if the client is null and we are in lax security mode then create the overrides the trust handling 
-		
 		// use the client if sent in, but create a working one otherwise
 		if( theClient == null ) {
-		    // Create a trust manager that does not validate certificate chains
-		    // Create a trust manager that does not validate certificate chains
-		    final TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
-		    	// this was based on the code found here:
-		    	// https://code.google.com/p/misc-utils/wiki/JavaHttpsUrl
-				@Override
-				public void checkClientTrusted(X509Certificate[] chain,
-						String authType) throws CertificateException {
-				}
-				@Override
-				public void checkServerTrusted(X509Certificate[] chain,
-						String authType) throws CertificateException {
-				}
-				@Override
-				public X509Certificate[] getAcceptedIssuers() {
-					return null;
-				}
-		    } };
-		    
-		    // Install the all-trusting trust manager
-		    SSLContext sslContext = null;
-		    SslContextFactory sslContextFactory = null;
 			try {
-				sslContext = SSLContext.getInstance( "SSL" );
-				sslContext.init( null, trustAllCerts, new java.security.SecureRandom() );
-
-				sslContextFactory = new SslContextFactory();
-				sslContextFactory.setSslContext( sslContext );
-
-			} catch (NoSuchAlgorithmException e2) {
-			} catch (KeyManagementException e1) {
-				// TODO: this isn't good
-			}
-
-		    
-			if( sslContextFactory != null ) {
-				httpClient = new HttpClient( sslContextFactory );
-			} else {
-				httpClient = new HttpClient(  );
-			}
-			try {
+			    SslContextFactory sslContextFactory = null;
+	
+			    if( endpoint.isSecure( ) ) {
+			    	if( allowUntrustedSSL ) {
+			    		// so we need SSL communication BUT we don't need to worry about it being valid, likley
+			    		// because the caller is self-cert'ing or in early development ... we may need to do 
+			    		// more here mind you
+			    		
+				    	// the following code was based https://code.google.com/p/misc-utils/wiki/JavaHttpsUrl
+				    	// if we were to look into mutual SSL and overall key handling, I probably want to
+				    	// take a closer look
+				    	
+				    	// We need to create a trust manager that essentially doesn't except/fail checks
+					    final TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
+					    	// this was based on the code found here:
+		
+							@Override
+							public void checkClientTrusted(X509Certificate[] chain,
+									String authType) throws CertificateException {
+							}
+							@Override
+							public void checkServerTrusted(X509Certificate[] chain,
+									String authType) throws CertificateException {
+							}
+							@Override
+							public X509Certificate[] getAcceptedIssuers() {
+								return null;
+							}
+					    } };
+					    
+					    // then we need to create an SSL context that uses lax trust manager 
+					    SSLContext sslContext = SSLContext.getInstance( "SSL" );
+						sslContext.init( null, trustAllCerts, new java.security.SecureRandom() );
+	
+						// and finally, create the SSL context that
+						sslContextFactory = new SslContextFactory();
+						sslContextFactory.setSslContext( sslContext );
+			    	} else {
+			    		// TODO: this needs to be tested against 
+			    		//		 a) real certs with real paths that aren't expired
+			    		//		 b) real certs with real paths that are expired
+			    		sslContextFactory = new SslContextFactory( );
+			    	}
+					httpClient = new HttpClient( sslContextFactory );
+			    } else {
+					httpClient = new HttpClient(  );
+			    }
+			    
 				httpClient.start( );
+			} catch (NoSuchAlgorithmException | KeyManagementException e) {
+				throw new IllegalStateException( "unable to create the resource client due to a problem setting up SSL", e );
 			} catch (Exception e ) {
 				throw new IllegalStateException( "unable to create the resource client due to the inability to start the HttpClient", e );
 			}

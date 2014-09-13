@@ -52,14 +52,23 @@ public class UserClient extends ResourceClient {
     	UserClient client = new UserClient( serviceBase );
     	
     	// client has been created, so let's load a well known suer
-    	client.getUser( UUID.fromString( "00000000-0000-0000-0000-000000000001" ) );
+    	User user = client.getUser( UUID.fromString( "00000000-0000-0000-0000-020000000001" ) );
+    	if( user != null ) {
+    		logger.debug( "Found user: '{}'", user.getFirstName( ) );
+    	} else {
+    		logger.debug( "Did not find user." );
+    	}
+    	// TODO: this doesn't exit at the end of the main here, need to understand why
+    	// TODO: one time when this ran it throw some form of SSL EOF related error that 
+    	//       I need to track down (this happened on the server too)
+    	System.exit( 0 );
 	}
 
 	private String debugOptions; // header overrides, response overrides, etc
 	
 	
 	public UserClient( String theServiceBase ) {
-		super( theServiceBase, "/user", "20140124", "UserAgentSample/1.0" );
+		super( theServiceBase, "/user", "20140124", "UserAgentSample/1.0", true ); // we are allowing untrusted SSL since the sample self-cert'ed
 		
 		// we now define the methods that we are going to expose for calling
 		this.methods = new ResourceMethod[ 1 ];
