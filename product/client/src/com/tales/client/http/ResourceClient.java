@@ -15,6 +15,15 @@
 // ***************************************************************************
 package com.tales.client.http;
 
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.http.HttpHeader;
@@ -23,7 +32,6 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.gson.JsonParser;
-
 import com.tales.communication.HttpEndpoint;
 import com.tales.communication.HttpVerb;
 import com.tales.contracts.ContractVersion;
@@ -52,42 +60,6 @@ import com.tales.system.Conditions;
  *
  */
 public class ResourceClient {
-//	// so we need to see if we have SSL settings for this interface
-//	String sslKeyStoreConfigName = String.format( ConfigurationConstants.HTTP_INTERFACE_SSL_KEY_STORE, theName );
-//	String sslCertAliasConfigName = String.format( ConfigurationConstants.HTTP_INTERFACE_SSL_CERT_ALIAS, theName );
-//	// if we have a key store defined on the  service and if so create the ssl factory
-//	if( service.getConfigurationManager().contains( sslKeyStoreConfigName ) ) {
-//		String keyStoreName = service.getConfigurationManager().getStringValue( sslKeyStoreConfigName ) ;
-//		String certAlias = service.getConfigurationManager().getStringValue( sslCertAliasConfigName, "" );
-//		try {
-//			KeyStore keyStore = service.getKeyStoreManager().getKeyStore( keyStoreName );
-//			
-//			if( keyStore == null ) {
-//				throw new ConfigurationException( String.format( "Interface '%s' is attempting to use a non-existent key store called '%s'.", theName, keyStoreName ) );
-//			} else {
-//				sslFactory = new SslContextFactory();
-//				sslFactory.setKeyStore( keyStore );
-//				// if we have the cert alias available, then we use
-//
-//				
-//				if( !Strings.isNullOrEmpty( certAlias ) ) {
-//					if( !keyStore.containsAlias( certAlias ) ) {
-//						throw new ConfigurationException( String.format( "Interface '%s' is attempting to use a non-existent certificate alias '%s' on key store '%s'.", theName, certAlias, keyStoreName ) );
-//					} else {
-//						sslFactory.setCertAlias( certAlias );
-//					}
-//				}
-//				// oddly we need to grab the key again, even though the store is open
-//				// I'm not very happy with having to do this, but Jetty needs the password again
-//				sslFactory.setKeyStorePassword( service.getConfigurationManager().getStringValue( String.format( ConfigurationConstants.SECURITY_KEY_STORE_PASSWORD_FORMAT, keyStoreName ) ) );
-//			}
-//		} catch( KeyStoreException e ) {
-//			throw new IllegalStateException( String.format( "Interface '%s' is using an invalid key store called '%s'.", theName, keyStoreName ) );
-//		}
-//	} else {
-//		sslFactory = null;
-//	}
-	
 	// make sure there is a way to share connection/thread pools across
 	// so if talking to a lot of services, there isn't a huge overhead
 	
@@ -101,7 +73,6 @@ public class ResourceClient {
 	
 	// need to have an array for the different methods
 	protected final HttpClient httpClient;
-	protected final SslContextFactory sslContextFactory; // this likely isn't needed since it could be done on setup
 
 	protected ResourceMethod[] methods;
 	
@@ -153,18 +124,59 @@ public class ResourceClient {
 		contractVersion = theContractVersion;
 		userAgent = theUserAgent;
 		
+		// TODO: ssl updates
+		// if the client isn't null and the endpoint is ssl enabled, I should probably check the client is doing ssl
+		// if the client is null and we are in lax security mode then create the overrides the trust handling 
+		
 		// use the client if sent in, but create a working one otherwise
 		if( theClient == null ) {
-			httpClient = new HttpClient( );
+		    // Create a trust manager that does not validate certificate chains
+		    // Create a trust manager that does not validate certificate chains
+		    final TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
+		    	// this was based on the code found here:
+		    	// https://code.google.com/p/misc-utils/wiki/JavaHttpsUrl
+				@Override
+				public void checkClientTrusted(X509Certificate[] chain,
+						String authType) throws CertificateException {
+				}
+				@Override
+				public void checkServerTrusted(X509Certificate[] chain,
+						String authType) throws CertificateException {
+				}
+				@Override
+				public X509Certificate[] getAcceptedIssuers() {
+					return null;
+				}
+		    } };
+		    
+		    // Install the all-trusting trust manager
+		    SSLContext sslContext = null;
+		    SslContextFactory sslContextFactory = null;
+			try {
+				sslContext = SSLContext.getInstance( "SSL" );
+				sslContext.init( null, trustAllCerts, new java.security.SecureRandom() );
+
+				sslContextFactory = new SslContextFactory();
+				sslContextFactory.setSslContext( sslContext );
+
+			} catch (NoSuchAlgorithmException e2) {
+			} catch (KeyManagementException e1) {
+				// TODO: this isn't good
+			}
+
+		    
+			if( sslContextFactory != null ) {
+				httpClient = new HttpClient( sslContextFactory );
+			} else {
+				httpClient = new HttpClient(  );
+			}
 			try {
 				httpClient.start( );
 			} catch (Exception e ) {
 				throw new IllegalStateException( "unable to create the resource client due to the inability to start the HttpClient", e );
 			}
-			sslContextFactory = null;
 		} else {
 			httpClient = theClient;
-			sslContextFactory = null;
 		}
 		httpClient.setUserAgentField( new HttpField( HttpHeader.USER_AGENT, theUserAgent ) );
 

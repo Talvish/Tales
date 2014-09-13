@@ -92,6 +92,7 @@ Client
   FormContentProvider provider;
 - support header overrides
 - add SSL support (add a method to indicate it is secure)
+- consider mutual SSL support, which means adding keystore support into the ssl context factory
 
 Misc
 ------------------------------------------------

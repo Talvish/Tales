@@ -377,9 +377,10 @@ public class ResourceMethod {
 		Matcher parameterMatcher = PARAMETER_PATTERN.matcher( thePath );
 		String paramName;
 		
-		pathBuilder.append( theClient.getEndpoint( ).toString( ) ); // we expect the given values to be URL encoded as needed, and we know that a trailing '/' isn't here
-		pathBuilder.append( "/" );
-		pathBuilder.append( theClient.getContractRoot( ) ); // we expect the given values to be URL encoded as needed
+		// we expect the given values to be URL encoded as needed, and we 
+		// know that a trailing '/' isn't here and the contract root has it
+		pathBuilder.append( theClient.getEndpoint( ).toString( ) ); 
+		pathBuilder.append( theClient.getContractRoot( ) ); 
 		if( !theClient.getContractRoot( ).endsWith( "/") ) {
 			pathBuilder.append( "/" );
 		}

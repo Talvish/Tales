@@ -21,12 +21,14 @@ import java.util.concurrent.TimeoutException;
 
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
+
 import com.tales.communication.CommunicationException;
 import com.tales.parts.translators.TranslationException;
 import com.tales.serialization.UrlEncoding;
@@ -95,18 +97,22 @@ public class ResourceRequest {
 	}
 
 	/**
-	 * Sets the data to use for a particular cookie. 
+	 * Sets the data to use for a particular cookie.
+	 * The cookie passed in is used to define path, age, etc, while the value
+	 * it stores will be over written the the value object passed in 
 	 * @param theCookie the cookie value to use and set
+	 * @param theValue the value to set the on the cookie (which will override the current cookies value)
 	 * @return the request, to make it easy to chain a set of calls like this together
 	 */
-	public ResourceRequest setCookieParameter( HttpCookie theCookie ) {
+	public ResourceRequest setCookieParameter( HttpCookie theCookie, Object theValue ) {
 		Preconditions.checkNotNull( theCookie, "cookie not given to set" );
 		ResourceMethodParameter parameter = method.getCookieParameters( ).get( theCookie.getName( ) );
 		// check if we got something (which will also verify we don't have a null name)
 		Preconditions.checkNotNull( parameter, "Parameter '%s' is either missing or not set.", theCookie.getName() );
+		// resets the value
+		theCookie.setValue( ( String )parameter.getTranslator().translate( theValue ) );
 		request.cookie( theCookie );
 		return this;
-		// TODO: this cannot be the cookie value if we are expecting type values
 	}
 
 	/**
@@ -184,9 +190,17 @@ public class ResourceRequest {
 		} catch( ExecutionException e ) {
 			Throwable cause = e.getCause();
 			if( cause != null ) {
-				throw new CommunicationException( String.format( "A problem of type '%s' occurred while communicating with '%s'.", cause.getClass().getSimpleName(), this.method.getMethodUrl( ) ) );
+				throw new CommunicationException( 
+						String.format( "A problem of type '%s' with message '%s' occurred while communicating with '%s'.", 
+								cause.getClass().getSimpleName(), 
+								cause.getMessage(), 
+								this.method.getMethodUrl( ) ),
+						e);
 			} else {
-				throw new CommunicationException( String.format( "For some unknown reason, could not communicate with '%s'.", this.method.getMethodUrl( ) ) );
+				throw new CommunicationException( 
+						String.format( "For some unknown reason, could not communicate with '%s'.",
+								this.method.getMethodUrl( ) ), 
+						e );
 			}
 		} finally {
 			// status block handling would go here

@@ -27,7 +27,7 @@ import com.tales.contracts.data.DataMember;
  */
 @DataContract( name="com.tales.response.status" )
 public class ResponseStatus {
-	@DataMember( name="code" )private Status code; // TODO: consider renaming this to something other than code 
+	@DataMember( name="code" )private Status code; 
 	@DataMember( name="subcode" )private String subcode;
 	@DataMember( name="message" )private String message;
 	@DataMember( name="exception" )private ResponseExceptionDetails exception;

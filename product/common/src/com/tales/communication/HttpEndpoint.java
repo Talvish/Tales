@@ -79,7 +79,6 @@ public class HttpEndpoint {
 		scheme = matcher.group( SCHEME_GROUP );
 		host = matcher.group( HOST_GROUP );
 		try {
-			System.out.print( "=================+++#$+#+$#+$#+$#+$+::::::::::: " + scheme + " " + host + " " + matcher.group( PORT_GROUP ) );
 			port = Integer.parseInt( matcher.group( PORT_GROUP ) );
 		} catch( NumberFormatException e ) {
 			throw new IllegalArgumentException( String.format( "invalid port in the endpoint definition: %s ", theEndpoint ), e );
@@ -87,6 +86,14 @@ public class HttpEndpoint {
 		stringForm = String.format( "%s://%s:%d", scheme, host, port );
 	}
 	
+	/**
+	 * Indicates whether this endpoint is considered secure, meaning
+	 * communicates over SSL.
+	 * @return returns true if the scheme is https, false otherwise
+	 */
+	public boolean isSecure( ) {
+		return scheme.equals( "https" );
+	}
 	/**
 	 * Returns the scheme used by the endpoint. 
 	 * This can be http or https.
