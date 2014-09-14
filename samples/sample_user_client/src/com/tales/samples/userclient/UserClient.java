@@ -20,6 +20,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.tales.client.http.ResourceClient;
 import com.tales.client.http.ResourceMethod;
@@ -52,9 +53,12 @@ public class UserClient extends ResourceClient {
     	UserClient client = new UserClient( serviceBase );
     	
     	// client has been created, so let's load a well known suer
-    	User user = client.getUser( UUID.fromString( "00000000-0000-0000-0000-020000000001" ) );
+    	User user = client.getUser( UUID.fromString( "00000000-0000-0000-0000-000000000001" ) );
     	if( user != null ) {
     		logger.debug( "Found user: '{}'", user.getFirstName( ) );
+    		user.setFirstName( "Bilbo" );
+    		user = client.updateUser( user );
+    		logger.debug( "Updated user: '{}'", user.getFirstName( ) );
     	} else {
     		logger.debug( "Did not find user." );
     	}
@@ -71,35 +75,48 @@ public class UserClient extends ResourceClient {
 		super( theServiceBase, "/user", "20140124", "UserAgentSample/1.0", true ); // we are allowing untrusted SSL since the sample self-cert'ed
 		
 		// we now define the methods that we are going to expose for calling
-		this.methods = new ResourceMethod[ 1 ];
+		this.methods = new ResourceMethod[ 2 ];
 		
 		this.methods[ 0 ] = this.defineMethod( "get_user", User.class, HttpVerb.GET, "users/{id}" )
 				.definePathParameter("id", UUID.class );
+
+		this.methods[ 1 ] = this.defineMethod( "update_user", User.class, HttpVerb.POST, "users/{id}/update" )
+				.definePathParameter("id", UUID.class )
+				.defineBodyParameter( "user", User.class );
 	}
 	
-	
-	// so I think all of this can go into a base implementation pretty easily
-	// we can hold onto the string force the format ordering for execution
-	// then we can do the http verb based on the resource implementation
-	// the response can be parsed just as outlined below and can handle the  
-	// result value by knowing the type of the object in question, which can
-	// also be stored on the method client
-
+	/**
+	 * Requests a particular user.
+	 * @param theUserId the id of the user being requested
+	 * @return the requested user, if found, null otherwise
+	 */
 	public User getUser( UUID theUserId ) {
-		
-		// need to be able to take the value, run through the translator and urlencode if on a parameter
-		// though if post body then it is down automatically I believe
-		
+		Preconditions.checkNotNull( theUserId, "need a user id to retrieve a user" );
 		ResourceResult<User> response;
 		try {
-			response = this.createRequest( this.methods[ 0 ], theUserId  )
+			response = this.createRequest( this.methods[ 0 ], theUserId )
 					.execute();
-			// TODO: gson is currently throwing an UnsupportedOperationException (likely because the return isn't a boolean) 
-			//		 but want to investigate what is happening to ensure a TranslatedException
 			return response.getResult( );
 		} catch (InterruptedException e) {
 			return null; // TODO: this isnt' right
 		}
-		
+	}
+
+	/**
+	 * A call to save the values of a user on the server.
+	 * @param theUser the user to save
+	 * @return the server returned version of the saved user
+	 */
+	public User updateUser( User theUser ) {
+		Preconditions.checkNotNull( theUser, "need a user to be able to update" );
+		ResourceResult<User> response;
+		try {
+			response = this.createRequest( this.methods[ 1 ], theUser.getId() )
+					.setBodyParameter( "user", theUser )
+					.execute();
+			return response.getResult( );
+		} catch (InterruptedException e) {
+			return null; // TODO: this isnt' right
+		}
 	}
 }

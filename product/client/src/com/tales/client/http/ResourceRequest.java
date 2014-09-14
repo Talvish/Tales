@@ -16,19 +16,19 @@
 package com.tales.client.http;
 
 import java.net.HttpCookie;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
-
 import com.tales.communication.CommunicationException;
 import com.tales.parts.translators.TranslationException;
 import com.tales.serialization.UrlEncoding;
@@ -47,6 +47,7 @@ public class ResourceRequest {
 	private final ResourceMethod method;
 	private final Request request;
 	private final Object[] pathParameters;
+	private final Map<String,String> bodyParameters;
 	
 	/**
 	 * Constructor called by the ResourceClient to indicate a request is going to be tempted.
@@ -62,6 +63,7 @@ public class ResourceRequest {
 		client = theClient;
 		method = theMethod;
 		
+		// setup the path parameters
 		if( thePathParameters != null ) {
 			pathParameters = new Object[ thePathParameters.length ];
 			
@@ -75,7 +77,11 @@ public class ResourceRequest {
 		} else {
 			pathParameters = null;
 		}
-			
+		
+		// setup the storage for body parameters
+		bodyParameters = new HashMap<String, String>( theMethod.getBodyParameters().size( ) );
+		
+		// setup the underlying jetty HTTP client
 		request = client.getHttpClient()
 		.newRequest( String.format( method.getMethodUrl(), pathParameters ) )
 		.method( method.getHttpVerb().getValue() ); 
@@ -96,6 +102,22 @@ public class ResourceRequest {
 		return this;
 	}
 
+
+	/**
+	 * Sets the data to use for a particular post body parameter. 
+	 * @param theName the name of the parameter
+	 * @param theValue the value to to use (not yet translated)
+	 * @return the request, to make it easy to chain a set of calls like this together
+	 */
+	public ResourceRequest setBodyParameter( String theName, Object theValue ) {
+		ResourceMethodParameter parameter = method.getBodyParameters( ).get( theName );
+		// check if we got something (which will also verify we don't have a null name)
+		Preconditions.checkNotNull( parameter, "Parameter '%s' is either missing or not set.", theName );
+		// then set the value (for storage at least)
+		this.bodyParameters.put( theName, ( String )parameter.getTranslator().translate( theValue ) );
+		return this;
+	}
+	
 	/**
 	 * Sets the data to use for a particular cookie.
 	 * The cookie passed in is used to define path, age, etc, while the value
@@ -159,6 +181,12 @@ public class ResourceRequest {
 		long startTimestamp = System.nanoTime(); 
 		ContentResponse response;
 		try {
+			// check to see if we have
+			if( this.bodyParameters.size() > 0 ) {
+				// create the content provider with the body parameters
+				request.content( new BodyContentProvider( this.bodyParameters ) );
+			}
+			
 			response = request.send( );
 
 			// grab the response as a string, it should all be json, so let's interpret

@@ -72,6 +72,9 @@ public class ResourceMethod {
 	private final Map<String,ResourceMethodParameter> queryParameters = new HashMap<String,ResourceMethodParameter>( );
 	private final Map<String,ResourceMethodParameter> externalQueryParameters = Collections.unmodifiableMap( queryParameters );
 	
+	private final Map<String,ResourceMethodParameter> bodyParameters = new HashMap<String,ResourceMethodParameter>( );
+	private final Map<String,ResourceMethodParameter> externalBodyParameters = Collections.unmodifiableMap( bodyParameters );
+	
 	private final Map<String,ResourceMethodParameter> cookieParameters = new HashMap<String,ResourceMethodParameter>( );
 	private final Map<String,ResourceMethodParameter> externalCookieParameters = Collections.unmodifiableMap( cookieParameters );
 
@@ -253,6 +256,34 @@ public class ResourceMethod {
 		queryParameters.put( theName, new ResourceMethodParameter(theName, queryParameters.size( ), theType, theGenericType, translator ) );
 		return this;
 	}
+
+	/**
+	 * Indicates that a body parameter is expected by the service and it is expecting a particular type.
+	 * @param theName the name of the body parameter
+	 * @param theType the type of the data
+	 * @return the ResourceMethod again, so calls can be strung together
+	 */
+	public ResourceMethod defineBodyParameter( String theName, Class<?> theType ) {
+		return defineBodyParameter( theName, theType, null );
+	}
+
+	/**
+	 * Indicates that a body parameter is expected by the service and it is expecting a particular type.
+	 * @param theName the name of the body parameter
+	 * @param theType the type of the data
+	 * @param theGenericType the generic type, if applicable
+	 * @return the ResourceMethod again, so calls can be strung together
+	 */
+	public ResourceMethod defineBodyParameter( String theName, Class<?> theType, Type theGenericType ) {
+		Conditions.checkParameter( !Strings.isNullOrEmpty( theName ),  "theName", "name must be given" );
+		Conditions.checkParameter( !bodyParameters.containsKey( theName ), "theName", "parameter '%s' was already defined", theName );
+		Preconditions.checkNotNull( theType, "type not specified for '%s'", theName );
+
+		Translator translator = getSuitableTranslator( theType, theGenericType );
+		
+		bodyParameters.put( theName, new ResourceMethodParameter(theName, bodyParameters.size( ), theType, theGenericType, translator ) );
+		return this;
+	}
 	
 	/**
 	 * Indicates that a cookie is expected by the service and it is expecting a particular type.
@@ -326,7 +357,7 @@ public class ResourceMethod {
 			JsonTypeReference typeReference = client.jsonFacility.getTypeReference(theType, theGenericType);
 			// verify we got something back
 			Preconditions.checkNotNull( typeReference, "Could not get json handler for type '%s'.", theType.getSimpleName() );
-			translator = new ChainToJsonElementToStringTranslator( typeReference.getFromJsonTranslator() );
+			translator = new ChainToJsonElementToStringTranslator( typeReference.getToJsonTranslator() );
 			// we don't need to do URL encoding here since Jetty does it automatically and if we do
 			// need it we expect the caller to handle
 		}
@@ -347,6 +378,14 @@ public class ResourceMethod {
 	 */
 	public Map<String,ResourceMethodParameter> getQueryParameters( ) {
 		return this.externalQueryParameters;
+	}
+
+	/**
+	 * Gets the body parameters currently defined.
+	 * @return the body parameters
+	 */
+	public Map<String,ResourceMethodParameter> getBodyParameters( ) {
+		return this.externalBodyParameters;
 	}
 
 	/**

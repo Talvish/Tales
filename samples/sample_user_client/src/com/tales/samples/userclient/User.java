@@ -66,9 +66,23 @@ public class User {
 	}
 	
 	/**
+	 * Sets the first name.
+	 */
+	public void setFirstName( String theName ) {
+		firstName = theName;
+	}
+
+	/**
 	 * Returns the last name.
 	 */
 	public String getLastName( ) {
 		return lastName;
+	}
+
+	/**
+	 * Sets the last name.
+	 */
+	public void setLastName( String theName ) {
+		lastName = theName;
 	}
 }

@@ -86,13 +86,11 @@ Client
 - move the Conditions items out from common and into service since it really is meant for the 
   facade handling of errors and automatic responses
 - status was moved to common (com.tales.system), probably need a better spot (items needed for service work that is shared) 
-- support post body parameters
-  http://download.eclipse.org/jetty/stable-9/apidocs/
-  BytesContentProvider provider;
-  FormContentProvider provider;
 - support header overrides
-- add SSL support (add a method to indicate it is secure)
 - consider mutual SSL support, which means adding keystore support into the ssl context factory
+- client needs to support generic return types from calls to the service which largely
+  means adding the generic type to the ResourceMethod constructor and exposing out from the execute method 
+  though curious how to get the generic information without doing some form of declaration somewhere to retrieve it
 
 Misc
 ------------------------------------------------
