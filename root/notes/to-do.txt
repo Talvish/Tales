@@ -88,9 +88,7 @@ Client
 - status was moved to common (com.tales.system), probably need a better spot (items needed for service work that is shared) 
 - support header overrides
 - consider mutual SSL support, which means adding keystore support into the ssl context factory
-- client needs to support generic return types from calls to the service which largely
-  means adding the generic type to the ResourceMethod constructor and exposing out from the execute method 
-  though curious how to get the generic information without doing some form of declaration somewhere to retrieve it
+- add helper to get generic information for return types
 
 Misc
 ------------------------------------------------

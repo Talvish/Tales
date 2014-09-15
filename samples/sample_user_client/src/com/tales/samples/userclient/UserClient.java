@@ -63,6 +63,7 @@ public class UserClient extends ResourceClient {
     		logger.debug( "Did not find user." );
     	}
     	// TODO: this doesn't exit at the end of the main here, need to understand why
+    	//	     (which is why I added the System.exit(0)
     	// TODO: one time when this ran it throw some form of SSL EOF related error that 
     	//       I need to track down (this happened on the server too)
     	System.exit( 0 );

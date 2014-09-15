@@ -60,7 +60,7 @@ public class ResourceMethod {
 	private final String name; 			// the name given to the method
 	private final String methodPath;	// e.g. sign_in
 	private final String methodUrl;
-	private final Class<?> returnType;
+	private final ResourceMethodReturn returnType;
 	private final HttpVerb httpVerb;
 	
 	private final Map<String,Integer> pathParameterIndices = new HashMap<String,Integer>( );
@@ -91,7 +91,7 @@ public class ResourceMethod {
 	 * @param theMethodPath the partial path (doesn't include http scheme, domain, contract root, etc)
 	 * @param theClient the client responsible for creating this ResourceMethod
 	 */
-	protected ResourceMethod( String theName, Class<?> theReturnType, HttpVerb theHttpVerb, String theMethodPath, ResourceClient theClient ) {
+	protected ResourceMethod( String theName, Class<?> theReturnType, Type theReturnGenericType, HttpVerb theHttpVerb, String theMethodPath, ResourceClient theClient ) {
 		Preconditions.checkArgument( !Strings.isNullOrEmpty( theName ),  "theName" );
 		Preconditions.checkNotNull( theReturnType, "theReturnType" );
 		Preconditions.checkNotNull( theHttpVerb, "theHttpVerb" );
@@ -101,7 +101,7 @@ public class ResourceMethod {
 		Preconditions.checkArgument( pathMatcher.matches( ), "the path string '%s' for contract '%s' does not conform to the pattern '%s'", theMethodPath, theClient.getContractRoot(), PATH_REGEX );
 
 		name = theName;
-		returnType = theReturnType;
+		returnType = new ResourceMethodReturn( theReturnType, theReturnGenericType ); // this will do validation of the reutrn type
 		httpVerb = theHttpVerb;
 		methodPath = theMethodPath;
 		methodUrl = generateUrl( theMethodPath, theClient, pathParameterNames );
@@ -132,10 +132,10 @@ public class ResourceMethod {
 	}
 	
 	/**
-	 * The type of the return of this method.
+	 * The type information of the return of this method.
 	 * @return
 	 */
-	public Class<?> getReturnType( ) {
+	public ResourceMethodReturn getReturn( ) {
 		return returnType;
 	}
 	

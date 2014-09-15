@@ -15,6 +15,7 @@
 // ***************************************************************************
 package com.tales.client.http;
 
+import java.lang.reflect.Type;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
@@ -311,9 +312,23 @@ public class ResourceClient {
 	 * @return
 	 */
 	public ResourceMethod defineMethod( String theName, Class<?> theReturnType, HttpVerb theHttpVerb, String theMethodPath ) {
-		return new ResourceMethod( theName, theReturnType, theHttpVerb, theMethodPath, this );
+		return this.defineMethod(theName, theReturnType, null, theHttpVerb, theMethodPath);
 	}
-	
+
+	/**
+	 * This is called to define a method that can be communicated with on a service. The method path can 
+	 * contain path parameters that are to be filled out during request creation.
+	 * @param theName the name to given the method, this does not impact execution, but shows up in logs
+	 * @param theReturnType the type of the object that is returned
+	 * @param theReturnGenericType the generic type information for the return type of the method
+	 * @param theHttpVerb the HTTP verb/method that will be communicated with
+	 * @param theMethodPath the relative path (should not have a leading '/') off the contract root for the url to communicate with for the method 
+	 * @return
+	 */
+	public ResourceMethod defineMethod( String theName, Class<?> theReturnType, Type theReturnGenericType, HttpVerb theHttpVerb, String theMethodPath ) {
+		return new ResourceMethod( theName, theReturnType, theReturnGenericType, theHttpVerb, theMethodPath, this );
+	}
+
 	/**
 	 * This is called to generate a request object
 	 * @param theMethod the method that is going to be called
