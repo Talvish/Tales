@@ -89,6 +89,8 @@ Client
 - support header overrides
 - consider mutual SSL support, which means adding keystore support into the ssl context factory
 - add helper to get generic information for return types
+- ability to set the X-Root-Request-Id, X-Parent-Request-Id headers
+- consider way to set override.response.details, override.response.readability parameters
 
 Misc
 ------------------------------------------------

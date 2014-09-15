@@ -54,7 +54,10 @@ public class SimpleResource {
 	 */
 
 	@ResourceOperation( name="echo", path="GET | POST : echo")
-	public ResourceResult<String> echo( @RequestParam( name="query_echo" )String theValue, @HeaderParam( name="Origin" )String theOrigin, @CookieParam(name = "cookie_echo") String theCookieValue ) {
+	public ResourceResult<String> echo( 
+			@RequestParam( name="query_echo" )String theValue, 
+			@HeaderParam( name="Origin" )String theOrigin, 
+			@CookieParam(name = "cookie_echo") String theCookieValue ) {
 		Conditions.checkParameter( !Strings.isNullOrEmpty( theValue ), "query_echo", "need the parameter");
 		// the "cookie_echo" parameter doesn't have to be a string, it can be other types and 
 		// it will get translated ... it can also be type Cookie, where you get the full

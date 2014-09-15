@@ -20,6 +20,9 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
@@ -61,18 +64,6 @@ import com.tales.system.Conditions;
  *
  */
 public class ResourceClient {
-	// make sure there is a way to share connection/thread pools across
-	// so if talking to a lot of services, there isn't a huge overhead
-	
-	// options
-	// - header: overrides (we can format the names)
-	// - header: X-Root-Request-Id
-	// - header: X-Parent-Request-Id
-	// - query param: override.response.details
-	// - query param: override.response.readability
-	// 
-	
-	// need to have an array for the different methods
 	protected final HttpClient httpClient;
 
 	protected ResourceMethod[] methods;
@@ -87,6 +78,14 @@ public class ResourceClient {
 	protected final String contractVersion;	// e.g. 20140901
 	
 	protected final String userAgent; // the user agent to use
+	
+	// these are volatile because when we add/remove headers here it reset these members
+	// since they are expected to change through-out the life-time of the resource client
+	// unlike other collections that are used through-out the com.tales.client.http 
+	// package 
+	protected volatile Map<String,String> headerOverrides = new HashMap<String,String>( );
+	protected volatile Map<String,String> externalHeaderOverrides = Collections.unmodifiableMap( headerOverrides );
+	protected final Object overrideLock = new Object( );
 	
 
 	/**
@@ -258,6 +257,69 @@ public class ResourceClient {
 		return this.userAgent;
 	}
 
+	/**
+	 * Returns the current value of a header that will be overridden.
+	 * @param theName the header that was overridden
+	 */
+	public String getHeaderOverride( String theName ) {
+		Preconditions.checkArgument( !Strings.isNullOrEmpty( theName ), "need a header name" );
+		theName = "override.header." + theName; // tales does this by having 'override.header.' prepended to the header name
+		return this.headerOverrides.get( theName );
+	}
+	
+	/**
+	 * Let's you set a header override. This is a feature of the Tales framework 
+	 * which, if a service is configured to allow them, will allow headers to be 
+	 * overridden by a parameter passed on the query string or POST body. This is 
+	 * useful for debugging interesting situations, particularly when equipment
+	 * like load balancers are the source of the header and therefore not easy 
+	 * to reconfigure.
+	 * @param theName the name of the header to override
+	 * @param theValue the string value to use
+	 * @return the ResourceClient again, so these can be strung together
+	 */
+	public ResourceClient setHeaderOverride( String theName, String theValue ) {
+		// this implementation may seem heavy-weight BUT it should be called very
+		// rarely and when it does it cannot interfere with any existing calls 
+		// that may be using/iterating over the collection
+		Preconditions.checkArgument( !Strings.isNullOrEmpty( theName ), "need a header name" );
+
+		theName = "override.header." + theName; // tales does this by having 'override.header.' prepended to the header name
+		synchronized( this.overrideLock ) {
+			Map<String,String > newOverrides = new HashMap<String, String>( this.headerOverrides );
+			if( theValue == null ) {
+				newOverrides.remove( theName );
+			} else {
+				newOverrides.put( theName,  theValue );
+			}
+			this.headerOverrides = newOverrides;
+			this.externalHeaderOverrides = Collections.unmodifiableMap( newOverrides );
+		}
+		return this;
+	}
+	
+	/**
+	 * Returns the current set of known 
+	 * @return the map of the current header overrides
+	 */
+	public Map<String,String> getHeaderOverrides( ) {
+		return this.externalHeaderOverrides;
+	}
+	
+	/**
+	 * This is used to clear all the header overrides.
+	 */
+	public void clearHeaderOverrides( ) {
+		// this implementation may seem heavy-weight BUT it should be called very
+		// rarely and when it does it cannot interfere with any existing calls 
+		// that may be using/iterating over the collection
+		synchronized( this.overrideLock ) {
+			Map<String,String > newOverrides = new HashMap<String, String>( );
+			this.headerOverrides = newOverrides;
+			this.externalHeaderOverrides = Collections.unmodifiableMap( newOverrides );
+		}
+	}
+	
 	/**
 	 * Retrieves the method at the specified index.
 	 * An exception is thrown if the index is out of bounds.

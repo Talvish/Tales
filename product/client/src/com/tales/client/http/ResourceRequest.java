@@ -181,12 +181,21 @@ public class ResourceRequest {
 		long startTimestamp = System.nanoTime(); 
 		ContentResponse response;
 		try {
-			// check to see if we have
+			// check to see if we have any body parameters to deal with
 			if( this.bodyParameters.size() > 0 ) {
 				// create the content provider with the body parameters
 				request.content( new BodyContentProvider( this.bodyParameters ) );
 			}
 			
+			// check to see if we have any header overrides to deal with
+			Map<String, String> headerOverrides = client.getHeaderOverrides(); // we do this in case the underlying version changes
+			if( headerOverrides.size() > 0 ) {
+				for( Map.Entry<String, String> header : headerOverrides.entrySet() ) {
+					request.param( header.getKey(), header.getValue() );
+				}
+			}
+			
+			// now let it rip and get that response back
 			response = request.send( );
 
 			// grab the response as a string, it should all be json, so let's interpret
