@@ -10,7 +10,7 @@
     <groupId>tales</groupId>
     <artifactId>tales.root</artifactId>
     <version>1.5.0-SNAPSHOT</version>
-    <relativePath>../tales.root/pom.xml</relativePath>
+    <relativePath>../../root/pom.xml</relativePath>
   </parent>
 
   <build>

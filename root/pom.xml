@@ -3,7 +3,7 @@
   <groupId>tales</groupId>
   <artifactId>tales.root</artifactId>
   <packaging>pom</packaging>
-  <version>${version.main}-${version.build}</version>
+  <version>1.5.0-SNAPSHOT</version>
   <name>Tales Root</name>
   <description>The parent project for tales.</description>
   <url>https://github.com/Talvish/Tales</url>
