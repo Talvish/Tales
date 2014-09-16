@@ -35,7 +35,6 @@ public class UserClient extends ResourceClient {
 	private static final Logger logger = LoggerFactory.getLogger( UserClient.class );
 	
     public static void main( String[ ] theArgs ) throws Exception {
-
     	// get the configuration system up and running
     	ConfigurationManager configurationManager = new ConfigurationManager( );
     	// we prepare two sources for configurations
@@ -66,6 +65,9 @@ public class UserClient extends ResourceClient {
     	//	     (which is why I added the System.exit(0)
     	// TODO: one time when this ran it throw some form of SSL EOF related error that 
     	//       I need to track down (this happened on the server too)
+    	System.console().writer().print( "Please <Enter> to quit ..." );
+    	System.console().writer().flush();
+    	System.console().readLine();
     	System.exit( 0 );
 	}
 

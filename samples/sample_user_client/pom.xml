@@ -53,7 +53,10 @@
                         <classpathPrefix>dependencies/</classpathPrefix>
                         <mainClass>com.tales.samples.userclient.UserClient</mainClass>
                     </manifest>
-                </archive>
+			        <manifestEntries>
+			            <Class-Path>config/</Class-Path>
+			        </manifestEntries>
+            	</archive>
             </configuration>
         </plugin>
         <plugin>
@@ -68,7 +71,7 @@
               			<goal>copy-resources</goal>
             		</goals>
             		<configuration>
-              			<outputDirectory>${project.build.directory}</outputDirectory>
+              			<outputDirectory>${project.build.directory}/config</outputDirectory>
               			<resources>          
                 			<resource>
                   				<directory>rsrc</directory>

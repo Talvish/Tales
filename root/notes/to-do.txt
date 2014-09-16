@@ -96,6 +96,7 @@ Misc
 ------------------------------------------------
 - update Conditions/parameter checking to take into account things like null, out of range, expression, etc. so it can be reported back
 - change to not use DateTime but epoch time (for the pieces we care about)
+- make it so the logging level can change per request through an override
 
 Update Admin to use Resource Contracts
 ------------------------------------------------

@@ -1,0 +1,2 @@
+ Here is a good pattern to use for server collecting/unifying
+ <pattern>%d{ISO8601, GMT} %property{HOSTNAME} [%thread] %-5level %logger{36} [%file:%line] - %msg%n</pattern>

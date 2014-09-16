@@ -53,6 +53,9 @@
                         <classpathPrefix>dependencies/</classpathPrefix>
                         <mainClass>com.tales.samples.complexservice.ComplexService</mainClass>
                     </manifest>
+			        <manifestEntries>
+			            <Class-Path>config/</Class-Path>
+			        </manifestEntries>                    
                 </archive>
             </configuration>
         </plugin>
@@ -68,7 +71,7 @@
               			<goal>copy-resources</goal>
             		</goals>
             		<configuration>
-              			<outputDirectory>${project.build.directory}</outputDirectory>
+              			<outputDirectory>${project.build.directory}/config</outputDirectory>
               			<resources>          
                 			<resource>
                   				<directory>rsrc</directory>

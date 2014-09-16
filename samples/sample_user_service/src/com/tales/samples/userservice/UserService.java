@@ -36,6 +36,10 @@ public class UserService extends HttpService {
 
 	protected UserService( ) {
 		super( "user_service", "User Service", "A simple sample service showing a functioning user service." );
+    	final org.slf4j.Logger jettyLogger = org.slf4j.LoggerFactory.getLogger("org.eclipse.jetty");
+    	if (jettyLogger instanceof ch.qos.logback.classic.Logger) {
+    		( (ch.qos.logback.classic.Logger) jettyLogger ).setLevel(ch.qos.logback.classic.Level.WARN);
+    	}
 	}
 	
 	@Override
