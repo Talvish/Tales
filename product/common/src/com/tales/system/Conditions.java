@@ -101,4 +101,20 @@ public class Conditions {
 			throw new NotFoundException( String.format( theMessage, theMessageParameters ) );
 		} 
 	}
+
+	/**
+	 * Checks the condition and if false throws an AuthorizationException.
+	 */
+	public static void checkAuthorization( boolean theCondition, String theScheme ) {
+		checkFound( theCondition, theScheme, "authorization failure" );
+	}
+	
+	/**
+	 * Checks the condition and if false throws an AuthorizationException.
+	 */
+	public static void checkAuthorization( boolean theCondition, String theScheme, String theMessage, Object... theMessageParameters ) {
+		if( !theCondition ) {
+			throw new AuthorizationException( String.format( theMessage, theMessageParameters ), theScheme, null );
+		} 
+	}
 }

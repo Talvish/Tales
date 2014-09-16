@@ -18,6 +18,7 @@ package com.tales.samples.userservice;
 import com.google.common.base.Strings;
 import com.tales.services.http.HttpInterface;
 import com.tales.services.http.HttpService;
+import com.tales.services.http.servlets.EnableHeaderOverridesFilter;
 import com.tales.system.configuration.PropertySource;
 
 /**
@@ -60,6 +61,7 @@ public class UserService extends HttpService {
 		this.interfaceManager.register( httpInterface );
 		
 		userEngine = new UserEngine();
+		httpInterface.bind( new EnableHeaderOverridesFilter(), "/user" ); // we are in debug mode, so let's allow header overrides
 		httpInterface.bind( new UserResource( userEngine ), "/user" );
 		// engine's typically have their own status block and those need to be
 		// registered with a status manager

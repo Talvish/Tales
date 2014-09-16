@@ -51,7 +51,9 @@ public class UserClient extends ResourceClient {
 
     	UserClient client = new UserClient( serviceBase );
     	
-    	// client has been created, so let's load a well known suer
+    	// client.setHeaderOverride( "Authorization", "random" ); //<= for testing, perhaps want to override this value, assuming server allows overrides
+    	
+    	// client has been created, so let's load a well known sure
     	User user = client.getUser( UUID.fromString( "00000000-0000-0000-0000-000000000001" ) );
     	if( user != null ) {
     		logger.debug( "Found user: '{}'", user.getFirstName( ) );
@@ -71,9 +73,8 @@ public class UserClient extends ResourceClient {
     	System.exit( 0 );
 	}
 
-	private String debugOptions; // header overrides, response overrides, etc
-	
-	
+    private String authToken = "Sample key=\"42349840984\"";
+    
 	public UserClient( String theServiceBase ) {
 		super( theServiceBase, "/user", "20140124", "UserAgentSample/1.0", true ); // we are allowing untrusted SSL since the sample self-cert'ed
 		
@@ -81,11 +82,13 @@ public class UserClient extends ResourceClient {
 		this.methods = new ResourceMethod[ 2 ];
 		
 		this.methods[ 0 ] = this.defineMethod( "get_user", User.class, HttpVerb.GET, "users/{id}" )
-				.definePathParameter("id", UUID.class );
+				.definePathParameter("id", UUID.class )
+				.defineHeaderParameter( "Authorization", String.class );
 
 		this.methods[ 1 ] = this.defineMethod( "update_user", User.class, HttpVerb.POST, "users/{id}/update" )
 				.definePathParameter("id", UUID.class )
-				.defineBodyParameter( "user", User.class );
+				.defineBodyParameter( "user", User.class )
+				.defineHeaderParameter( "Authorization", String.class );
 	}
 	
 	/**
@@ -98,6 +101,7 @@ public class UserClient extends ResourceClient {
 		ResourceResult<User> response;
 		try {
 			response = this.createRequest( this.methods[ 0 ], theUserId )
+					.setHeaderParameter( "Authorization", this.authToken )
 					.execute();
 			return response.getResult( );
 		} catch (InterruptedException e) {
@@ -116,6 +120,7 @@ public class UserClient extends ResourceClient {
 		try {
 			response = this.createRequest( this.methods[ 1 ], theUser.getId() )
 					.setBodyParameter( "user", theUser )
+					.setHeaderParameter( "Authorization", this.authToken )
 					.execute();
 			return response.getResult( );
 		} catch (InterruptedException e) {

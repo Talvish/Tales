@@ -617,8 +617,17 @@ public abstract class HttpInterfaceBase implements Interface {
     	Preconditions.checkArgument( !Strings.isNullOrEmpty( theRoot ), "need a path to bind to" );
     	Preconditions.checkArgument( theRoot.startsWith( "/" ), "the path '%s' must be a reference from the root (i.e. start with '/')", theRoot );
 
+    	logger.info( "Binding filter '{}' on interface '{}' to http path '{}'.", theFilter.getClass().getSimpleName(), this.getName(), theRoot );
+
+    	String path = theRoot; 
+    	if( path.endsWith( "/") ) {
+    		path = path + "*";
+    	} else if( !path.endsWith( "*" ) ) {
+    		path = path + "/*";
+    	} 
+
     	// and properly bind the filter to the context
-    	servletContext.addFilter( new FilterHolder( theFilter ), theRoot, EnumSet.allOf( DispatcherType.class ) );
+    	servletContext.addFilter( new FilterHolder( theFilter ), path, EnumSet.allOf( DispatcherType.class ) );
 	}
 
 	/**

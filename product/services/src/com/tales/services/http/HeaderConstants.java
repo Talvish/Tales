@@ -24,8 +24,8 @@ package com.tales.services.http;
 public class HeaderConstants {
 //	private static final String USER_AGENT_HEADER = "User-Agent";
 //	private static final String REFERRER_HEADER = "Referer";
-	public static final String ROOT_REQUEST_ID_HEADER = "X-Root-Request-Id";
-	public static final String PARENT_REQUEST_ID_HEADER = "X-Parent-Request-Id";
+	public static final String ROOT_REQUEST_ID_HEADER = "Root-Request-Id";
+	public static final String PARENT_REQUEST_ID_HEADER = "Parent-Request-Id";
 
 	public static final String CACHE_CONTROL = "Cache-Control";
 	// client/server shared names/values

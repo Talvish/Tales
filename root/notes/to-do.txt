@@ -89,7 +89,7 @@ Client
 - support header overrides
 - consider mutual SSL support, which means adding keystore support into the ssl context factory
 - add helper to get generic information for return types
-- ability to set the X-Root-Request-Id, X-Parent-Request-Id headers
+- ability to set the Root-Request-Id, Parent-Request-Id headers
 - consider way to set override.response.details, override.response.readability parameters
 
 Misc
@@ -97,6 +97,7 @@ Misc
 - update Conditions/parameter checking to take into account things like null, out of range, expression, etc. so it can be reported back
 - change to not use DateTime but epoch time (for the pieces we care about)
 - make it so the logging level can change per request through an override
+- the AuthenticationException handling in ResourceFacility needs to encode/strip non-RFC 2616 quoted-string compliant characters
 
 Update Admin to use Resource Contracts
 ------------------------------------------------

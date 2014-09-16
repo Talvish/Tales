@@ -38,6 +38,7 @@ import com.tales.serialization.json.translators.ChainToJsonElementToStringTransl
 import com.tales.serialization.json.translators.StringToJsonElementToChainTranslator;
 import com.tales.services.DependencyException;
 import com.tales.services.http.FailureSubcodes;
+import com.tales.system.AuthorizationException;
 import com.tales.system.Facility;
 import com.tales.system.InvalidParameterException;
 import com.tales.system.InvalidStateException;
@@ -137,7 +138,31 @@ public final class ResourceFacility implements Facility {
 						theException );
 			}
 		});
-	}
+
+		registerExceptionHandler( AuthorizationException.class, new ExceptionHandler<AuthorizationException>() {
+			public ResourceMethodResult toResult( ResourceMethod theMethod, AuthorizationException theException ) {
+				ResourceMethodResult result = new ResourceMethodResult( 
+						Status.CALLER_UNAUTHORIZED,
+						null,
+						String.format( 
+								"Not authorized to execute method '%s.%s'.", 
+								theMethod.getResourceType().getType().getSimpleName(), 
+								theMethod.getMethod( ).getName( ) ), 
+						theException );
+				
+				String scheme = theException.getScheme( ); // TODO: needs to be RFC 2616 quoted-string compliant
+				String realm = theException.getRealm( ); // TODO: needs to be RFC 2616 quoted-string compliant
+				
+				scheme = Strings.isNullOrEmpty( scheme ) ? "default" : scheme;
+				realm = Strings.isNullOrEmpty( realm ) ? theMethod.getResourceType().getName( ) : realm;
+				
+				result.headers.put( 
+						"WWW-Authenticate", 
+						String.format( "%s realm=\"%s\"", scheme, realm ) );
+				return result;
+			}
+		});
+}
 	
 	/**
 	 * Returns the facility responsible for converting to/from JSON.
