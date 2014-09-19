@@ -76,6 +76,7 @@ Config
 - json-based config, for supporting sensitive params
 - network based config
 - map source config should copy the input to be save (in case something underlying changes them)
+- change the list format to mirror map (e.g. [] instead of ,)
 
 Client
 ------------------------------------------------

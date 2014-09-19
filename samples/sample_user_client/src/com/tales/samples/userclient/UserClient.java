@@ -49,11 +49,11 @@ public class UserClient extends ResourceClient {
 		// now we prepare the client for talking to the server
 		String serviceBase = configurationManager.getStringValue( "user_service.base_url" ); // no default, since we need it to run
 
-    	UserClient client = new UserClient( serviceBase );
+    	UserClient client = new UserClient( serviceBase, "UserAgentSample/1.0" );
     	
     	// client.setHeaderOverride( "Authorization", "random" ); //<= for testing, perhaps want to override this value, assuming server allows overrides
     	
-    	// client has been created, so let's load a well known sure
+    	// client has been created, so let's load a well known user
     	User user = client.getUser( UUID.fromString( "00000000-0000-0000-0000-000000000001" ) );
     	if( user != null ) {
     		logger.debug( "Found user: '{}'", user.getFirstName( ) );
@@ -75,8 +75,8 @@ public class UserClient extends ResourceClient {
 
     private String authToken = "Sample key=\"42349840984\"";
     
-	public UserClient( String theServiceBase ) {
-		super( theServiceBase, "/user", "20140124", "UserAgentSample/1.0", true ); // we are allowing untrusted SSL since the sample self-cert'ed
+	public UserClient( String theServiceBase, String theUserAgent ) {
+		super( theServiceBase, "/user", "20140124", theUserAgent, true ); // we are allowing untrusted SSL since the sample self-cert'ed
 		
 		// we now define the methods that we are going to expose for calling
 		this.methods = new ResourceMethod[ 2 ];

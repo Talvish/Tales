@@ -178,7 +178,7 @@ public abstract class Service implements Runnable {
 		}
 	}
 	
-	public static String SERVICE_NAME_VALIDATOR = "service_name";
+	public static final String SERVICE_NAME_VALIDATOR = "service_name";
 	
 	static {
 		if( !NameManager.hasValidator( Service.SERVICE_NAME_VALIDATOR ) ) {

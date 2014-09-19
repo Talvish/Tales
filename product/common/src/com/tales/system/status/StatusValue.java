@@ -34,7 +34,7 @@ import com.tales.parts.naming.NameValidator;
  *
  */
 public class StatusValue {
-	public static String STATUS_VALUE_NAME_VALIDATOR = "status_value_name";
+	public static final String STATUS_VALUE_NAME_VALIDATOR = "status_value_name";
 	
 	static {
 		if( !NameManager.hasValidator( StatusValue.STATUS_VALUE_NAME_VALIDATOR ) ) {

@@ -108,7 +108,7 @@ public class ResourceMethodParameter {
 		COOKIE,
 	}
 	
-	public static String RESOURCE_METHOD_PARAMETER_NAME_VALIDATOR = "resource_method_parameter_name";
+	public static final String RESOURCE_METHOD_PARAMETER_NAME_VALIDATOR = "resource_method_parameter_name";
 	
 	static {
 		if( !NameManager.hasValidator( ResourceMethodParameter.RESOURCE_METHOD_PARAMETER_NAME_VALIDATOR ) ) {

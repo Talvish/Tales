@@ -31,7 +31,7 @@ import com.tales.parts.naming.SegmentedLowercaseEntityNameValidator;
  * @author jmolnar
  */
 public class LoadedSetting {
-	public static String SETTING_NAME_VALIDATOR = "setting_name";
+	public static final String SETTING_NAME_VALIDATOR = "setting_name";
 	
 	static {
 		if( !NameManager.hasValidator( LoadedSetting.SETTING_NAME_VALIDATOR ) ) {

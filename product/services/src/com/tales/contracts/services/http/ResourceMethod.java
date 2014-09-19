@@ -67,7 +67,7 @@ import com.tales.services.http.FailureSubcodes;
 public class ResourceMethod extends Subcontract {
 	private static final Logger logger = LoggerFactory.getLogger( ResourceType.class );
 
-	public static String RESOURCE_METHOD_NAME_VALIDATOR = "resource_method_name";
+	public static final String RESOURCE_METHOD_NAME_VALIDATOR = "resource_method_name";
 	
 	static {
 		if( !NameManager.hasValidator( ResourceMethod.RESOURCE_METHOD_NAME_VALIDATOR ) ) {
