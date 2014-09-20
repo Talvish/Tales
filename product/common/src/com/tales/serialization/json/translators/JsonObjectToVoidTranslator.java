@@ -16,6 +16,8 @@
 package com.tales.serialization.json.translators;
 
 
+import com.google.gson.JsonObject;
+
 import com.tales.parts.translators.TranslationException;
 import com.tales.parts.translators.Translator;
 
@@ -37,7 +39,18 @@ public class JsonObjectToVoidTranslator implements Translator {
 	 * since void data should not be received.
 	 */
 	@Override
-	public Object translate(Object anObject) {
-		throw new TranslationException( "should not be receiving void data" );
+	public Object translate( Object anObject ) {
+		try {
+			JsonObject jsonObject = ( JsonObject )anObject;
+
+			if( jsonObject.entrySet().size() != 0  ) {
+				throw new TranslationException( "should not be receiving void data" );
+			} else {
+				return null; // no data here, so let's return null
+			}
+
+		} catch( ClassCastException e ) {
+			throw new TranslationException( e );
+		}
 	}
 }

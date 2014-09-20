@@ -196,10 +196,13 @@ public class ResourceRequest {
 			}
 			
 			// now let it rip and get that response back
-			response = request.send( );
+			response = request.send( );			
+			String responseString = response.getContentAsString();
+			
+			logger.trace( "Service return '{}'.", responseString );
 
 			// grab the response as a string, it should all be json, so let's interpret
-			JsonElement jsonResult = client.jsonParser.parse( response.getContentAsString() );
+			JsonElement jsonResult = client.jsonParser.parse( responseString );
 			// now we need to convert what was returned as a result object ... BUT ..
 			ResourceResult<T> objectResult = ( ResourceResult<T> )client.getResultType().getFromJsonTranslator().translate( jsonResult );
 			// the actual result is not interpreted since we don't the type at registration time so we deal with the result
