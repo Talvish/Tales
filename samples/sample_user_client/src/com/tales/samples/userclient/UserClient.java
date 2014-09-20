@@ -31,9 +31,17 @@ import com.tales.system.configuration.ConfigurationManager;
 import com.tales.system.configuration.MapSource;
 import com.tales.system.configuration.PropertySource;
 
+/**
+ * The client for talking to the UserService.
+ * @author jmolnar
+ *
+ */
 public class UserClient extends ResourceClient {
 	private static final Logger logger = LoggerFactory.getLogger( UserClient.class );
 	
+	/**
+	 * This main is really just to demonstrate calling and would not exist in an actual client.
+	 */
     public static void main( String[ ] theArgs ) throws Exception {
     	// get the configuration system up and running
     	ConfigurationManager configurationManager = new ConfigurationManager( );
@@ -54,12 +62,12 @@ public class UserClient extends ResourceClient {
     	// client.setHeaderOverride( "Authorization", "random" ); //<= for testing, perhaps want to override this value, assuming server allows overrides
     	
     	// client has been created, so let's load a well known user
-    	User user = client.getUser( UUID.fromString( "00000000-0000-0000-0000-000000000001" ) );
-    	if( user != null ) {
-    		logger.debug( "Found user: '{}'", user.getFirstName( ) );
-    		user.setFirstName( "Bilbo" );
-    		user = client.updateUser( user );
-    		logger.debug( "Updated user: '{}'", user.getFirstName( ) );
+    	ResourceResult<User> result = client.getUser( UUID.fromString( "00000000-0000-0000-0000-000000000001" ) );
+    	if( result.getResult() != null ) {
+    		logger.debug( "Found user: '{}'", result.getResult().getFirstName( ) );
+    		result.getResult().setFirstName( "Bilbo" );
+    		result = client.updateUser( result.getResult() );
+    		logger.debug( "Updated user: '{}'", result.getResult().getFirstName( ) );
     	} else {
     		logger.debug( "Did not find user." );
     	}
@@ -95,36 +103,27 @@ public class UserClient extends ResourceClient {
 	 * Requests a particular user.
 	 * @param theUserId the id of the user being requested
 	 * @return the requested user, if found, null otherwise
+	 * @throws InterruptedException thrown if the calling thread is interrupted
 	 */
-	public User getUser( UUID theUserId ) {
+	public ResourceResult<User> getUser( UUID theUserId ) throws InterruptedException {
 		Preconditions.checkNotNull( theUserId, "need a user id to retrieve a user" );
-		ResourceResult<User> response;
-		try {
-			response = this.createRequest( this.methods[ 0 ], theUserId )
-					.setHeaderParameter( "Authorization", this.authToken )
-					.execute();
-			return response.getResult( );
-		} catch (InterruptedException e) {
-			return null; // TODO: this isnt' right
-		}
+
+		return this.createRequest( this.methods[ 0 ], theUserId )
+				.setHeaderParameter( "Authorization", this.authToken )
+				.execute();
 	}
 
 	/**
 	 * A call to save the values of a user on the server.
 	 * @param theUser the user to save
 	 * @return the server returned version of the saved user
+	 * @throws InterruptedException thrown if the calling thread is interrupted
 	 */
-	public User updateUser( User theUser ) {
+	public ResourceResult<User> updateUser( User theUser ) throws InterruptedException {
 		Preconditions.checkNotNull( theUser, "need a user to be able to update" );
-		ResourceResult<User> response;
-		try {
-			response = this.createRequest( this.methods[ 1 ], theUser.getId() )
-					.setBodyParameter( "user", theUser )
-					.setHeaderParameter( "Authorization", this.authToken )
-					.execute();
-			return response.getResult( );
-		} catch (InterruptedException e) {
-			return null; // TODO: this isnt' right
-		}
+		return this.createRequest( this.methods[ 1 ], theUser.getId() )
+				.setBodyParameter( "user", theUser )
+				.setHeaderParameter( "Authorization", this.authToken )
+				.execute();
 	}
 }
