@@ -83,8 +83,13 @@ public class UserClient extends ResourceClient {
 
     private String authToken = "Sample key=\"42349840984\"";
     
-	public UserClient( String theServiceBase, String theUserAgent ) {
-		super( theServiceBase, "/user", "20140124", theUserAgent, true ); // we are allowing untrusted SSL since the sample self-cert'ed
+    /**
+     * The constructor used to create the client.
+     * @param theEndpoint the endpoint the service it located at
+     * @param theUserAgent the user agent to use while talking to the service
+     */
+	public UserClient( String theEndpoint, String theUserAgent ) {
+		super( theEndpoint, "/user", "20140124", theUserAgent, true ); // we are allowing untrusted SSL since the sample self-cert'ed
 		
 		// we now define the methods that we are going to expose for calling
 		this.methods = new ResourceMethod[ 2 ];
