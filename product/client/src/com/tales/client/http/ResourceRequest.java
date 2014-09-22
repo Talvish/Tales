@@ -23,6 +23,8 @@ import java.util.concurrent.TimeoutException;
 
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
+import org.eclipse.jetty.http.HttpField;
+import org.eclipse.jetty.http.HttpFields;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -214,6 +216,22 @@ public class ResourceRequest {
 				objectResult.setResult( ( T )client.getJsonFacility().fromJsonElement( jsonReturn, method.getReturn().getType(), method.getReturn().getGenericType() ) );
 			} else {
 				objectResult.setResult( null );
+			}
+
+			// TODO: need to do HTTP header and cookie support
+			HttpFields headers = response.getHeaders();
+			
+			for( HttpField header : headers ) {
+				if( objectResult.getHeaders().containsKey( header.getName( ) ) ) {
+					// we shouldn't have two of the same headers, but if we do, at least warn
+					logger.warn( 
+							"Duplicate header '{}' found while processing result from resource method '{}' from contract '{}'.", 
+							header.getName( ),
+							this.method.getName(),
+							this.client.contractRoot );
+				} else {
+					objectResult.setHeader( header.getName(), header.getValue());
+				}
 			}
 	
 			return objectResult;		
