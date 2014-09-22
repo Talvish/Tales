@@ -92,6 +92,8 @@ Client
 - add helper to get generic information for return types
 - ability to set the Root-Request-Id, Parent-Request-Id headers
 - consider way to set override.response.details, override.response.readability parameters
+- need better support for headers and cookies in the clients (no cookie support at all right now)
+- need a helper for dealing with responses from services, time-outs/retries, etc
 
 Misc
 ------------------------------------------------
