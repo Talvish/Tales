@@ -18,10 +18,13 @@ package com.tales.samples.userservice;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.UUID;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.tales.businessobjects.ObjectId;
 import com.tales.contracts.services.http.HeaderParam;
 import com.tales.contracts.services.http.PathParam;
 import com.tales.contracts.services.http.RequestParam;
@@ -69,7 +72,7 @@ public class UserResource {
 	 */
 	@ResourceOperation( name="get_user", path="GET : users/{id}" )
 	public TransportUser getUser( 
-			@PathParam( name="id" )UUID theId, 
+			@PathParam( name="id" )ObjectId theId, 
 			@HeaderParam( name="Authorization" )String theAuthToken ) {
 		Conditions.checkAuthorization( validateAuthorization( theAuthToken ), "Sample", "unauthorized attempt to access resource" ); // if invalid, throws AuthorizationException which turns into HTTP status code 401
 		Conditions.checkParameter( theId != null , "id", "an id must be given" ); // if invalid, throws InvalidParameterException, which turns into HTTP status code 400
@@ -120,7 +123,7 @@ public class UserResource {
 	 */
 	@ResourceOperation( name="update_user", path="GET | POST : users/{id}/update" ) // supporting GET just so a browser can easily be used for manual testing
 	public TransportUser updateUser( 
-			@PathParam( name="id" )UUID theId, 
+			@PathParam( name="id" )ObjectId theId, 
 			@RequestParam( name="user" )TransportUser theUser,
 			@HeaderParam( name="Authorization" )String theAuthToken ) {
 		Conditions.checkAuthorization( validateAuthorization( theAuthToken ), "Sample", "unauthorized attempt to access resource" ); 
@@ -138,7 +141,7 @@ public class UserResource {
 	 */
 	@ResourceOperation( name="delete_user", path="GET | POST : users/{id}/delete" ) // supporting GET just so a browser can easily be used for manual testing
 	public void deleteUser(
-			@PathParam( name="id" )UUID theId, 
+			@PathParam( name="id" )ObjectId theId, 
 			@HeaderParam( name="Authorization" )String theAuthToken ) {
 		Conditions.checkAuthorization( validateAuthorization( theAuthToken ), "Sample", "unauthorized attempt to access resource" ); 
 		Conditions.checkParameter( theId != null, "id", "an id must be given" );

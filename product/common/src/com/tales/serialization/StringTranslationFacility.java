@@ -23,7 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.joda.time.DateTime;
 
 import com.google.common.base.Preconditions;
-
+import com.tales.businessobjects.ObjectId;
 import com.tales.parts.translators.BooleanToStringTranslator;
 import com.tales.parts.translators.EnumToStringTranslator;
 import com.tales.parts.translators.ObjectToStringTranslator;
@@ -35,6 +35,7 @@ import com.tales.parts.translators.StringToEnumTranslator;
 import com.tales.parts.translators.StringToFloatTranslator;
 import com.tales.parts.translators.StringToIntegerTranslator;
 import com.tales.parts.translators.StringToLongTranslator;
+import com.tales.parts.translators.StringToObjectIdTranslator;
 import com.tales.parts.translators.StringToStringTranslator;
 import com.tales.parts.translators.StringToUuidTranslator;
 import com.tales.parts.translators.Translator;
@@ -86,6 +87,9 @@ public final class StringTranslationFacility implements Facility {
 		Translator toUUIDTranslator = new StringToUuidTranslator(true, null, null);
 		fromStringTranslators.put( UUID.class, toUUIDTranslator );
 		
+		Translator toObjectIdTranslator = new StringToObjectIdTranslator( true, null, null );
+		fromStringTranslators.put( ObjectId.class, toObjectIdTranslator );
+		
 		// the to string translators . . .
 		
 		Translator fromObjectTranslator = new ObjectToStringTranslator( "" );
@@ -115,6 +119,8 @@ public final class StringTranslationFacility implements Facility {
 		
 		Translator fromUUIDTranslator = new UuidToStringTranslator( "" );
 		toStringTranslators.put( UUID.class, fromUUIDTranslator );
+		
+		toStringTranslators.put( ObjectId.class,  fromObjectTranslator );
 		
 	}
 	

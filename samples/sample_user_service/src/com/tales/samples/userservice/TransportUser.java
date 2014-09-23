@@ -15,14 +15,14 @@
 // ***************************************************************************
 package com.tales.samples.userservice;
 
-import java.util.UUID;
-
+import com.tales.businessobjects.BusinessObjectBase;
+import com.tales.businessobjects.ObjectId;
 import com.tales.contracts.data.DataContract;
 import com.tales.contracts.data.DataMember;
 
 
 @DataContract( name ="com.tales.transport.user")
-public class TransportUser extends TransportModelBase {
+public class TransportUser extends BusinessObjectBase {
 	@DataMember( name = "first_name" ) private String firstName;
 	@DataMember( name = "last_name" ) private String lastName;
 	
@@ -46,7 +46,7 @@ public class TransportUser extends TransportModelBase {
 	/**
 	 * Constructor taking the required id.
 	 */
-	public TransportUser( UUID theId ) {
+	public TransportUser( ObjectId theId ) {
 		super( theId );
 	}
 	

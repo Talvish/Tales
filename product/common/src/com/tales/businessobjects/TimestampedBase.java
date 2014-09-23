@@ -17,6 +17,7 @@ package com.tales.businessobjects;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
+import com.google.common.base.Preconditions;
 import com.tales.contracts.data.DataContract;
 import com.tales.contracts.data.DataMember;
 
@@ -35,7 +36,19 @@ public class TimestampedBase {
 	 */
 	protected TimestampedBase( ) {
 		creationTimestamp = DateTime.now( DateTimeZone.UTC );
-		modificationTimestamp = DateTime.now( DateTimeZone.UTC );
+		modificationTimestamp = creationTimestamp;
+	}
+
+	/**
+	 * A constructor used, internally, for doing copy constructor
+	 * or copying between different projects of the same object.
+	 * @param theReference the object to copy
+	 */
+	protected TimestampedBase( TimestampedBase theReference ) {
+		Preconditions.checkNotNull( theReference, "reference must not be null" );
+
+		creationTimestamp = theReference.creationTimestamp;
+		modificationTimestamp = theReference.modificationTimestamp;
 	}
 
 	/**

@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.tales.businessobjects.ObjectId;
 import com.tales.client.http.ResourceClient;
 import com.tales.client.http.ResourceMethod;
 import com.tales.client.http.ResourceResult;
@@ -62,7 +63,7 @@ public class UserClient extends ResourceClient {
     	// client.setHeaderOverride( "Authorization", "random" ); //<= for testing, perhaps want to override this value, assuming server allows overrides
     	
     	// client has been created, so let's load a well known user
-    	ResourceResult<User> result = client.getUser( UUID.fromString( "00000000-0000-0000-0000-000000000001" ) );
+    	ResourceResult<User> result = client.getUser( new ObjectId( 1, 1, 100 ) );
     	if( result.getResult() != null ) {
     		logger.debug( "Found user: '{}'", result.getResult().getFirstName( ) );
     		result.getResult().setFirstName( "Bilbo" );
@@ -95,11 +96,11 @@ public class UserClient extends ResourceClient {
 		this.methods = new ResourceMethod[ 2 ];
 		
 		this.methods[ 0 ] = this.defineMethod( "get_user", User.class, HttpVerb.GET, "users/{id}" )
-				.definePathParameter("id", UUID.class )
+				.definePathParameter("id", ObjectId.class )
 				.defineHeaderParameter( "Authorization", String.class );
 
 		this.methods[ 1 ] = this.defineMethod( "update_user", User.class, HttpVerb.POST, "users/{id}/update" )
-				.definePathParameter("id", UUID.class )
+				.definePathParameter("id", ObjectId.class )
 				.defineBodyParameter( "user", User.class )
 				.defineHeaderParameter( "Authorization", String.class );
 	}
@@ -110,7 +111,7 @@ public class UserClient extends ResourceClient {
 	 * @return the requested user, if found, null otherwise
 	 * @throws InterruptedException thrown if the calling thread is interrupted
 	 */
-	public ResourceResult<User> getUser( UUID theUserId ) throws InterruptedException {
+	public ResourceResult<User> getUser( ObjectId theUserId ) throws InterruptedException {
 		Preconditions.checkNotNull( theUserId, "need a user id to retrieve a user" );
 
 		return this.createRequest( this.methods[ 0 ], theUserId )

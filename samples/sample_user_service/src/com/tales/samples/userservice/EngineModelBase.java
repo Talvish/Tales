@@ -15,12 +15,11 @@
 // ***************************************************************************
 package com.tales.samples.userservice;
 
-import java.util.UUID;
-
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import com.google.common.base.Preconditions;
+import com.tales.businessobjects.ObjectId;
 
 /**
  * A helper base class for objects that are used in an engine
@@ -29,7 +28,7 @@ import com.google.common.base.Preconditions;
  */
 public class EngineModelBase {
 	// TODO: this needs to be updated to make use of the storage system
-	private UUID id;
+	private ObjectId id;
 	private DateTime creationTimestamp;
 	private DateTime modificationTimestamp;
 	
@@ -43,7 +42,7 @@ public class EngineModelBase {
 	 * The constructor needed when creating a new instance. 
 	 * @param theId The unique id for this object.
 	 */
-	public EngineModelBase( UUID theId ) {
+	public EngineModelBase( ObjectId theId ) {
 		Preconditions.checkArgument( theId != null, "an id must be give" );
 		
 		id = theId;
@@ -54,7 +53,7 @@ public class EngineModelBase {
 	/**
 	 * The unique id given to this object.
 	 */
-	public UUID getId( ) {
+	public ObjectId getId( ) {
 		return id;
 	}
 	

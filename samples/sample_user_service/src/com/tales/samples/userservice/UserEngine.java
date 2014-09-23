@@ -18,9 +18,12 @@ package com.tales.samples.userservice;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
+import com.tales.businessobjects.ObjectId;
 
 /**
  * The engine is the component that actually does the work
@@ -36,7 +39,7 @@ public class UserEngine {
 	// TODO: this needs to be updated to to proper persistence
 	
 	private UserEngineStatus status = new UserEngineStatus( );
-	private Map<UUID, User> storage = new HashMap<UUID, User>( );
+	private Map<ObjectId, User> storage = new HashMap<ObjectId, User>( );
 	
 	public UserEngine( ) {
 		// since we aren't building a real storage system
@@ -44,15 +47,16 @@ public class UserEngine {
 		// and adding a few existing users
 		User user;
 		
-		user = new User( UUID.fromString( "00000000-0000-0000-0000-000000000001" ) );
+		user = new User( new ObjectId( 1, 1, 100 ) );
 		user.setFirstName( "John" );
 		user.setLastName( "Doe" );		
 		storage.put( user.getId(), user );
-
-		user = new User( UUID.fromString( "00000000-0000-0000-0000-000000000002" ) );
+		
+		user = new User( new ObjectId( 2, 1, 100 ) );
 		user.setFirstName( "Jane" );
 		user.setLastName( "Smith" );		
 		storage.put( user.getId(), user );
+
 	}
 	
 	/**
@@ -66,7 +70,7 @@ public class UserEngine {
 	/**
 	 * Returns a particular user, if it can be found.
 	 */
-	public User getUser( UUID theId ) {
+	public User getUser( ObjectId theId ) {
 		Preconditions.checkArgument( theId != null, "an id must be given" );
 		return storage.get( theId );
 	}
@@ -84,7 +88,7 @@ public class UserEngine {
 	 * Creates the user in storage. The parameters are not forced.
 	 */
 	public User createUser( String theFirstName, String theLastName ) {
-		User user = new User( UUID.randomUUID() );
+		User user = new User( new ObjectId( 3, 1, 100 ) );
 		
 		user.setFirstName( theFirstName );
 		user.setLastName( theLastName );
@@ -104,7 +108,6 @@ public class UserEngine {
 			user.setFirstName( theUser.getFirstName( ) );
 			user.setLastName(  theUser.getLastName( ) );
 			// we don't reset the creation/modification time stamps
-			user.indicateModified();
 			storage.put( user.getId( ),  user ); // yes not needed, but pretend we are storing back into persistence
 
 			return user;
@@ -118,7 +121,7 @@ public class UserEngine {
 	 * Performs the removal of the user from the storage system.
 	 * This actually performs a soft-delete.
 	 */
-	public boolean deleteUser( UUID theId ) {
+	public boolean deleteUser( ObjectId theId ) {
 		Preconditions.checkArgument( theId != null, "an id must be given" );
 		
 		User user = getUser( theId );

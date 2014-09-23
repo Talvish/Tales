@@ -15,17 +15,16 @@
 // ***************************************************************************
 package com.tales.samples.userclient;
 
-import java.util.UUID;
-
 import org.joda.time.DateTime;
 
+import com.tales.businessobjects.ObjectId;
 import com.tales.contracts.data.DataContract;
 import com.tales.contracts.data.DataMember;
 
 
 @DataContract( name ="com.tales.transport.user")
 public class User {
-	@DataMember( name = "id") private UUID id;
+	@DataMember( name = "id") private ObjectId id;
 	@DataMember( name = "creation_timestamp" ) private DateTime creationTimestamp;
 	@DataMember( name = "modification_timestamp" ) private DateTime modificationTimestamp;
 	@DataMember( name = "first_name" ) private String firstName;
@@ -40,7 +39,7 @@ public class User {
 	/**
 	 * The unique id given to this object.
 	 */
-	public UUID getId( ) {
+	public ObjectId getId( ) {
 		return id;
 	}
 	

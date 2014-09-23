@@ -15,7 +15,8 @@
 // ***************************************************************************
 package com.tales.samples.userservice;
 
-import java.util.UUID;
+import com.tales.businessobjects.BusinessObjectBase;
+import com.tales.businessobjects.ObjectId;
 
 
 /**
@@ -23,7 +24,7 @@ import java.util.UUID;
  * @author Joseph Molnar
  *
  */
-public class User extends EngineModelBase {
+public class User extends BusinessObjectBase {
 	// TODO: this needs to be updated to make use of the storage system
 	private String firstName;
 	private String lastName;
@@ -39,7 +40,7 @@ public class User extends EngineModelBase {
 	/**
 	 * Constructor taking the required id.
 	 */
-	public User( UUID theId ) {
+	public User( ObjectId theId ) {
 		super( theId );
 	}
 	
@@ -55,6 +56,7 @@ public class User extends EngineModelBase {
 	 */
 	public void setFirstName( String theFirstName ) {
 		firstName = theFirstName;
+		this.indicateModified();
 	}
 	
 	/**
@@ -69,6 +71,7 @@ public class User extends EngineModelBase {
 	 */
 	public void setLastName( String theLastName ) {
 		lastName = theLastName;
+		this.indicateModified();
 	}
 	
 	/**

@@ -15,7 +15,6 @@
 package com.tales.businessobjects;
 
 import com.google.common.base.Preconditions;
-
 import com.tales.contracts.data.DataContract;
 import com.tales.contracts.data.DataMember;
 
@@ -32,6 +31,16 @@ public class BusinessObjectBase extends TimestampedBase {
 	 * A constructor used for serialization purposes.
 	 */
 	protected BusinessObjectBase( ) {
+	}
+	
+	/**
+	 * A constructor used, internally, for doing copy constructor
+	 * or copying between different projects of the same object.
+	 * @param theReference the object to copy
+	 */
+	protected BusinessObjectBase( BusinessObjectBase theReference ) {
+		super( theReference ); // this will check it isn't null
+		id = theReference.id;
 	}
 
 	/**

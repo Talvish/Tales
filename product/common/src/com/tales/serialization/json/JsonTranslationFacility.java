@@ -34,6 +34,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
+import com.tales.businessobjects.ObjectId;
 import com.tales.parts.naming.NameValidator;
 import com.tales.parts.naming.NopNameValidator;
 import com.tales.parts.reflection.FieldDescriptor;
@@ -190,7 +191,12 @@ public final class JsonTranslationFacility implements Facility {
 				UUID.class, "uuid : string", 
 				new JsonElementToStringToChainTranslator( stringTranslators.getFromStringTranslator( UUID.class ) ),
 				objectToJsonTranslator ) );
-		
+
+		this.translators.put( ObjectId.class, new JsonTypeReference(
+				ObjectId.class, "objectid : string", 
+				new JsonElementToStringToChainTranslator( stringTranslators.getFromStringTranslator( ObjectId.class ) ),
+				objectToJsonTranslator ) );
+
 		// this is the standard void 'type' required when using reflection
 		this.translators.put( Void.TYPE, new JsonTypeReference(
 				Void.TYPE, "void", 

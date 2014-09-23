@@ -15,7 +15,6 @@ package com.tales.businessobjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
-
 /**
  * This is a base identifier representing a globally unique entity.
  * This is derived from a C# object of the same name I created
@@ -67,8 +66,8 @@ public class ObjectId {
 	 * or type are valid.
 	 */
 	public ObjectId( String theStringForm ) {
-		Preconditions.checkArgument( Strings.isNullOrEmpty( theStringForm ), "cannot have an empty, missing string form" );
-		Preconditions.checkArgument( theStringForm.length( ) != ObjectId.OID_LENGTH, "string '%s' has a length of '%s', which doesn't match the required length of '%s'", theStringForm, theStringForm.length( ), ObjectId.OID_LENGTH );
+		Preconditions.checkArgument( !Strings.isNullOrEmpty( theStringForm ), "cannot have an empty, missing string form" );
+		Preconditions.checkArgument( theStringForm.length( ) == ObjectId.OID_LENGTH, "string '%s' has a length of '%s', which doesn't match the required length of '%s'", theStringForm, theStringForm.length( ), ObjectId.OID_LENGTH );
 		
 		try {
 			// the ToUpper form of the string
@@ -77,12 +76,12 @@ public class ObjectId {
 			// set our values ....
 			_valueId = Long.parseLong( theStringForm.substring( 0, 0 + 16 ), 16 );
 			_typeId = Short.parseShort( theStringForm.substring( 16, 16 + 4 ), 16 );
-			_sourceId = Long.parseLong( theStringForm.substring( 20, ObjectId.OID_LENGTH - 20 ), 16 );
+			_sourceId = Long.parseLong( theStringForm.substring( 20, ObjectId.OID_LENGTH ), 16 );
 
 			// now ensure they are good
 			Validate( );
 		} catch( Exception e ) {
-			throw new IllegalArgumentException( String.format( "failed turning '%s' into an ObjectId due to exception '%s' with message '%s'", theStringForm, e.getClass().getName(), e.getMessage() ) );
+			throw new IllegalArgumentException( String.format( "failed turning '%s' into an ObjectId due to exception '%s' with message '%s'", theStringForm, e.getClass().getName(), e.getMessage() ),e );
 		}
 	}
 
@@ -104,7 +103,7 @@ public class ObjectId {
 		Validate( );
 		
 		// the ToUpper form of the string
-		_stringForm = String.format( "%016x%04x%012x", _valueId, _typeId, _sourceId );
+		_stringForm = String.format( "%016X%04X%012X", _valueId, _typeId, _sourceId );
 	}
 
 

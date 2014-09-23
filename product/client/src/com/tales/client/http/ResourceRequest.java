@@ -197,6 +197,9 @@ public class ResourceRequest {
 				}
 			}
 			
+			// TODO: consider a configuration setting for this
+			//request.param( "override.response.details", "ALL" );
+
 			// now let it rip and get that response back
 			response = request.send( );			
 			String responseString = response.getContentAsString();
