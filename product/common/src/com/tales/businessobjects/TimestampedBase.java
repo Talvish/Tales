@@ -52,6 +52,20 @@ public class TimestampedBase {
 	}
 
 	/**
+	 * Constructor primarily meant for non-reflection-based serialization.
+	 * @param theCreationTimestamp the datetime the object was created
+	 * @param theModificationTimestamp the datetime the object was last modified
+	 */
+	public TimestampedBase( DateTime theCreationTimestamp, DateTime theModificationTimestamp ) {
+		Preconditions.checkNotNull( theCreationTimestamp, "need a creation timestamp" );
+		Preconditions.checkNotNull( theModificationTimestamp, "need a creation timestamp" );
+		// TODO: need to check that modification is equal or greater than creation
+		
+		creationTimestamp = theCreationTimestamp;
+		modificationTimestamp = theModificationTimestamp;
+	}
+	
+	/**
 	 * The date, in UTC, when the object was created.
 	 */
 	public DateTime getCreationTimestamp( ) {

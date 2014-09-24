@@ -14,6 +14,8 @@
 // ***************************************************************************
 package com.tales.businessobjects;
 
+import org.joda.time.DateTime;
+
 import com.google.common.base.Preconditions;
 import com.tales.contracts.data.DataContract;
 import com.tales.contracts.data.DataMember;
@@ -48,8 +50,20 @@ public class BusinessObjectBase extends TimestampedBase {
 	 * @param theId The unique id for this object.
 	 */
 	public BusinessObjectBase( ObjectId theId ) {
-		Preconditions.checkArgument( theId != null, "an id must be give" );
+		Preconditions.checkNotNull( theId, "need an id" );
 		
+		id = theId;
+	}
+	
+	/**
+	 * Constructor primarily meant for non-reflection-based serialization.
+	 * @param theId the id to give the object
+	 * @param theCreationTimestamp the datetime the object was created
+	 * @param theModificationTimestamp the datetime the object was last modified
+	 */
+	public BusinessObjectBase( ObjectId theId, DateTime theCreationTimestamp, DateTime theModificationTimestamp ) {
+		super( theCreationTimestamp, theModificationTimestamp );
+		Preconditions.checkNotNull( theId, "need an id" );
 		id = theId;
 	}
 	
