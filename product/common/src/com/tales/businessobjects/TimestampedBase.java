@@ -59,7 +59,7 @@ public class TimestampedBase {
 	public TimestampedBase( DateTime theCreationTimestamp, DateTime theModificationTimestamp ) {
 		Preconditions.checkNotNull( theCreationTimestamp, "need a creation timestamp" );
 		Preconditions.checkNotNull( theModificationTimestamp, "need a creation timestamp" );
-		// TODO: need to check that modification is equal or greater than creation
+		Preconditions.checkArgument( !theCreationTimestamp.isAfter( theModificationTimestamp ), "the creation timestamp should be less than or equal to the modification timestamp");
 		
 		creationTimestamp = theCreationTimestamp;
 		modificationTimestamp = theModificationTimestamp;
