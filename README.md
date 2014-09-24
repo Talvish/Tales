@@ -13,8 +13,21 @@ The current version of Tales is in mid-update:
 a) In process of moving from Jetty 8.x/JDK 1.6 to Jetty 9.x/JDK 1.8, and 
 b) Adding polymorphic data handling for transport/storage
 
-Note: Right now the storage system is not compiling and I don't expect to be updating it soon. 
+Note: Right now the storage system is not in a working state and it will be awhile before I update it. 
 
+Related Repositories
+--------------------
+
+In total there are three repositories that make up the Tales suite:
+
+* <b>Tales</b>: This is the primary repository that contains only the framework.<br>
+https://github.com/Talvish/Tales
+
+* <b>Tales - Samples</b>: This repository contains various samples show the capabilities of the framework. Samples range from simple, to complex, to near real services. <br>
+https://github.com/Talvish/Tales-Samples
+
+* <b>Tales - Rigs</b>: This repository contains usable services and their clients built using Tales. The intention is for these components to be used in real environments.<br>
+https://github.com/Talvish/Tales-Rigs
 
 A bit of history
 ----------------
