@@ -17,15 +17,34 @@ package com.tales.parts.translators;
 
 import java.math.BigDecimal;
 
+/**
+ * Translator that takes a string and changes it into BigDecimal.
+ * @author jmolnar
+ *
+ */
 public class StringToBigDecimalTranslator extends StringToObjectTranslatorBase implements Translator {
 
+	/**
+	 * Default constructor that will have set the translator to have
+	 * trim as true and null for empty and null values.
+	 */
 	public StringToBigDecimalTranslator( ) {
 		this( true, null, null );
 	}
+	
+	/**
+	 * Constructor for explicitly setting translation values.
+	 * @param shouldTrim indicate if the string should be trimmed before translation
+	 * @param theEmptyValue the value to use if the empty string is received
+	 * @param theNullValue the value to use if null is received
+	 */
 	public StringToBigDecimalTranslator( boolean shouldTrim, Object theEmptyValue, Object theNullValue) {
 		super(shouldTrim, theEmptyValue, theNullValue);
 	}
 
+	/**
+	 * Translates the value of the object from a String to a BigDecimal.
+	 */
 	@Override
 	public Object translate(Object anObject) {
 		Object returnValue;

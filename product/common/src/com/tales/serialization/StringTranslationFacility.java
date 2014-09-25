@@ -51,6 +51,9 @@ public final class StringTranslationFacility implements Facility {
 	private final Map< Class<?>, Translator> toStringTranslators = new ConcurrentHashMap<Class<?>, Translator>( 16, 0.75f, 1 );
 	private final Map< Class<?>, Translator> fromStringTranslators = new ConcurrentHashMap<Class<?>, Translator>( 16, 0.75f, 1 );
 
+	/**
+	 * Default constructor.
+	 */
 	public StringTranslationFacility( ) {
 		// the from string translators . . .
 		

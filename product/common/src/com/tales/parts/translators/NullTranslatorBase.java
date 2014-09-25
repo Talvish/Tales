@@ -15,13 +15,26 @@
 // ***************************************************************************
 package com.tales.parts.translators;
 
+/**
+ * Base class for translators dealing with null values.
+ * @author jmolnar
+ *
+ */
 public abstract class NullTranslatorBase {
 	protected Object nullValue;
 
+	/**
+	 * Constructor taking the value to use for null
+	 * @param theNullValue the value to use for null
+	 */
 	protected NullTranslatorBase( Object theNullValue ) {
 		nullValue = theNullValue;
 	}
 	
+	/**
+	 * The value that will be used for null.
+	 * @return the value that will be used for null
+	 */
 	public Object getNullValue( ) {
 		return nullValue;
 	}
