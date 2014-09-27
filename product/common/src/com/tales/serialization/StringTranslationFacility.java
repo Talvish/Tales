@@ -16,6 +16,8 @@
 package com.tales.serialization;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.ZonedDateTime;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -34,10 +36,12 @@ import com.tales.parts.translators.StringToDoubleTranslator;
 import com.tales.parts.translators.StringToEnumTranslator;
 import com.tales.parts.translators.StringToFloatTranslator;
 import com.tales.parts.translators.StringToIntegerTranslator;
+import com.tales.parts.translators.StringToLocalDateTranslator;
 import com.tales.parts.translators.StringToLongTranslator;
 import com.tales.parts.translators.StringToObjectIdTranslator;
 import com.tales.parts.translators.StringToStringTranslator;
 import com.tales.parts.translators.StringToUuidTranslator;
+import com.tales.parts.translators.StringToZonedDateTimeTranslator;
 import com.tales.parts.translators.Translator;
 import com.tales.parts.translators.UuidToStringTranslator;
 import com.tales.system.Facility;
@@ -83,6 +87,10 @@ public final class StringTranslationFacility implements Facility {
 
 		Translator toDateTimeTranslator = new StringToDateTimeTranslator( true, null, null );
 		fromStringTranslators.put( DateTime.class, toDateTimeTranslator );
+		Translator toZonedDateTimeTranslator = new StringToZonedDateTimeTranslator( true,  null,  null );
+		fromStringTranslators.put( ZonedDateTime.class,  toZonedDateTimeTranslator );
+		Translator toLocalDateTranslator = new StringToLocalDateTranslator( true,  null,  null );
+		fromStringTranslators.put( LocalDate.class,  toLocalDateTranslator );
 
 		Translator toStringTranslator = new StringToStringTranslator( true, "", null );
 		fromStringTranslators.put( String.class, toStringTranslator );
@@ -116,6 +124,8 @@ public final class StringTranslationFacility implements Facility {
 		toStringTranslators.put( boolean.class, fromBooleanTranslator );
 
 		toStringTranslators.put( DateTime.class, fromObjectTranslator );
+		toStringTranslators.put( LocalDate.class, fromObjectTranslator );
+		toStringTranslators.put( ZonedDateTime.class, fromObjectTranslator );
 
 		Translator fromStringTranslator = new StringToStringTranslator( true, "", null );
 		toStringTranslators.put( String.class, fromStringTranslator );

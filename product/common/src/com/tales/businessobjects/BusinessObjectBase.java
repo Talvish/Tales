@@ -15,7 +15,7 @@
 // ***************************************************************************
 package com.tales.businessobjects;
 
-import org.joda.time.DateTime;
+import java.time.ZonedDateTime;
 
 import com.google.common.base.Preconditions;
 import com.tales.contracts.data.DataContract;
@@ -27,7 +27,7 @@ import com.tales.contracts.data.DataMember;
  *
  */
 @DataContract( name ="com.tales.business_objects.business_object_base")
-public class BusinessObjectBase extends TimestampedBase {
+public abstract class BusinessObjectBase extends TimestampedBase {
 	@DataMember( name = "id") private ObjectId id;
 	
 	/**
@@ -50,7 +50,7 @@ public class BusinessObjectBase extends TimestampedBase {
 	 * The constructor needed when creating a new instance. 
 	 * @param theId The unique id for this object.
 	 */
-	public BusinessObjectBase( ObjectId theId ) {
+	protected BusinessObjectBase( ObjectId theId ) {
 		Preconditions.checkNotNull( theId, "need an id" );
 		
 		id = theId;
@@ -62,7 +62,7 @@ public class BusinessObjectBase extends TimestampedBase {
 	 * @param theCreationTimestamp the datetime the object was created
 	 * @param theModificationTimestamp the datetime the object was last modified
 	 */
-	public BusinessObjectBase( ObjectId theId, DateTime theCreationTimestamp, DateTime theModificationTimestamp ) {
+	protected BusinessObjectBase( ObjectId theId, ZonedDateTime theCreationTimestamp, ZonedDateTime theModificationTimestamp ) {
 		super( theCreationTimestamp, theModificationTimestamp );
 		Preconditions.checkNotNull( theId, "need an id" );
 		id = theId;
@@ -73,5 +73,15 @@ public class BusinessObjectBase extends TimestampedBase {
 	 */
 	public ObjectId getId( ) {
 		return id;
+	}
+	
+	/**
+	 * Sets the id, which is only possible if the id isn't set.
+	 * @param theId the id to set
+	 */
+	public void setId( ObjectId theId ) {
+		Preconditions.checkNotNull( theId, "need an id" );
+		Preconditions.checkState( this.id == null, "cannot set id to '%s' since id is already set to '%s'", theId, this.id );
+		id = theId;
 	}
 }

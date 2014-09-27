@@ -41,14 +41,14 @@ public class Conditions {
 	/**
 	 * Checks if the object is null and if so throws an InvalidParameterException indicating the parameter is null.
 	 */
-	public static void checkParameterNull( Object theObject, String theName ) {
-		checkParameterNull( theObject, theName, "failed parameter check" );
+	public static void checkParameterNotNull( Object theObject, String theName ) {
+		checkParameterNotNull( theObject, theName, "failed parameter check" );
 	}
 	
 	/**
 	 * Checks if the object is null and if so throws an InvalidParameterException indicating the parameter is null.
 	 */
-	public static void checkParameterNull( Object theObject, String theName, String theMessage, Object... theMessageParameters ) {
+	public static void checkParameterNotNull( Object theObject, String theName, String theMessage, Object... theMessageParameters ) {
 		if( theObject == null ) {
 			throw new InvalidParameterException( theName, String.format( theMessage, theMessageParameters ), "parameter_null" );
 		} 

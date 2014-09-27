@@ -17,6 +17,8 @@ package com.tales.serialization.json;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.time.LocalDate;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -181,7 +183,17 @@ public final class JsonTranslationFacility implements Facility {
 				DateTime.class, "datetime", 
 				new JsonElementToStringToChainTranslator( stringTranslators.getFromStringTranslator( DateTime.class ) ),
 				objectToJsonTranslator ) );
-		
+
+		this.translators.put( ZonedDateTime.class, new JsonTypeReference(
+				ZonedDateTime.class, "datetime", 
+				new JsonElementToStringToChainTranslator( stringTranslators.getFromStringTranslator( ZonedDateTime.class ) ),
+				objectToJsonTranslator ) );
+
+		this.translators.put( LocalDate.class, new JsonTypeReference(
+				LocalDate.class, "date", 
+				new JsonElementToStringToChainTranslator( stringTranslators.getFromStringTranslator( LocalDate.class ) ),
+				objectToJsonTranslator ) );
+
 		this.translators.put( String.class, new JsonTypeReference(
 				String.class, "string", 
 				new JsonElementToStringToChainTranslator( stringTranslators.getFromStringTranslator( String.class ) ),

@@ -20,7 +20,6 @@ import java.lang.reflect.Type;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.tales.parts.translators.Translator;
-import com.tales.system.Conditions;
 
 /**
  * This class represents any form of parameter that can exist, be it 
@@ -36,10 +35,10 @@ public class ResourceMethodParameter {
 	private final Translator translator;
 	
 	protected ResourceMethodParameter( String theName, int theIndex, Class<?> theType, Type theGenericType, Translator theTranslator ) {
-		Conditions.checkParameter( !Strings.isNullOrEmpty( theName ),  "theName" );
+		Preconditions.checkArgument( !Strings.isNullOrEmpty( theName ),  "need a name" );
 		Preconditions.checkArgument( theIndex >= 0, "parameter '%s' is using an invalid index value of '%s'", theName, theIndex );
-		Conditions.checkParameterNull( theTranslator,  "theTranslator" );
-		Conditions.checkParameterNull( theType, "theType" );
+		Preconditions.checkNotNull(theTranslator,  "need a translator" );
+		Preconditions.checkNotNull( theType, "need a type" );
 		
 		name = theName;
 		type = theType;
