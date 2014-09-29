@@ -15,12 +15,14 @@
 // ***************************************************************************
 package com.tales.client.http;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+
 import com.tales.contracts.data.DataContract;
 import com.tales.contracts.data.DataMember;
 
@@ -37,6 +39,7 @@ public class ResourceResult<T> {
 	private @DataMember( name="status" )ResponseStatus status;
 	private @DataMember( name="operation")ResponseOperation operation;
 	
+	private CacheControl cacheControl = null;
 	private final Map<String,String> headers = new HashMap<String,String>();
 	private final Map<String,String> externalHeaders = Collections.unmodifiableMap( headers );
 	
@@ -82,6 +85,43 @@ public class ResourceResult<T> {
 		
 	}
 
+	/**
+	 * Gets the cache control directives that came from the server.
+	 * @return the cache control directives
+	 */
+	public CacheControl getCacheControl( ) {
+		return this.cacheControl;
+	}
+	
+	/**
+	 * Uses the Cache-Control header and potentially other information
+	 * to calculate when the results of this call can be cached until. 
+	 * @return LocalDateTime for when the cache is good until, or null if not enough information to calculate
+	 */
+	public LocalDateTime calculateExpiration( ) {
+		LocalDateTime expiration = null;
+		
+		// if we wanted to be more accuate we could look at the
+		// things like request time or Date header and compare to 
+		// request time/response time and then calculate from there
+		// but for now we are keeping it simple
+		if( cacheControl != null ) {
+			if( cacheControl.getMaxAge() != null ) {
+				expiration = LocalDateTime.now( ).plusSeconds( cacheControl.getMaxAge( ) );
+			}
+		}
+		
+		return expiration;
+	}
+	
+	/**
+	 * Internal method for saving the cache control directives that returned from the server.
+	 * @param theCacheControl the cache control directives
+	 */
+	protected void setCacheControl( CacheControl theCacheControl ) {
+		this.cacheControl = theCacheControl;
+	}
+	
 	/**
 	 * Internal method to the main result.
 	 * This is protected since it should only be called by the Tales client source.

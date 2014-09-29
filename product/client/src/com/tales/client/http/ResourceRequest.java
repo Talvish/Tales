@@ -32,6 +32,7 @@ import com.google.common.base.Preconditions;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 import com.tales.communication.CommunicationException;
+import com.tales.communication.HeaderConstants;
 import com.tales.parts.translators.TranslationException;
 import com.tales.serialization.UrlEncoding;
 
@@ -223,17 +224,29 @@ public class ResourceRequest {
 
 			// TODO: need to do HTTP header and cookie support
 			HttpFields headers = response.getHeaders();
+			String headerName;
+			String headerValue;
 			
 			for( HttpField header : headers ) {
-				if( objectResult.getHeaders().containsKey( header.getName( ) ) ) {
+				headerName = header.getName( );
+				headerValue = header.getValue( );
+				if( objectResult.getHeaders().containsKey( headerName ) ) {
 					// we shouldn't have two of the same headers, but if we do, at least warn
 					logger.warn( 
 							"Duplicate header '{}' found while processing result from resource method '{}' from contract '{}'.", 
-							header.getName( ),
+							headerName,
 							this.method.getName(),
 							this.client.contractRoot );
 				} else {
-					objectResult.setHeader( header.getName(), header.getValue());
+					objectResult.setHeader( headerName, headerValue );
+					switch( headerName ) {
+					case HeaderConstants.CACHE_CONTROL:
+						objectResult.setCacheControl( CacheControl.create( headerValue ) );
+						break;
+					default:
+						// nothing else to do yet
+						break;
+					}
 				}
 			}
 	

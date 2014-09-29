@@ -26,8 +26,8 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
 import com.google.common.base.Preconditions;
+import com.tales.communication.HeaderConstants;
 import com.tales.communication.Status;
-import com.tales.services.http.HeaderConstants;
 
 /**
  * This class represents the result of an execution of a HTTP request.
@@ -92,8 +92,8 @@ public abstract class HttpResult<T> {
 	public void setCachingEnabled( int theMaxAge, String[] theOptions ) {
 		Preconditions.checkArgument( theMaxAge >= 0, "need a max-age greater than or equal to zero" );
 		
-		DateTime dateTime = new DateTime( DateTimeZone.UTC );
-		dateTime = dateTime.plusSeconds( theMaxAge );
+		DateTime dateTimeNow = new DateTime( DateTimeZone.UTC );
+		DateTime dateTimeExpired = dateTimeNow.plusSeconds( theMaxAge );
 		
 		StringBuilder value = new  StringBuilder( HeaderConstants.CACHE_CONTROL_MAX_AGE_DIRECTIVE );
 		value.append( "=" );
@@ -102,9 +102,16 @@ public abstract class HttpResult<T> {
 			value.append( ", " );
 			value.append( option );
 		}
+		
+		// we put the date header so relative time can be calculated and as outlined
+		// for origin-servers according to RFC2616
+		headers.put( HeaderConstants.DATE_HEADER, RFC_1123_DATE_FORMATTER.print( dateTimeNow ) );
+		// now we put in HTTP 1.1 headers
 		headers.put( HeaderConstants.CACHE_CONTROL, value.toString( ) );
-		headers.put( HeaderConstants.EXPIRES, RFC_1123_DATE_FORMATTER.print( dateTime ) );
-		headers.remove( HeaderConstants.PRAGMA ); // just to be sure there is no conflict
+		// and then the older HTTP 1.0 header, just in case
+		headers.put( HeaderConstants.EXPIRES, RFC_1123_DATE_FORMATTER.print( dateTimeExpired ) );
+		// and remove pragma, to ensure no conflict
+		headers.remove( HeaderConstants.PRAGMA ); 
 	}
 
 	// ******* below are shared success and failure items

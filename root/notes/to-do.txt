@@ -94,6 +94,7 @@ Client
 - consider way to set override.response.details, override.response.readability parameters
 - need better support for headers and cookies in the clients (no cookie support at all right now)
 - need a helper for dealing with responses from services, time-outs/retries, etc
+- need support for more cache-control abilities like fields on private/no-store or custom extensions
 
 Misc
 ------------------------------------------------
@@ -101,6 +102,16 @@ Misc
 - change to not use DateTime but epoch time (for the pieces we care about)
 - make it so the logging level can change per request through an override
 - the AuthenticationException handling in ResourceFacility needs to encode/strip non-RFC 2616 quoted-string compliant characters
+
+Helpers
+------------------------------------------------
+- if transport versus storage business objects are needed it would be nice to have a way to translate between them
+  quickly/easily ... a helper could be used (match like for like names) and helpers for transforms
+  
+  OR
+  
+  maybe there is something for the transport layer that does the transformation ... an object isn't necessarily 
+  needed, but instead, description of what is needed/used
 
 Update Admin to use Resource Contracts
 ------------------------------------------------

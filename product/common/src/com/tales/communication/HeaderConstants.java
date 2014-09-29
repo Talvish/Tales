@@ -13,20 +13,25 @@
 // *  See the License for the specific language governing permissions and
 // *  limitations under the License.
 // ***************************************************************************
-package com.tales.services.http;
+package com.tales.communication;
 
 /**
  * HTTP header names and values commonly used. 
- * Current set concentrate on caching headers based on RFC 2616.
+ * Current set concentrate on caching headers based on RFC 2616 
+ * (see: http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html)
  * @author jmolnar
  *
  */
 public class HeaderConstants {
-//	private static final String USER_AGENT_HEADER = "User-Agent";
-//	private static final String REFERRER_HEADER = "Referer";
+	public static final String USER_AGENT_HEADER = "User-Agent";
 	public static final String ROOT_REQUEST_ID_HEADER = "Root-Request-Id";
 	public static final String PARENT_REQUEST_ID_HEADER = "Parent-Request-Id";
+	
+	// TODO: if we set the cache-control headers we shoudl also be sending the date field
+	//		 see: http://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html
+	public static final String DATE_HEADER = "DATE";
 
+	// the following below are cache related headers
 	public static final String CACHE_CONTROL = "Cache-Control";
 	// client/server shared names/values
 	public static final String CACHE_CONTROL_NO_CACHE_DIRECTIVE = "no-cache";
