@@ -112,6 +112,20 @@
     </dependencies>
   </dependencyManagement>
   
+  <distributionManagement>
+    <repository>
+        <id>releases</id>
+        <name>Internal Releases</name>
+        <url>file:///build/repositories/releases</url>
+    </repository>
+    <snapshotRepository>
+        <id>snapshots</id>
+        <name>Internal Snapshots</name>
+        <url>file:///build/repositories/snapshots</url>
+    </snapshotRepository>
+  </distributionManagement>
+  
+  
   <modules>
     <module>../product/common</module>
     <module>../product/client</module>
