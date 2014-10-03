@@ -9,7 +9,7 @@
   <parent>
     <groupId>tales</groupId>
     <artifactId>tales.root</artifactId>
-    <version>1.5.0-SNAPSHOT</version>
+    <version>1.5.0</version>
     <relativePath>../../root/pom.xml</relativePath>
   </parent>
 
