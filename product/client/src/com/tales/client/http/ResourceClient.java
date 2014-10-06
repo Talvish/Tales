@@ -194,6 +194,7 @@ public class ResourceClient {
 					httpClient = new HttpClient(  );
 			    }
 			    httpClient.setFollowRedirects( false ); // tales doesn't have redirects (at least not yet)
+			    httpClient.setStrictEventOrdering( true ); // this seems to fix an odd issue on back-to-back calls to the same service on 
 				httpClient.start( );
 			    displayClientConfiguration( httpClient );
 			} catch (NoSuchAlgorithmException | KeyManagementException e) {
