@@ -32,6 +32,8 @@ import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -64,6 +66,8 @@ import com.tales.system.Conditions;
  *
  */
 public class ResourceClient {
+	private static final Logger logger = LoggerFactory.getLogger( ResourceClient.class );
+	
 	protected final HttpClient httpClient;
 
 	protected ResourceMethod[] methods;
@@ -189,8 +193,9 @@ public class ResourceClient {
 			    } else {
 					httpClient = new HttpClient(  );
 			    }
-			    
+			    httpClient.setFollowRedirects( false ); // tales doesn't have redirects (at least not yet)
 				httpClient.start( );
+			    displayClientConfiguration( httpClient );
 			} catch (NoSuchAlgorithmException | KeyManagementException e) {
 				throw new IllegalStateException( "unable to create the resource client due to a problem setting up SSL", e );
 			} catch (Exception e ) {
@@ -223,6 +228,52 @@ public class ResourceClient {
     			new JsonObjectToObjectTranslator( typeMap ),
     			new ObjectToJsonObjectTranslator( typeMap ) );				
 	}
+	
+	private void displayClientConfiguration( HttpClient theClient ) {
+		StringBuffer settingBuffer = new StringBuffer ();
+		
+		settingBuffer.append( "\n\tAddress Resolution Timeout: " );
+		settingBuffer.append( theClient.getAddressResolutionTimeout( ) );
+
+		settingBuffer.append( "\n\tConnect Timeout: " );
+		settingBuffer.append( theClient.getConnectTimeout() );
+	
+		settingBuffer.append( "\n\tDispatch I/O: " );
+		settingBuffer.append( theClient.isDispatchIO( ) );
+
+		settingBuffer.append( "\n\tFollow Redirects: " );
+		settingBuffer.append( theClient.isFollowRedirects( ) );
+
+		settingBuffer.append( "\n\tIdle Timeout: " );
+		settingBuffer.append( theClient.getIdleTimeout( ) );
+
+		settingBuffer.append( "\n\tMax Connections Per Destination: " );
+		settingBuffer.append( theClient.getMaxConnectionsPerDestination() );
+
+		settingBuffer.append( "\n\tMax Redirects: " );
+		settingBuffer.append( theClient.getMaxRedirects( ) );
+
+		settingBuffer.append( "\n\tMax Requests Queued Per Destination: " );
+		settingBuffer.append( theClient.getMaxRequestsQueuedPerDestination( ) );
+
+		settingBuffer.append( "\n\tRemove Idle Destinations: " );
+		settingBuffer.append( theClient.isRemoveIdleDestinations() );
+
+		settingBuffer.append( "\n\tRequest Buffer Size: " );
+		settingBuffer.append( theClient.getRequestBufferSize( ) );
+
+		settingBuffer.append( "\n\tResponse Buffer Size: " );
+		settingBuffer.append( theClient.getResponseBufferSize( ) );
+
+		settingBuffer.append( "\n\tStrict Event Ordering: " );
+		settingBuffer.append( theClient.isStrictEventOrdering( ) );
+
+		settingBuffer.append( "\n\tTCP No Delay: " );
+		settingBuffer.append( theClient.isTCPNoDelay( ));
+
+		
+		logger.info( "Client for contract '{}' on endpoint '{}' is using configuration: {}", this.contractRoot, this.endpoint.toString(), settingBuffer.toString( ) );
+}
 
 	/**
 	 * The endpoint that this client will communicate with
