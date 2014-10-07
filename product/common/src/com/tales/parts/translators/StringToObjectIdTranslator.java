@@ -40,7 +40,10 @@ public class StringToObjectIdTranslator extends StringToObjectTranslatorBase imp
 				if( stringValue.equals("") ) {
 					returnValue = this.emptyValue;
 				} else {
-					returnValue = new ObjectId( stringValue );
+					returnValue = ObjectId.tryParse( stringValue );
+					if( returnValue == null ) {
+						throw new TranslationException( String.format( "Unable to translate '%s' into an ObjectId.", anObject ) );
+					}
 				}
 			} catch( IllegalArgumentException e ) {
 				throw new TranslationException( String.format( "Unable to translate '%s' into an ObjectId.", anObject ), e);

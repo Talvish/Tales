@@ -116,8 +116,17 @@ Helpers
 Update Admin to use Resource Contracts
 ------------------------------------------------
 Examples:
-/status/
-/status/status/values/{name}
+/status/service
+/status/service/values
+/status/service/values/{name}
 /status/interfaces/{name}
-/status/interfaces/{name}/status/contracts/{name}
-/status/interfaces/{name}/status/contracts/{name}/values/{name} 
+/status/interfaces/{name}/values
+/status/interfaces/{name}/values/{name}
+/status/interfaces/{name}/contracts/{name}
+/status/interfaces/{name}/contracts/{name}/values/{name}
+/status/interfaces/{name}/contracts/{name}/version/{version}
+/status/interfaces/{name}/contracts/{name}/version/{version}/values
+/status/interfaces/{name}/contracts/{name}/version/{version}/values/{name}
+/status/interfaces/{name}/contracts/{name}/version/{version}/subcontracts/{name}/values/{name}
+/status/interfaces/{name}/contracts/{name}/version/{version}/values/{name}
+ 

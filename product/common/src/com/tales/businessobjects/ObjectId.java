@@ -15,8 +15,8 @@
 // ***************************************************************************
 package com.tales.businessobjects;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * This is a base identifier representing a globally unique entity.
@@ -53,6 +53,9 @@ public class ObjectId {
 	 * The bit length of an object id.
 	 */
 	public static final int		OID_LENGTH			= 32;
+	
+	public static final String	OID_REGEX			= "([0-9a-fA-F]{16})([0-9a-fA-F]{4})([0-9a-fA-F]{12})";
+	public static final Pattern OID_PATTERN			= Pattern.compile( OID_REGEX );
 
 	
 	// the actual id
@@ -62,31 +65,7 @@ public class ObjectId {
 	private final long			_sourceId;
 	private final long			_valueId;
 	private final int 			_typeId;
-
-	/**
-	 * Creates an ObjectId based on the string representation.
-	 * The string is checked for proper form but not if source
-	 * or type are valid.
-	 */
-	public ObjectId( String theStringForm ) {
-		Preconditions.checkArgument( !Strings.isNullOrEmpty( theStringForm ), "cannot have an empty, missing string form" );
-		Preconditions.checkArgument( theStringForm.length( ) == ObjectId.OID_LENGTH, "string '%s' has a length of '%s', which doesn't match the required length of '%s'", theStringForm, theStringForm.length( ), ObjectId.OID_LENGTH );
-		
-		try {
-			// the ToUpper form of the string
-			_stringForm = theStringForm.toUpperCase();
-
-			// set our values ....
-			_valueId = Long.parseLong( theStringForm.substring( 0, 0 + 16 ), 16 );
-			_typeId = Short.parseShort( theStringForm.substring( 16, 16 + 4 ), 16 );
-			_sourceId = Long.parseLong( theStringForm.substring( 20, ObjectId.OID_LENGTH ), 16 );
-
-			// now ensure they are good
-			Validate( );
-		} catch( Exception e ) {
-			throw new IllegalArgumentException( String.format( "failed turning '%s' into an ObjectId due to exception '%s' with message '%s'", theStringForm, e.getClass().getName(), e.getMessage() ),e );
-		}
-	}
+	
 
 	/**
 	 * Creates an ObjectId based on the components.
@@ -96,27 +75,30 @@ public class ObjectId {
 	 * @param theTypeId the type of the object id
 	 * @param theSourceId the source id, representing who generated it
 	 */
-	public ObjectId( long theValueId, int theTypeId, long theSourceId  )  {
+	public ObjectId( long theValueId, int theTypeId, long theSourceId  ) {
+		this( theValueId, theTypeId, theSourceId, true);
+	}
+
+	/**
+	 * Private constructor for sharing code.
+	 * @param theValueId the value 
+	 * @param theTypeId the type of the object id
+	 * @param theSourceId the source id, representing who generated it
+	 * @param validate if true, the numeric values are validated, if false, they are not
+	 */
+	private ObjectId( long theValueId, int theTypeId, long theSourceId, boolean validate  )  {
+		if( validate ) {
+			// ensure parameters are good
+			isValid( theValueId, theTypeId, theSourceId, true );
+		}
+
 		// set our values ....
 		_valueId = theValueId;
 		_typeId = theTypeId;
 		_sourceId = theSourceId;
-
-		// now ensure they are good
-		Validate( );
 		
 		// the ToUpper form of the string
 		_stringForm = String.format( "%016X%04X%012X", _valueId, _typeId, _sourceId );
-	}
-
-
-	/**
-	 * Called by the constructor to validate the data given for creating the object id.
-	 */
-	private void Validate( ) {
-		Preconditions.checkArgument( _valueId <= MAX_VALUE_ID && _valueId >= MIN_VALUE_ID, "value '%s' is out of the acceptable range", _valueId );
-		Preconditions.checkArgument( _typeId <= MAX_TYPE_ID && MIN_TYPE_ID >= MIN_VALUE_ID, "type '%s' is out of the acceptable range", _typeId );
-		Preconditions.checkArgument( _sourceId <= MAX_SOURCE_ID && _sourceId >= MIN_SOURCE_ID, "source '%s' is out of the acceptable range", _sourceId );
 	}
 
 	/**
@@ -179,5 +161,79 @@ public class ObjectId {
 	@Override
 	public String toString() {
 		return _stringForm;
+	}
+
+	/**
+	 * A method that will parse a string into an ObjectId and throw an exception if it cannot.
+	 * @param theStringForm the string to parse
+	 * @return an ObjectId 
+	 * @throws IllegalArgumentException if the string cannot be parse
+	 */
+	public static ObjectId parse( String theStringForm ) {
+		return tryParse( theStringForm, true );
+	}
+	
+	/**
+	 * A method that will attempt to parse a string into an ObjectId.
+	 * @param theStringForm the string to parse
+	 * @return null if the string could not be parsed, and ObjectId if it could
+	 */
+	public static ObjectId tryParse( String theStringForm ) {
+		return tryParse( theStringForm, false );
+	}
+
+	/**
+	 * Helper method that will parse a string into an ObjectId and it 
+	 * may or may not except depending on the shoudlExcept parameter
+	 * @param theStringForm the string to parse
+	 * @param shouldExcept true if the method should except if the values are wrong, false if it should not
+	 * @return null if the string could not be parsed (and shouldExcept is false, since an exception will be raised otherwise), and ObjectId if it could
+	 */
+	private static ObjectId tryParse( String theStringForm, boolean shouldExcept ) {
+		ObjectId result = null;
+		
+		Matcher matcher = OID_PATTERN.matcher( theStringForm );
+		if( matcher.matches( ) ) {
+			// set our values, none of which should fail given the regex
+			long valueId = Long.parseLong( matcher.group( 1 ), 16 );
+			int typeId = Integer.parseInt( matcher.group( 2 ), 16 );
+			long sourceId = Long.parseLong( matcher.group( 3 ), 16 );
+
+			if( isValid( valueId, typeId, sourceId, shouldExcept ) ) {					
+				result = new ObjectId( valueId, typeId, sourceId, false ); // false means don't validate (since I just did)
+			} // no need to throw exceptions if bad, isValid will
+
+		} else if( shouldExcept ) {
+			throw new IllegalArgumentException( String.format( "string, '%s', is either not %s characters long or does not have required shape", OID_LENGTH, theStringForm ) );
+		}
+
+		return result;
+	}
+
+	/**
+	 * Called by methods looking to confirm the numeric values for the object id components are in range.
+	 */
+	private static boolean isValid( long theValueId, int theTypeId, long theSourceId, boolean shouldExcept )  {
+		boolean valid = true;
+		String failedText = null;
+		
+		if( !( theValueId <= MAX_VALUE_ID && theValueId >= MIN_VALUE_ID ) ) {
+			failedText = String.format( "value '%s' is out of the acceptable range", theValueId );
+			valid = false;
+		}
+		if( !( theTypeId <= MAX_TYPE_ID && theTypeId >= MIN_VALUE_ID ) ) {
+			failedText = String.format( "type '%s' is out of the acceptable range", theTypeId );
+			valid = false;
+		}
+		if( !( theSourceId <= MAX_SOURCE_ID && theSourceId >= MIN_SOURCE_ID ) ) {
+			failedText = String.format( "source '%s' is out of the acceptable range", shouldExcept );
+			valid = false;
+		}
+		
+		if( !valid && shouldExcept ) {
+			throw new IllegalArgumentException( failedText );
+		} else {
+			return valid;
+		}
 	}
 }
