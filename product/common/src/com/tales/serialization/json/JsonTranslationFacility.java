@@ -410,10 +410,9 @@ public final class JsonTranslationFacility implements Facility {
 							new JsonArrayToMapTranslator( keyTypeReferences, valueTypeReferences, field.getSite( ).getType( ) ) ), typeMap ) );
 					
 				} else {
-					ValueType<?,?> valueType = field.getValueTypes( ).get( 0 );
-					typeReference = getTypeReference( valueType.getType(), valueType.getGenericType( ) );
+					typeReference = getTypeReference( field.getSite().getType(), field.getSite().getGenericType() );
 	                if( typeReference == null ) {
-						throw new IllegalStateException( String.format( "Type '%s' on field '%s.%s' could not be analyzed because the type reference could not be found.", valueType.getType(), theType.getName( ), field.getSite().getName( ) ) );
+						throw new IllegalStateException( String.format( "Type '%s' on field '%s.%s' could not be analyzed because the type reference could not be found.", field.getSite().getType().getSimpleName( ), theType.getName( ), field.getSite().getName( ) ) );
 	                } else if( !memberNameValidator.isValid( field.getName( ) ) ) {
 	            		throw new IllegalStateException( String.format( "Field '%s.%s' is using the name '%s' that does not conform to validator '%s'.", reflectedType.getType().getName(), field.getSite().getName(), field.getName( ), memberNameValidator.getClass().getSimpleName() ) );
 	            	}
@@ -547,13 +546,14 @@ public final class JsonTranslationFacility implements Facility {
 		    	}
 	            
 	    	} else if( Collection.class.isAssignableFrom( theType ) ) {
+
 	    		if( !( theGenericType instanceof ParameterizedType ) ) {
 	            	throw new IllegalStateException( String.format( "Unable to create a type reference for a collection because the parameterized type was not given when '%s' generic types are expected.", theType.getTypeParameters().length ) );
 		    	} else {
 	        		// start be seeing if we have a collection and if so generate some translators
 	                Class<?> elementType = ( Class<?> )( ( ( ParameterizedType ) theGenericType ).getActualTypeArguments( )[ 0 ] );
 	                JsonTypeReference elementTypeReference = getTypeReference( elementType, null );
-		            
+
 	                if( elementTypeReference == null ) {
 		            	throw new IllegalStateException( String.format( "Unable to create a type reference for a collection because a type reference for element type '%s' could not be found.", elementType.getName( ) ) );
 		            } else {

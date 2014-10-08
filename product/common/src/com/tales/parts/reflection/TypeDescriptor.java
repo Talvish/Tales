@@ -91,7 +91,7 @@ public abstract class TypeDescriptor<T extends TypeDescriptor<T, F>, F extends F
     	
     	for( F field : theFields ) {
     		if( newFields.containsKey( field.getName( ) ) ) {
-    			throw new IllegalStateException( String.format( "The type info with name '%s' and type '%s' is attempting to add more than one fieled called '%s'.", this.name, this.type.getName(), field.getName( ) ) );
+    			throw new IllegalStateException( String.format( "The type info with name '%s' and type '%s' is attempting to add more than one field called '%s'.", this.name, this.type.getName(), field.getName( ) ) );
     		} else if( field.getContainingType() != this ) {
     			throw new IllegalStateException( String.format( "The type info with name '%s' and type '%s' is attempting to add a field called '%s', but the field is associated to the type '%s'.", this.name, this.type.getName(), field.getName( ), field.getContainingType().getType().getName() ) );
     		} else {
