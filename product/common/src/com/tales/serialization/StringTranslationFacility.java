@@ -26,6 +26,7 @@ import org.joda.time.DateTime;
 
 import com.google.common.base.Preconditions;
 import com.tales.businessobjects.ObjectId;
+import com.tales.parts.reflection.JavaType;
 import com.tales.parts.translators.BooleanToStringTranslator;
 import com.tales.parts.translators.EnumToStringTranslator;
 import com.tales.parts.translators.ObjectToStringTranslator;
@@ -52,9 +53,10 @@ import com.tales.system.Facility;
  *
  */
 public final class StringTranslationFacility implements Facility {
-	private final Map< Class<?>, Translator> toStringTranslators = new ConcurrentHashMap<Class<?>, Translator>( 16, 0.75f, 1 );
-	private final Map< Class<?>, Translator> fromStringTranslators = new ConcurrentHashMap<Class<?>, Translator>( 16, 0.75f, 1 );
+	private final Map< JavaType, Translator> toStringTranslators = new ConcurrentHashMap<>( 16, 0.75f, 1 );
+	private final Map< JavaType, Translator> fromStringTranslators = new ConcurrentHashMap<>( 16, 0.75f, 1 );
 
+	// TODO: if I move JsonTypeReference out and call it SerializedTypeXXX then it could be used here as well
 	/**
 	 * Default constructor.
 	 */
@@ -62,109 +64,82 @@ public final class StringTranslationFacility implements Facility {
 		// the from string translators . . .
 		
 		Translator toIntegerTranslator = new StringToIntegerTranslator( true, null, null );
-		fromStringTranslators.put( Integer.class, toIntegerTranslator );
-		fromStringTranslators.put( int.class, toIntegerTranslator );
+		Translator fromObjectTranslator = new ObjectToStringTranslator( "" );
+		
+		this.registerTranslators( new JavaType( Integer.class ), toIntegerTranslator, fromObjectTranslator );
+		this.registerTranslators( new JavaType( int.class ), toIntegerTranslator, fromObjectTranslator );
 
 		Translator toLongTranslator = new StringToLongTranslator( true, null, null );
-		fromStringTranslators.put( Long.class, toLongTranslator );
-		fromStringTranslators.put( long.class, toLongTranslator );
+		this.registerTranslators( new JavaType( Long.class ), toLongTranslator, fromObjectTranslator );
+		this.registerTranslators( new JavaType( long.class ), toLongTranslator, fromObjectTranslator );
 
 		Translator toFloatTranslator = new StringToFloatTranslator( true, null, null );
-		fromStringTranslators.put( Float.class, toFloatTranslator );
-		fromStringTranslators.put( float.class, toFloatTranslator );
+		this.registerTranslators( new JavaType( Float.class ), toFloatTranslator, fromObjectTranslator );
+		this.registerTranslators( new JavaType( float.class ), toFloatTranslator, fromObjectTranslator );
 
 		Translator toDoubleTranslator = new StringToDoubleTranslator( true, null, null );
-		fromStringTranslators.put( Double.class, toDoubleTranslator );
-		fromStringTranslators.put( double.class, toDoubleTranslator );
+		this.registerTranslators( new JavaType( Double.class ), toDoubleTranslator, fromObjectTranslator );
+		this.registerTranslators( new JavaType( double.class ), toDoubleTranslator, fromObjectTranslator );
 
 		Translator toBigDecimalTranslator = new StringToBigDecimalTranslator( true, null, null );
-		fromStringTranslators.put( BigDecimal.class, toBigDecimalTranslator );
+		this.registerTranslators( new JavaType( BigDecimal.class ), toBigDecimalTranslator, fromObjectTranslator );
 
 		
 		Translator toBooleanTranslator = new StringToBooleanTranslator( true, null, null );
-		fromStringTranslators.put( Boolean.class, toBooleanTranslator );
-		fromStringTranslators.put( boolean.class, toBooleanTranslator );
+		Translator fromBooleanTranslator = new BooleanToStringTranslator( "" );
+		this.registerTranslators( new JavaType( Boolean.class ), toBooleanTranslator, fromBooleanTranslator );
+		this.registerTranslators( new JavaType( boolean.class ), toBooleanTranslator, fromBooleanTranslator );
 
+		
 		Translator toDateTimeTranslator = new StringToDateTimeTranslator( true, null, null );
-		fromStringTranslators.put( DateTime.class, toDateTimeTranslator );
+		this.registerTranslators( new JavaType( DateTime.class ), toDateTimeTranslator, fromObjectTranslator );
 		Translator toZonedDateTimeTranslator = new StringToZonedDateTimeTranslator( true,  null,  null );
-		fromStringTranslators.put( ZonedDateTime.class,  toZonedDateTimeTranslator );
+		this.registerTranslators( new JavaType( ZonedDateTime.class ), toZonedDateTimeTranslator, fromObjectTranslator );
 		Translator toLocalDateTranslator = new StringToLocalDateTranslator( true,  null,  null );
-		fromStringTranslators.put( LocalDate.class,  toLocalDateTranslator );
+		this.registerTranslators( new JavaType( LocalDate.class ), toLocalDateTranslator, fromObjectTranslator );
 
+		
 		Translator toStringTranslator = new StringToStringTranslator( true, "", null );
-		fromStringTranslators.put( String.class, toStringTranslator );
+		Translator fromStringTranslator = new StringToStringTranslator( true, "", null );
+		this.registerTranslators( new JavaType( String.class ), toStringTranslator, fromStringTranslator );
 		
 		Translator toUUIDTranslator = new StringToUuidTranslator(true, null, null);
-		fromStringTranslators.put( UUID.class, toUUIDTranslator );
+		Translator fromUUIDTranslator = new UuidToStringTranslator( "" );
+		this.registerTranslators( new JavaType( UUID.class ), toUUIDTranslator, fromUUIDTranslator );
 		
 		Translator toObjectIdTranslator = new StringToObjectIdTranslator( true, null, null );
-		fromStringTranslators.put( ObjectId.class, toObjectIdTranslator );
-		
-		// the to string translators . . .
-		
-		Translator fromObjectTranslator = new ObjectToStringTranslator( "" );
-				
-		toStringTranslators.put( Integer.class, fromObjectTranslator );
-		toStringTranslators.put( int.class, fromObjectTranslator );
-
-		toStringTranslators.put( Long.class, fromObjectTranslator );
-		toStringTranslators.put( long.class, fromObjectTranslator );
-
-		toStringTranslators.put( Float.class, fromObjectTranslator);
-		toStringTranslators.put( float.class, fromObjectTranslator );
-
-		toStringTranslators.put( Double.class, fromObjectTranslator );
-		toStringTranslators.put( double.class, fromObjectTranslator );
-
-		toStringTranslators.put( BigDecimal.class, fromObjectTranslator );
-
-		Translator fromBooleanTranslator = new BooleanToStringTranslator( "" );
-		toStringTranslators.put( Boolean.class, fromBooleanTranslator );
-		toStringTranslators.put( boolean.class, fromBooleanTranslator );
-
-		toStringTranslators.put( DateTime.class, fromObjectTranslator );
-		toStringTranslators.put( LocalDate.class, fromObjectTranslator );
-		toStringTranslators.put( ZonedDateTime.class, fromObjectTranslator );
-
-		Translator fromStringTranslator = new StringToStringTranslator( true, "", null );
-		toStringTranslators.put( String.class, fromStringTranslator );
-		
-		Translator fromUUIDTranslator = new UuidToStringTranslator( "" );
-		toStringTranslators.put( UUID.class, fromUUIDTranslator );
-		
-		toStringTranslators.put( ObjectId.class,  fromObjectTranslator );
-		
+		this.registerTranslators( new JavaType( ObjectId.class ), toObjectIdTranslator, fromObjectTranslator );		
 	}
-	
 
 	/***
 	 * This method is used to add translators into the manager for ensuring proper conversion.
-	 * @param theClass
-	 * @param fromStringTranslator
-	 * @param toStringTranslator
+	 * @param theType the class to register for
+	 * @param theGenericType the generic type information, if it makes sense 
+	 * @param fromStringTranslator the from translator 
+	 * @param toStringTranslator the to translator
 	 */
-	public void registerTranslators( Class<?> theClass, Translator fromStringTranslator, Translator toStringTranslator ) {
-		Preconditions.checkNotNull( theClass, "need a class" );
+	public final void registerTranslators( JavaType theType, Translator fromStringTranslator, Translator toStringTranslator ) {
+		Preconditions.checkNotNull( theType, "need a type" );
 		Preconditions.checkNotNull( fromStringTranslator, "need a from-string  translator" );
 		Preconditions.checkNotNull( toStringTranslator, "need a to-string translator" );
 		
-		fromStringTranslators.put( theClass, fromStringTranslator );
-		toStringTranslators.put( theClass, toStringTranslator );
+		fromStringTranslators.put( theType, fromStringTranslator );
+		toStringTranslators.put( theType, toStringTranslator );
 	}
 	
 	/**
 	 * Gets a translator to translate values from strings to values.
 	 * @param theType the type to get a translator for
+	 * @param theGenericType the generic type information of the type to get a translator for 
 	 * @return the translator, or {@code null} if one was not found
 	 */
-	public Translator getFromStringTranslator( Class<?> theType ) {
+	public final Translator getFromStringTranslator( JavaType theType ) {
 		Preconditions.checkNotNull( theType, "need a type to get a translator");
 		Translator translator = fromStringTranslators.get( theType );
 		
-		if( translator == null && theType.isEnum( ) ) {
+		if( translator == null && theType.getUnderlyingClass().isEnum( ) ) {
 			// enums translators are generated as needed but then saved
-			translator = new StringToEnumTranslator( theType );
+			translator = new StringToEnumTranslator( theType.getUnderlyingClass() );
 			fromStringTranslators.put( theType, translator );
 		}
 		return translator;
@@ -173,65 +148,18 @@ public final class StringTranslationFacility implements Facility {
 	/**
 	 * Gets a translator to translator values from an object type to a string.
 	 * @param theType the type to get a translator for
+	 * @param theGenericType the generic type information of the type to get a translator for 
 	 * @return the translator, or {@code null} if one was not found
 	 */
-	public Translator getToStringTranslator( Class<?> theType ) {
+	public final Translator getToStringTranslator( JavaType theType ) {
 		Preconditions.checkNotNull( theType, "need a type to get a translator");
 		Translator translator = toStringTranslators.get( theType );
 		
-		if( translator == null && theType.isEnum( ) ) {
+		if( translator == null && theType.getUnderlyingClass( ).isEnum( ) ) {
 			// enums translators are generated as needed but then saved
-			translator = new EnumToStringTranslator( theType );
+			translator = new EnumToStringTranslator( theType.getUnderlyingClass() );
 			toStringTranslators.put( theType, translator );
 		}
 		return translator;
-	}
-	
-	/**
-	 * Translates the object into a string.
-	 * @param theObject the object to translate
-	 * @return the translated object, or null if null was the value of theObject
-	 */
-	public String toString( Object theObject ) {
-		if( theObject == null ) {
-			return null;
-		} else {
-			return toString( theObject, theObject.getClass( ) );
-		}
-	}
-
-	/**
-	 * Translates the object into a string.
-	 * If a translator cannot be found an IllegalArgumentException is thrown.
-	 * @param theObject the object to translate
-	 * @param theType the class to use to pick a translator
-	 * @return the translated object
-	 */
-	public String toString( Object theObject, Class<?> theType ) {
-		Preconditions.checkNotNull( theType, "need a class to pick translator");
-		Translator translator = this.toStringTranslators.get( theType );
-		if( translator == null ){
-			throw new IllegalArgumentException( String.format( "Unable to find a translator for type '%s'.", theType.getName( ) ) );
-		} else {
-			return ( String )translator.translate( theObject );
-		}
-	}
-
-	/**
-	 * Translate the string into an object of a particular type.
-	 * If a translator cannot be found an IllegalArgumentException is thrown.
-	 * @param theString the string to translate
-	 * @param theType the type to translate to (by using to pick a translator)
-	 * @return the translated value
-	 */
-	@SuppressWarnings("unchecked")
-	public <T> T fromString( String theString, Class<T> theType ) {
-		Preconditions.checkNotNull( theType, "need a class to pick translator");
-		Translator translator = this.fromStringTranslators.get( theType );
-		if( translator == null ){
-			throw new IllegalArgumentException( String.format( "Unable to find a translator for type '%s'.", theType.getName( ) ) );
-		} else {
-			return ( T )translator.translate( theString );
-		}
 	}
 }

@@ -15,6 +15,8 @@
 // ***************************************************************************
 package com.tales.parts.sites;
 
+import com.tales.parts.reflection.JavaType;
+
 /**
  * This is a simple interface that abstracts getting and setting values 
  * on a particular object.
@@ -26,7 +28,7 @@ public interface DataSite {
 	 * The type of the data in this data site.
 	 * @return class representing the type of data
 	 */
-	Class<?> getType( );
+	JavaType getType( );
 
 	/**
 	 * Indicates if this particular data is read-only.

@@ -23,12 +23,21 @@ import com.google.common.base.Preconditions;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
+import com.tales.parts.reflection.JavaType;
 import com.tales.parts.translators.TranslationException;
 import com.tales.parts.translators.Translator;
 import com.tales.serialization.json.JsonTypeReference;
 
+/**
+ * A translator that looks at the type to be translated and picks an appropriate translator.
+ * The translator doesn't support more than one class where the only difference is generic
+ * type parameters since the information is not available during the serialization process.
+ * Fixing this may be impossible or at least very difficult to do in Java.
+ * @author jmolnar
+ *
+ */
 public class PolymorphicObjectToJsonObjectTranslator implements Translator {
-	private final Map<Class<?>, JsonTypeReference> typeReferences = new HashMap<>( 2 );
+	private final Map<JavaType, JsonTypeReference> typeReferences = new HashMap<>( 2 );
 
 	/**
 	 * Constructor taking the needed references.
@@ -38,8 +47,8 @@ public class PolymorphicObjectToJsonObjectTranslator implements Translator {
 		Preconditions.checkArgument( theTypeReferences.size( ) > 0, "Need at least one value type reference." );
 
 		for( JsonTypeReference typeReference : theTypeReferences ) {
-			Preconditions.checkArgument( !typeReferences.containsKey( typeReference.getType()), String.format( "Attempting to add type reference '%s' more than once.", typeReference.getType( ).getName()));
-			typeReferences.put( typeReference.getType( ), typeReference );
+			Preconditions.checkArgument( !typeReferences.containsKey( typeReference.getType()), String.format( "Attempting to add type reference '%s' more than once (differences in generic type parameters are not sufficient).", typeReference.getType( ).getName()));
+			typeReferences.put( typeReference.getType(), typeReference );
 		}
 	}
 

@@ -238,13 +238,13 @@ public class ContractsServlet extends AdministrationServlet {
 					}
 					subcontractObject.add( "verbs", verbArray );
 					subcontractObject.addProperty( "path", method.getParameterPath( ) );
-					subcontractObject.addProperty( "return_type", theJsonFacility.generateTypeName( method.getReturn().getType( ), method.getReturn( ).getGenericType( ), jsonTypeMaps ) );
+					subcontractObject.addProperty( "return_type", theJsonFacility.generateTypeName( method.getReturn().getType( ), jsonTypeMaps ) );
 					parameterArray = new JsonArray( );
 					for( ResourceMethodParameter parameter : method.getParameters( ) ) {
 						if( parameter.getSource( ) != ParameterSource.CONTEXT ) {
 							parameterObject = new JsonObject( );
 							parameterObject.addProperty( "name", parameter.getValueName( ) );
-							parameterObject.addProperty( "type", theJsonFacility.generateTypeName( parameter.getType( ), parameter.getGenericType( ), jsonTypeMaps ) );
+							parameterObject.addProperty( "type", theJsonFacility.generateTypeName( parameter.getType( ), jsonTypeMaps ) );
 							parameterObject.addProperty( "source", parameter.getSource( ).toString( ) );
 							parameterArray.add( parameterObject );
 						}
@@ -277,7 +277,7 @@ public class ContractsServlet extends AdministrationServlet {
 					}
 				
 					// TODO: more than one type actually exists here, so we need to re-think this
-					typeMemberObject.addProperty( "type", theJsonFacility.generateTypeName( memberMap.getReflectedField().getSite().getType(), memberMap.getReflectedField().getSite().getGenericType(), null ) );
+					typeMemberObject.addProperty( "type", theJsonFacility.generateTypeName( memberMap.getReflectedField().getSite().getType(), null ) );
 					typeMemberArray.add( typeMemberObject );
 				}
 				typeObject.add( "members", typeMemberArray );

@@ -50,6 +50,7 @@ import com.tales.parts.RegularExpressionHelper;
 import com.tales.parts.naming.LowerCaseEntityNameValidator;
 import com.tales.parts.naming.NameManager;
 import com.tales.parts.naming.NameValidator;
+import com.tales.parts.reflection.JavaType;
 import com.tales.parts.sites.DataSiteException;
 import com.tales.parts.translators.TranslationException;
 import com.tales.parts.translators.Translator;
@@ -191,25 +192,22 @@ public class ResourceMethod extends Subcontract {
 
 		
 		// SECOND, make sure we have proper parameters
-		Class<?>[] paramClasses = method.getParameterTypes();
 		Type[] paramTypes = method.getGenericParameterTypes();
 		Annotation[][] annotations = method.getParameterAnnotations();
 		Annotation[] paramAnnotations;
 		Annotation paramAnnotation;
 		ResourceMethodParameter parameter;
-		Class<?> paramClass;
-		Type paramType;
+		JavaType paramType;
 		List<ResourceMethodParameter> newMethodParameters = new ArrayList<ResourceMethodParameter>( );
 		
 		// we have to iterate over all of the annotations on parameters
 		// make sure they are our type and then store what is important
-		for( int paramCount = 0; paramCount < paramClasses.length; paramCount += 1 ) {
+		for( int paramCount = 0; paramCount < paramTypes.length; paramCount += 1 ) {
 			// get the parameter type, the parameter generic type and the annotations for the parameter
-			paramClass = paramClasses[ paramCount ];
-			paramType = paramTypes[ paramCount ];
+			paramType = new JavaType( paramTypes[ paramCount ] );
 			paramAnnotations = annotations[ paramCount ];
 			if( paramAnnotations.length <= 0 ) {
-				throw new IllegalStateException( String.format( "Parameter %s of type '%s' on method '%s.%s' does not have a parameter annotation.", paramCount + 1, paramClass.getSimpleName(), method.getDeclaringClass().getName(), method.getName() ) );
+				throw new IllegalStateException( String.format( "Parameter %s of type '%s' on method '%s.%s' does not have a parameter annotation.", paramCount + 1, paramType.getSimpleName(), method.getDeclaringClass().getName(), method.getName() ) );
 				// we have a problem
 			} else {
 				for( int annotationCount = 0; annotationCount < paramAnnotations.length; annotationCount += 1 ) {
@@ -218,19 +216,19 @@ public class ResourceMethod extends Subcontract {
 
 					// so check the type of parameter and then create the parameter reference 
 					if( paramAnnotation instanceof PathParam ) {
-						parameter = generatePathParameter( ( PathParam )paramAnnotation, paramClass, paramType, paramCount, theResourceFacility );
+						parameter = generatePathParameter( ( PathParam )paramAnnotation, paramType, paramCount, theResourceFacility );
 						
 					} else if( paramAnnotation instanceof RequestParam ) {
-						parameter = generateRequestParameter( ( RequestParam )paramAnnotation, paramClass, paramType, paramCount, theResourceFacility );
+						parameter = generateRequestParameter( ( RequestParam )paramAnnotation, paramType, paramCount, theResourceFacility );
 					
 					} else if( paramAnnotation instanceof HeaderParam ) {
-						parameter = generateHeaderParameter( ( HeaderParam )paramAnnotation, paramClass, paramType, paramCount, theResourceFacility );
+						parameter = generateHeaderParameter( ( HeaderParam )paramAnnotation, paramType, paramCount, theResourceFacility );
 						
 					} else if( paramAnnotation instanceof CookieParam ) {
-						parameter = generateCookieParameter( ( CookieParam )paramAnnotation, paramClass, paramType, paramCount, theResourceFacility );
+						parameter = generateCookieParameter( ( CookieParam )paramAnnotation, paramType, paramCount, theResourceFacility );
 
 					} else if( paramAnnotation instanceof ContextParam ) {
-						parameter = generateContextParameter( ( ContextParam )paramAnnotation, paramClass, paramType, paramCount, theResourceFacility );
+						parameter = generateContextParameter( ( ContextParam )paramAnnotation, paramType, paramCount, theResourceFacility );
 					}
 					
 					// make sure we made a parameter, verify the state, and save if
@@ -239,7 +237,7 @@ public class ResourceMethod extends Subcontract {
 					// we verify that a parameter was created later
 					if( newMethodParameters.size() >= paramCount + 1 ) {
 						// we have more than one annotations on this parameter
-						throw new IllegalStateException( String.format( "Parameter %s of type '%s' on method '%s.%s' has more than one parameter annotation.", paramCount + 1, paramClass.getSimpleName(), method.getDeclaringClass().getName(), method.getName() ) );
+						throw new IllegalStateException( String.format( "Parameter %s of type '%s' on method '%s.%s' has more than one parameter annotation.", paramCount + 1, paramType.getSimpleName(), method.getDeclaringClass().getName(), method.getName() ) );
 					} else if( parameter != null ) {
 						// finally, we save the parameter
 						newMethodParameters.add( parameter );
@@ -248,7 +246,7 @@ public class ResourceMethod extends Subcontract {
 			}
 		}
 		// make sure we have an annotation for each parameter
-		if( newMethodParameters.size() < paramClasses.length ) {
+		if( newMethodParameters.size() < paramTypes.length ) {
 			throw new IllegalStateException( String.format( "Method '%s.%s' has parameters without a parameter annotation.", method.getDeclaringClass().getName(), method.getName() ) );
 		}
 		// make sure that every path parameter mentioned in the path was
@@ -258,7 +256,7 @@ public class ResourceMethod extends Subcontract {
 		// all, but it wont' say which one, so we do this instead
 		// to verify
 		for( String pathParam : pathParams ) {
-			boolean found = false;
+			//boolean found = false;
 			for( ResourceMethodParameter methodParam : newMethodParameters ) {
 				if( pathParam.equals( methodParam.getValueName() ) ) {
 					if( !methodParam.getSource().equals( ParameterSource.PATH ) ) {
@@ -269,7 +267,7 @@ public class ResourceMethod extends Subcontract {
 								pathParam,
 								methodParam.getSource( ) ) );
 					} else {
-						found = true;
+						//found = true;
 						break;
 					}
 				}
@@ -285,37 +283,30 @@ public class ResourceMethod extends Subcontract {
 
 		// THIRD, look at the return type and make sure we have something appropriate
 
-		Class<?> returnType = method.getReturnType();
-		Type genericReturnType = method.getGenericReturnType( );
+		JavaType returnType = new JavaType( method.getGenericReturnType( ) );		
 		JsonTypeReference typeReference;
 		if( Void.TYPE.equals( returnType ) ) {
 			// void returns are very simple
-			this.methodReturn = new ResourceMethodReturn( returnType, method.getGenericReturnType(), this );
+			this.methodReturn = new ResourceMethodReturn( returnType, this );
 			
-		} else if( ResourceResult.class.isAssignableFrom( returnType ) ) {
+		} else if( ResourceResult.class.isAssignableFrom( returnType.getUnderlyingClass() ) ) {
 			// if this is the special resource response type, then we need
 			// to pull the data down a bit differently to get the actual type
-			genericReturnType = ( ( ParameterizedType ) genericReturnType ).getActualTypeArguments( )[ 0 ];
-			if( ParameterizedType.class.isAssignableFrom( genericReturnType.getClass( ) ) ) {
-				returnType = ( Class<?> )( ( ParameterizedType )genericReturnType ).getRawType();
-			} else {
-				returnType = ( Class<?> )genericReturnType;
-			}
-
-			typeReference = theResourceFacility.getJsonFacility().getTypeReference( returnType, genericReturnType );
+			returnType = new JavaType( ( ( ParameterizedType ) returnType.getType() ).getActualTypeArguments( )[ 0 ] );
+			typeReference = theResourceFacility.getJsonFacility().getTypeReference( returnType );
 			if( typeReference == null ) {
 				throw new IllegalStateException( String.format( "Return type '%s' on method '%s.%s' could not be analyzed because a translator could not be found.", returnType.getSimpleName(), method.getDeclaringClass().getName(), method.getName() ) );
 			} else {
-				this.methodReturn = new ResourceMethodReturn( returnType, genericReturnType, true, typeReference.getToJsonTranslator(), this );
+				this.methodReturn = new ResourceMethodReturn( returnType, true, typeReference.getToJsonTranslator(), this );
 			}
 
 		} else {
 			// otherwise the type is just something we are looking to return
-			typeReference = theResourceFacility.getJsonFacility().getTypeReference( returnType, genericReturnType );
+			typeReference = theResourceFacility.getJsonFacility().getTypeReference( returnType );
 			if( typeReference == null ) {
 				throw new IllegalStateException( String.format( "Return type '%s' on method '%s.%s' could not be analyzed because a translator could not be found.", returnType.getSimpleName(), method.getDeclaringClass().getName(), method.getName() ) );
 			} else {
-				this.methodReturn = new ResourceMethodReturn( returnType, genericReturnType, false, typeReference.getToJsonTranslator(), this );
+				this.methodReturn = new ResourceMethodReturn( returnType, false, typeReference.getToJsonTranslator(), this );
 			}
 		}
 	}
@@ -434,7 +425,7 @@ public class ResourceMethod extends Subcontract {
 	 * @param theParamIndex the index of the parameter in the list of the method's parameters
 	 * @return a parameter object
 	 */
-	private ResourceMethodParameter generatePathParameter( PathParam theParamAnnotation, Class<?> theParamType, Type theParamGenericType, int theParamIndex, ResourceFacility theResourceFacility ) {
+	private ResourceMethodParameter generatePathParameter( PathParam theParamAnnotation, JavaType theParamType, int theParamIndex, ResourceFacility theResourceFacility ) {
 		ResourceMethodParameter parameter;
 		
 		int pathParamOffset;
@@ -456,7 +447,7 @@ public class ResourceMethod extends Subcontract {
 			if( translator == null ) {
 				throw new IllegalStateException( String.format( "Parameter %s of type '%s' on method '%s.%s' is not recognized as a path type that can be translated.", theParamIndex + 1, theParamType.getSimpleName(), method.getDeclaringClass().getName(), method.getName() ) );
 			} else {
-				parameter = new ResourceMethodParameter( ParameterSource.PATH, theParamType, theParamGenericType, theParamIndex, paramName, pathParamOffset, translator, theParamAnnotation.sensitive(), this );
+				parameter = new ResourceMethodParameter( ParameterSource.PATH, theParamType, theParamIndex, paramName, pathParamOffset, translator, theParamAnnotation.sensitive(), this );
 			}
 		}
 		return parameter;
@@ -469,7 +460,7 @@ public class ResourceMethod extends Subcontract {
 	 * @param theParamIndex the index of the parameter in the list of the method's parameters
 	 * @return a parameter object
 	 */	
-	private ResourceMethodParameter generateRequestParameter( RequestParam theParamAnnotation, Class<?> theParamType, Type theParamGenericType, int theParamIndex, ResourceFacility theResourceFacility ) {
+	private ResourceMethodParameter generateRequestParameter( RequestParam theParamAnnotation, JavaType theParamType, int theParamIndex, ResourceFacility theResourceFacility ) {
 		ResourceMethodParameter parameter;
 		
 		Translator translator;
@@ -477,11 +468,11 @@ public class ResourceMethod extends Subcontract {
 		paramName = ( ( RequestParam )theParamAnnotation ).name( );
 
 		// get the translator to use
-		translator = theResourceFacility.getFromParameterTranslator(theParamType, theParamGenericType);
+		translator = theResourceFacility.getFromParameterTranslator(theParamType);
 		if( translator == null ) {
 			throw new IllegalStateException( String.format( "Could not find a translator for parameter %s of type '%s' on method '%s.%s'.", theParamIndex + 1, theParamType.getSimpleName(), method.getDeclaringClass().getName(), method.getName() ) );
 		} else {
-			parameter = new ResourceMethodParameter( ParameterSource.REQUEST, theParamType, theParamGenericType, theParamIndex, paramName, translator, theParamAnnotation.sensitive(), this );
+			parameter = new ResourceMethodParameter( ParameterSource.REQUEST, theParamType, theParamIndex, paramName, translator, theParamAnnotation.sensitive(), this );
 		}
 		return parameter;
 	}
@@ -493,7 +484,7 @@ public class ResourceMethod extends Subcontract {
 	 * @param theParamIndex the index of the parameter in the list of the method's parameters
 	 * @return a parameter object
 	 */	
-	private ResourceMethodParameter generateHeaderParameter( HeaderParam theParamAnnotation, Class<?> theParamType, Type theParamGenericType, int theParamIndex, ResourceFacility theResourceFacility ) {
+	private ResourceMethodParameter generateHeaderParameter( HeaderParam theParamAnnotation, JavaType theParamType, int theParamIndex, ResourceFacility theResourceFacility ) {
 		ResourceMethodParameter parameter;
 		
 		Translator translator;
@@ -501,11 +492,11 @@ public class ResourceMethod extends Subcontract {
 		paramName = ( ( HeaderParam )theParamAnnotation ).name( );
 
 		// get the translator to use
-		translator = theResourceFacility.getFromParameterTranslator(theParamType, theParamGenericType);
+		translator = theResourceFacility.getFromParameterTranslator(theParamType);
 		if( translator == null ) {
 			throw new IllegalStateException( String.format( "Could not find a translator for parameter %s of type '%s' on method '%s.%s'.", theParamIndex + 1, theParamType.getSimpleName(), method.getDeclaringClass().getName(), method.getName() ) );
 		} else {
-			parameter = new ResourceMethodParameter( ParameterSource.HEADER, theParamType, theParamGenericType, theParamIndex, paramName, translator, theParamAnnotation.sensitive(), this );
+			parameter = new ResourceMethodParameter( ParameterSource.HEADER, theParamType, theParamIndex, paramName, translator, theParamAnnotation.sensitive(), this );
 		}
 		return parameter;
 	}
@@ -517,21 +508,21 @@ public class ResourceMethod extends Subcontract {
 	 * @param theParamIndex the index of the parameter in the list of the method's parameters
 	 * @return a parameter object
 	 */	
-	private ResourceMethodParameter generateCookieParameter( CookieParam theParamAnnotation, Class<?> theParamType, Type theParamGenericType, int theParamIndex, ResourceFacility theResourceFacility ) {
+	private ResourceMethodParameter generateCookieParameter( CookieParam theParamAnnotation, JavaType theParamType, int theParamIndex, ResourceFacility theResourceFacility ) {
 		ResourceMethodParameter parameter;
 		
 		String paramName;
 		paramName = ( ( CookieParam )theParamAnnotation ).name( );
 
-		if( Cookie.class.isAssignableFrom( theParamType )) {
-			parameter = new ResourceMethodParameter( ParameterSource.COOKIE, theParamType, theParamGenericType, theParamIndex, paramName, null, theParamAnnotation.sensitive(), this );
+		if( Cookie.class.isAssignableFrom( theParamType.getUnderlyingClass() )) {
+			parameter = new ResourceMethodParameter( ParameterSource.COOKIE, theParamType, theParamIndex, paramName, null, theParamAnnotation.sensitive(), this );
 		} else {
 			// get the translator to use
-			Translator translator = theResourceFacility.getFromParameterTranslator(theParamType, theParamGenericType);
+			Translator translator = theResourceFacility.getFromParameterTranslator(theParamType);
 			if( translator == null ) {
 				throw new IllegalStateException( String.format( "Could not find a translator for parameter %s of type '%s' on method '%s.%s'.", theParamIndex + 1, theParamType.getSimpleName(), method.getDeclaringClass().getName(), method.getName() ) );
 			} else {
-				parameter = new ResourceMethodParameter( ParameterSource.COOKIE, theParamType, theParamGenericType, theParamIndex, paramName, translator, theParamAnnotation.sensitive(), this );
+				parameter = new ResourceMethodParameter( ParameterSource.COOKIE, theParamType, theParamIndex, paramName, translator, theParamAnnotation.sensitive(), this );
 			}
 		}
 		return parameter;
@@ -544,11 +535,11 @@ public class ResourceMethod extends Subcontract {
 	 * @param theParamIndex the index of the parameter in the list of the method's parameters
 	 * @return a parameter object
 	 */	
-	private ResourceMethodParameter generateContextParameter( ContextParam theParamAnnotation, Class<?> theParamType, Type theParamGenericType, int theParamIndex, ResourceFacility theResourceFacility ) {
+	private ResourceMethodParameter generateContextParameter( ContextParam theParamAnnotation, JavaType theParamType, int theParamIndex, ResourceFacility theResourceFacility ) {
 		ResourceMethodParameter parameter;
 		
 		// the constructor will validate as needed
-		parameter = new ResourceMethodParameter( ParameterSource.CONTEXT, theParamType, theParamGenericType, theParamIndex, theParamAnnotation.sensitive(), this );
+		parameter = new ResourceMethodParameter( ParameterSource.CONTEXT, theParamType, theParamIndex, theParamAnnotation.sensitive(), this );
 		return parameter;
 	}
 	
@@ -847,7 +838,7 @@ public class ResourceMethod extends Subcontract {
 						loggedParameters += 1;
 						
 						actualValue = parameter.translate( stringValue );
-						if( actualValue == null && parameter.getType().isPrimitive() ) {
+						if( actualValue == null && parameter.getType().getUnderlyingClass( ).isPrimitive() ) {
 							// if we have a null value and primitive, we have a problem
 							throw new TranslationException( String.format( "Attempting to set primitive type '%s' to null.", parameter.getType().getName() ) );
 						} else {

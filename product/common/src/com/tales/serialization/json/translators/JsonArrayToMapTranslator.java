@@ -40,10 +40,12 @@ import com.tales.serialization.json.JsonTypeReference;
  *
  */
 public class JsonArrayToMapTranslator implements Translator {
-	private final Map<String, JsonTypeReference> keyTypeReferences = new HashMap<>( 2 );
+	// these are used if we have more than one possible element type
+	private final Map<String, JsonTypeReference> keyTypeReferences = new HashMap<>( 2 ); 
 	private final Map<String, JsonTypeReference> valueTypeReferences = new HashMap<>( 2 );
 	
-	private final Translator keyTranslator;
+	// these are used if we only have one possible element type
+	private final Translator keyTranslator; 
 	private final Translator valueTranslator;
 	
 	private final Class<?> mapType;
@@ -94,7 +96,7 @@ public class JsonArrayToMapTranslator implements Translator {
 		Preconditions.checkArgument( Map.class.isAssignableFrom( theMapType ), String.format( "'%s' needs to implement map.", theMapType.getName( ) ) );
 
 		for( JsonTypeReference keyTypeReference : theKeyTypeReferences ) {
-			Preconditions.checkArgument( !valueTypeReferences.containsKey( keyTypeReference.getType()), String.format( "Attempting to add key type reference '%s' more than once.", keyTypeReference.getType( ).getName()));
+			Preconditions.checkArgument( !valueTypeReferences.containsKey( keyTypeReference.getName()), String.format( "Attempting to add key type reference '%s' more than once.", keyTypeReference.getType( ).getName()));
 			keyTypeReferences.put( keyTypeReference.getName(), keyTypeReference );
 		}
 		// if we only have one key type than pull out the translator directly 
@@ -106,7 +108,7 @@ public class JsonArrayToMapTranslator implements Translator {
 		}
 		
 		for( JsonTypeReference valueTypeReference : theValueTypeReferences ) {
-			Preconditions.checkArgument( !valueTypeReferences.containsKey( valueTypeReference.getType()), String.format( "Attempting to add value type reference '%s' more than once.", valueTypeReference.getType( ).getName()));
+			Preconditions.checkArgument( !valueTypeReferences.containsKey( valueTypeReference.getName()), String.format( "Attempting to add value type reference '%s' more than once.", valueTypeReference.getType( ).getName()));
 			valueTypeReferences.put( valueTypeReference.getName( ), valueTypeReference );
 		}
 		// if we only have one key type than pull out the translator directly 

@@ -15,10 +15,10 @@
 // ***************************************************************************
 package com.tales.client.http;
 
-import java.lang.reflect.Type;
-
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+
+import com.tales.parts.reflection.JavaType;
 import com.tales.parts.translators.Translator;
 
 /**
@@ -30,11 +30,10 @@ import com.tales.parts.translators.Translator;
 public class ResourceMethodParameter {
 	private final String name;
 	private final int index; // this is used to help get items quickly
-	private final Class<?> type;
-	private final Type genericType;
+	private final JavaType type;
 	private final Translator translator;
 	
-	protected ResourceMethodParameter( String theName, int theIndex, Class<?> theType, Type theGenericType, Translator theTranslator ) {
+	protected ResourceMethodParameter( String theName, int theIndex, JavaType theType, Translator theTranslator ) {
 		Preconditions.checkArgument( !Strings.isNullOrEmpty( theName ),  "need a name" );
 		Preconditions.checkArgument( theIndex >= 0, "parameter '%s' is using an invalid index value of '%s'", theName, theIndex );
 		Preconditions.checkNotNull(theTranslator,  "need a translator" );
@@ -42,7 +41,6 @@ public class ResourceMethodParameter {
 		
 		name = theName;
 		type = theType;
-		genericType = theGenericType;
 		translator = theTranslator;
 		index = theIndex;
 	}
@@ -68,16 +66,8 @@ public class ResourceMethodParameter {
 	 * The type of the parameter.
 	 * @return the type of the parameter
 	 */
-	public Class<?> getType( ) {
+	public JavaType getType( ) {
 		return type;
-	}
-	
-	/**
-	 * The generic type, if applicable, for a parameter.
-	 * @return the generic type, though may be null if not set
-	 */
-	public Type getGenericType( ) {
-		return genericType;
 	}
 	
 	/**

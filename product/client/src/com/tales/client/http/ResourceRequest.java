@@ -217,7 +217,7 @@ public class ResourceRequest {
 			// we need to make sure we have a result and if not then we 
 			// assume we didn't get a response
 			if( jsonReturn != null )  {
-				objectResult.setResult( ( T )client.getJsonFacility().fromJsonElement( jsonReturn, method.getReturn().getType(), method.getReturn().getGenericType() ) );
+				objectResult.setResult( ( T )client.getJsonFacility().fromJsonElement( jsonReturn, method.getReturn().getType() ) );
 			} else {
 				objectResult.setResult( null );
 			}

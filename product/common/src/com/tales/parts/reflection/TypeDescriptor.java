@@ -27,25 +27,25 @@ import com.google.common.base.Strings;
 
 public abstract class TypeDescriptor<T extends TypeDescriptor<T, F>, F extends FieldDescriptor<T, F>> {
     protected final String name;
-    protected final Class<?> type;
+    protected final JavaType type;
     private final Constructor<?> defaultConstructor;
     
     protected Map<String,F> fields = Collections.unmodifiableMap( new HashMap<String, F>( 0 ) );
     
-    public TypeDescriptor( String theName, Class<?> theType ) {
+    public TypeDescriptor( String theName, JavaType theType ) {
         Preconditions.checkArgument( !Strings.isNullOrEmpty( theName ), "theName must be specified" );
         Preconditions.checkNotNull( theType, "the type must not be null" );
         
         name = theName;
         type = theType;
-        
+
         try {
-			defaultConstructor = type.getDeclaredConstructor( );
+			defaultConstructor = type.getUnderlyingClass().getDeclaredConstructor( );
 			defaultConstructor.setAccessible( true );
 		} catch (SecurityException e) {
-			throw new IllegalArgumentException( String.format( "Type '%s' does not have an accessible constructor.", theType.getName( ) ) );
+			throw new IllegalArgumentException( String.format( "Type '%s' does not have an accessible constructor.", type.getSimpleName() ) );
 		} catch (NoSuchMethodException e) {
-			throw new IllegalArgumentException( String.format( "Type '%s' does not have an accessible constructor.", theType.getName( ) ) );
+			throw new IllegalArgumentException( String.format( "Type '%s' does not have an accessible constructor.", type.getSimpleName() ) );
 		}
     }
 
@@ -61,7 +61,7 @@ public abstract class TypeDescriptor<T extends TypeDescriptor<T, F>, F extends F
      * The underlying type this class represents.
      * @return the underlying class
      */
-    public Class<?> getType( ) {
+    public JavaType getType( ) {
     	return this.type;
     }
     
@@ -91,9 +91,9 @@ public abstract class TypeDescriptor<T extends TypeDescriptor<T, F>, F extends F
     	
     	for( F field : theFields ) {
     		if( newFields.containsKey( field.getName( ) ) ) {
-    			throw new IllegalStateException( String.format( "The type info with name '%s' and type '%s' is attempting to add more than one field called '%s'.", this.name, this.type.getName(), field.getName( ) ) );
+    			throw new IllegalStateException( String.format( "The type info with name '%s' and type '%s' is attempting to add more than one field called '%s'.", this.name, type.getSimpleName( ), field.getName( ) ) );
     		} else if( field.getContainingType() != this ) {
-    			throw new IllegalStateException( String.format( "The type info with name '%s' and type '%s' is attempting to add a field called '%s', but the field is associated to the type '%s'.", this.name, this.type.getName(), field.getName( ), field.getContainingType().getType().getName() ) );
+    			throw new IllegalStateException( String.format( "The type info with name '%s' and type '%s' is attempting to add a field called '%s', but the field is associated to the type '%s'.", this.name, type.getSimpleName( ), field.getName( ), field.getContainingType().getType( ).getSimpleName() ) );
     		} else {
     			newFields.put( field.getName( ), field );
     		}
@@ -114,13 +114,13 @@ public abstract class TypeDescriptor<T extends TypeDescriptor<T, F>, F extends F
         try {
 			return defaultConstructor.newInstance( );
         } catch( IllegalArgumentException e ) {
-            throw new IllegalStateException( String.format( "Cannot create a new instance of class '%s' due to an illegal argument exception.", type.getName( ) ), e );
+            throw new IllegalStateException( String.format( "Cannot create a new instance of class '%s' due to an illegal argument exception.", type.getSimpleName( ) ), e );
         } catch( InvocationTargetException e ) {
-            throw new IllegalStateException( String.format( "Cannot create a new instance of class '%s' due to an invocation exception.", type.getName( ) ), e );
+            throw new IllegalStateException( String.format( "Cannot create a new instance of class '%s' due to an invocation exception.", type.getSimpleName( ) ), e );
         } catch( InstantiationException e ) {
-            throw new IllegalStateException( String.format( "Cannot create a new instance of class '%s' due to an instantiation exception.", type.getName( ) ), e );
+            throw new IllegalStateException( String.format( "Cannot create a new instance of class '%s' due to an instantiation exception.", type.getSimpleName( ) ), e );
         } catch( IllegalAccessException e ) {
-            throw new IllegalStateException( String.format( "Cannot create a new instance of class '%s' due to an illegal access exception.", type.getName( ) ), e );
+            throw new IllegalStateException( String.format( "Cannot create a new instance of class '%s' due to an illegal access exception.", type.getSimpleName( ) ), e );
         }
     }
 }

@@ -18,7 +18,7 @@ package com.tales.contracts.data;
 import java.util.Collection;
 
 import com.google.common.base.Preconditions;
-
+import com.tales.parts.reflection.JavaType;
 import com.tales.serialization.SerializationTypeSource;
 
 /**
@@ -62,7 +62,7 @@ public class DataContractTypeSource implements SerializationTypeSource<DataContr
 	 * @return the serializable form of the type
 	 */
 	@Override
-	public DataContractType getSerializedType( Class<?> theType ) {
+	public DataContractType getSerializedType( JavaType theType ) {
 		return contractManager.generateType( theType );
 	}
 

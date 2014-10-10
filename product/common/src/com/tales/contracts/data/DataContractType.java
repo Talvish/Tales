@@ -15,6 +15,7 @@
 // ***************************************************************************
 package com.tales.contracts.data;
 
+import com.tales.parts.reflection.JavaType;
 import com.tales.parts.reflection.TypeDescriptor;
 
 /**
@@ -32,9 +33,10 @@ public class DataContractType extends TypeDescriptor< DataContractType, DataCont
      * objects. 
      * @param theName the name to give the type
      * @param theType the underlying type
+     * @param validationSupport indicates if the contract supports validation
      * @param theBaseType the base class, if applicable
      */
-    DataContractType( String theName, Class<?> theType, boolean validationSupport, DataContractType theBaseType ) {
+    DataContractType( String theName, JavaType theType, boolean validationSupport, DataContractType theBaseType ) {
     	super( theName, theType );
     	this.supportsValidation = validationSupport;
         this.baseType = theBaseType;        

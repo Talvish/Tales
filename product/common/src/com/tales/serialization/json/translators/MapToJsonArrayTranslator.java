@@ -25,6 +25,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
+import com.tales.parts.reflection.JavaType;
 import com.tales.parts.translators.TranslationException;
 import com.tales.parts.translators.Translator;
 import com.tales.serialization.json.JsonTypeReference;
@@ -32,13 +33,17 @@ import com.tales.serialization.json.JsonTypeReference;
 
 /**
  * Translator that converts a map into a json array of key/value json objects.,
- * or, if null, {@code JsonNull}.
+ * or, if null, {@code JsonNull}. 
+ * If the keys or values support more than one type for translation, 
+ * it isn't possible (and may be very difficult or impossible to do in Java) 
+ * to have key or value types differ by their type parameters (if generic types) 
+ * since the information is not available during the serialization process.
  * @author jmolnar
  *
  */
 public class MapToJsonArrayTranslator implements Translator {
-	private final Map<Class<?>, JsonTypeReference> keyTypeReferences = new HashMap<>( 2 );
-	private final Map<Class<?>, JsonTypeReference> valueTypeReferences = new HashMap<>( 2 );
+	private final Map<JavaType, JsonTypeReference> keyTypeReferences = new HashMap<>( 2 );
+	private final Map<JavaType, JsonTypeReference> valueTypeReferences = new HashMap<>( 2 );
 	
 	private final Translator keyTranslator;
 	private final Translator valueTranslator;
@@ -66,7 +71,7 @@ public class MapToJsonArrayTranslator implements Translator {
 		Preconditions.checkArgument( theValueTypeReferences.size( ) > 0, "Need at least one value type reference." );
 
 		for( JsonTypeReference keyTypeReference : theKeyTypeReferences ) {
-			Preconditions.checkArgument( !valueTypeReferences.containsKey( keyTypeReference.getType()), String.format( "Attempting to add key type reference '%s' more than once.", keyTypeReference.getType( ).getName()));
+			Preconditions.checkArgument( !valueTypeReferences.containsKey( keyTypeReference.getType()), String.format( "Attempting to add key type reference '%s' more than once (differences in generic type parameters are not sufficient).", keyTypeReference.getType( ).getName()));
 			keyTypeReferences.put( keyTypeReference.getType( ), keyTypeReference );
 		}
 		// if we only have one key type than pull out the translator directly 
@@ -78,7 +83,7 @@ public class MapToJsonArrayTranslator implements Translator {
 		}
 		
 		for( JsonTypeReference valueTypeReference : theValueTypeReferences ) {
-			Preconditions.checkArgument( !valueTypeReferences.containsKey( valueTypeReference.getType()), String.format( "Attempting to add value type reference '%s' more than once.", valueTypeReference.getType( ).getName()));
+			Preconditions.checkArgument( !valueTypeReferences.containsKey( valueTypeReference.getType()), String.format( "Attempting to add value type reference '%s' more than once (differences in generic type parameters are not sufficient).", valueTypeReference.getType( ).getName()));
 			valueTypeReferences.put( valueTypeReference.getType( ), valueTypeReference );
 		}
 		// if we only have one key type than pull out the translator directly 

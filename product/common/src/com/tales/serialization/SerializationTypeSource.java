@@ -18,6 +18,7 @@ package com.tales.serialization;
 import java.util.Collection;
 
 import com.tales.parts.reflection.FieldDescriptor;
+import com.tales.parts.reflection.JavaType;
 import com.tales.parts.reflection.TypeDescriptor;
 
 /**
@@ -33,7 +34,7 @@ public interface SerializationTypeSource<T extends TypeDescriptor<T, F>, F exten
 	 * @param theType the type to get serialization information on
 	 * @return the serializable form of the type
 	 */
-	T getSerializedType( Class<?> theType );
+	T getSerializedType( JavaType theType );
 	/**
 	 * Gets, from the previously requested serializable type,
 	 * the set of fields to serialize.

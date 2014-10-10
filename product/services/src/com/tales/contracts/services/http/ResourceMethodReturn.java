@@ -15,9 +15,8 @@
 // ***************************************************************************
 package com.tales.contracts.services.http;
 
-import java.lang.reflect.Type;
-
 import com.google.common.base.Preconditions;
+import com.tales.parts.reflection.JavaType;
 import com.tales.parts.translators.Translator;
 
 /**
@@ -28,10 +27,9 @@ import com.tales.parts.translators.Translator;
 public class ResourceMethodReturn {
 	// TODO: support translators in both directions AND getting/setting data (both directions)
 	private final ResourceMethod resourceMethod; 
-	private final Class<?> type;
+	private final JavaType type;
 	private final boolean isVoid;
 	private final boolean isResultWrapper;
-	private final Type genericType;
 	private final Translator valueTranslator;
 	
 	/**
@@ -41,14 +39,12 @@ public class ResourceMethodReturn {
 	 * @param theResultTranslator the translator that will be used to translate
 	 * @param theMethod the method this is a return value
 	 */
-	ResourceMethodReturn( Class<?> theType, Type theGenericType, ResourceMethod theMethod ) {
+	ResourceMethodReturn( JavaType theType, ResourceMethod theMethod ) {
 		Preconditions.checkNotNull( theType, "need a type" );
-		Preconditions.checkNotNull( theGenericType, "need a generic type" );
 		Preconditions.checkNotNull( theMethod, "need a method" );
 		
 		type = theType;
 		isVoid = true;
-		genericType = theGenericType;
 		valueTranslator = null;
 		resourceMethod = theMethod;
 		isResultWrapper = false;
@@ -63,14 +59,12 @@ public class ResourceMethodReturn {
 	 * @param theValueTranslator the translator that will be used to translate the result values
 	 * @param theMethod the method this is a return value
 	 */
-	ResourceMethodReturn( Class<?> theType, Type theGenericType, boolean resultWrapper, Translator theValueTranslator, ResourceMethod theMethod ) {
+	ResourceMethodReturn( JavaType theType, boolean resultWrapper, Translator theValueTranslator, ResourceMethod theMethod ) {
 		Preconditions.checkNotNull( theType, "need a type" );
-		Preconditions.checkNotNull( theGenericType, "need a generic type" );
 		Preconditions.checkNotNull( theValueTranslator, "need a translator" );
 		Preconditions.checkNotNull( theMethod, "need a method" );
 		
 		type = theType;
-		genericType = theGenericType;
 		isResultWrapper = resultWrapper;
 		isVoid = false;
 		valueTranslator = theValueTranslator;
@@ -106,16 +100,8 @@ public class ResourceMethodReturn {
 	 * The return type of the method.
 	 * @return the return type
 	 */
-	public Class<?> getType( ) {
+	public JavaType getType( ) {
 		return this.type;
-	}
-	
-	/**
-	 * The generic version of the return type of the method.
-	 * @return the return generic type 
-	 */
-	public Type getGenericType( ) {
-		return this.genericType;
 	}
 	
 	/**

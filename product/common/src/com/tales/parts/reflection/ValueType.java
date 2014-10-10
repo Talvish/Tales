@@ -15,42 +15,26 @@
 // ***************************************************************************
 package com.tales.parts.reflection;
 
-import java.lang.reflect.Type;
-
 import com.google.common.base.Preconditions;
-//Element
-//Descriptor
-//Component
-//Unit
-//Aspect
-//Detail
+
+
 public class ValueType <T extends TypeDescriptor<T, F>, F extends FieldDescriptor<T, F>> {
-    protected final Class<?> type;
-    protected final Type genericType;
+    protected final JavaType type;
     protected final T reflectedType;
     
-    public ValueType( Class<?> theType ) {
-    	this( theType, null, null );
+    public ValueType( JavaType  theType ) {
+    	this( theType, null );
     }
 
-    public ValueType( Class<?> theType, Type theGenericType ) {
-    	this( theType, theGenericType, null );
-    }
-
-    public ValueType( Class<?> theType, Type theGenericType, T theReflectedType ) {
+    public ValueType( JavaType theType, T theReflectedType ) {
     	Preconditions.checkNotNull( theType, "need a type" );
     	
     	type = theType;
-    	genericType = theGenericType;
     	reflectedType = theReflectedType;
     }
 
-    public Class<?> getType( ) {
+    public JavaType getType( ) {
     	return type;
-    }
-    
-    public Type getGenericType( ) {
-    	return genericType;
     }
     
     public T getReflectedType( ) {

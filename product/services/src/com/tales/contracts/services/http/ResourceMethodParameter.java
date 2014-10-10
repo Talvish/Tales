@@ -15,8 +15,6 @@
 // ***************************************************************************
 package com.tales.contracts.services.http;
 
-import java.lang.reflect.Type;
-
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -26,6 +24,7 @@ import com.google.common.base.Strings;
 import com.tales.parts.naming.LowerCaseEntityNameValidator;
 import com.tales.parts.naming.NameManager;
 import com.tales.parts.naming.NameValidator;
+import com.tales.parts.reflection.JavaType;
 import com.tales.parts.translators.Translator;
 import com.tales.services.OperationContext;
 import com.tales.system.Conditions;
@@ -122,8 +121,7 @@ public class ResourceMethodParameter {
 	private final ContextValue contextValue;
 	private final CookieValue cookieValue;
 	private final ResourceMethod resourceMethod;
-	private final Class<?> type;
-	private final Type genericType;
+	private final JavaType type;
 	private final int methodParamOffset;
 	private final int pathReference;
 	private final String valueName;
@@ -133,35 +131,33 @@ public class ResourceMethodParameter {
 	/**
 	 * Constructor called when there is a context parameter.
 	 */
-	ResourceMethodParameter( ParameterSource theSource, Class<?> theType, Type theGenericType, int theMethodParamOffset, boolean isSensitive, ResourceMethod theMethod ) {
-		this( theSource, theType, theGenericType, theMethodParamOffset, null, -1, null, isSensitive, theMethod );
+	ResourceMethodParameter( ParameterSource theSource, JavaType theType, int theMethodParamOffset, boolean isSensitive, ResourceMethod theMethod ) {
+		this( theSource, theType, theMethodParamOffset, null, -1, null, isSensitive, theMethod );
 	}
 	
 	/**
 	 * Constructor called when there is a request parameter, header or cookie parameter referenced.
 	 */
-	ResourceMethodParameter( ParameterSource theSource, Class<?> theType, Type theGenericType, int theMethodParamOffset, String theValueName, Translator theValueTranslator, boolean isSensitive, ResourceMethod theMethod ) {
-		this( theSource, theType, theGenericType, theMethodParamOffset, theValueName, -1, theValueTranslator, isSensitive, theMethod );
+	ResourceMethodParameter( ParameterSource theSource, JavaType theType, int theMethodParamOffset, String theValueName, Translator theValueTranslator, boolean isSensitive, ResourceMethod theMethod ) {
+		this( theSource, theType, theMethodParamOffset, theValueName, -1, theValueTranslator, isSensitive, theMethod );
 	}
 
 	/**
 	 * Shared constructor called from above then request parameter is referenced, or directly if we have a path parameter.
 	 */
-	ResourceMethodParameter( ParameterSource theSource, Class<?> theType, Type theGenericType, int theMethodParamOffset, String theValueName, int thePathReference, Translator theValueTranslator, boolean isSensitive, ResourceMethod theMethod ) {
+	ResourceMethodParameter( ParameterSource theSource, JavaType theType, int theMethodParamOffset, String theValueName, int thePathReference, Translator theValueTranslator, boolean isSensitive, ResourceMethod theMethod ) {
 		NameValidator nameValidator = NameManager.getValidator( ResourceMethodParameter.RESOURCE_METHOD_PARAMETER_NAME_VALIDATOR );
 		
 		Preconditions.checkNotNull( theSource, "the source of the parameter must be given");
 		Preconditions.checkArgument( theSource == ParameterSource.PATH && thePathReference >= 0 || theSource != ParameterSource.PATH && thePathReference == -1, "if a path param, than path parameter must be non-negative, otherwise the path parameter must be -1" );
 		Preconditions.checkNotNull( theMethod, "need a method" );
 		Preconditions.checkNotNull( theType, "need a type" );
-		Preconditions.checkNotNull( theGenericType, "need a generic type" );
 		Preconditions.checkArgument( theMethodParamOffset >= 0, "need a non-negative parameter offset" );
 		Preconditions.checkArgument( theSource == ParameterSource.CONTEXT || ( theSource != ParameterSource.CONTEXT && !Strings.isNullOrEmpty( theValueName ) ), "need a value name" );
 		Preconditions.checkArgument( theSource == ParameterSource.HEADER || theSource == ParameterSource.COOKIE || theSource == ParameterSource.CONTEXT || ( theSource != ParameterSource.HEADER && nameValidator.isValid( theValueName ) ), String.format( "Parameter '%s' on resource method '%s' does not conform to validator '%s'.", theValueName, theMethod.getName( ), nameValidator.getClass().getSimpleName() ) );
 		Preconditions.checkArgument( theSource == ParameterSource.CONTEXT || theSource == ParameterSource.COOKIE || ( theSource != ParameterSource.CONTEXT && theSource != ParameterSource.COOKIE && theValueTranslator != null ), "need a translator" );
 		source = theSource;
 		type = theType;
-		genericType = theGenericType;
 		methodParamOffset = theMethodParamOffset;
 		valueName = theValueName;
 		sensitive = isSensitive;
@@ -170,11 +166,11 @@ public class ResourceMethodParameter {
 		resourceMethod = theMethod;
 		
 		if( source == ParameterSource.CONTEXT ) {
-			if( HttpServletRequest.class.isAssignableFrom( type ) ) {
+			if( HttpServletRequest.class.isAssignableFrom( type.getUnderlyingClass() ) ) {
 				this.contextValue = ContextValue.HTTP_REQUEST;				
-			} else if( HttpServletResponse.class.isAssignableFrom( type ) ) {
+			} else if( HttpServletResponse.class.isAssignableFrom( type.getUnderlyingClass() ) ) {
 				this.contextValue = ContextValue.HTTP_RESPONSE;
-			} else if( OperationContext.class.isAssignableFrom( type ) ) {
+			} else if( OperationContext.class.isAssignableFrom( type.getUnderlyingClass() ) ) {
 				this.contextValue = ContextValue.OPERATION_CONTEXT;
 			} else {
 				throw new IllegalArgumentException( "attempting to request a context parameter, the parameter isn't a request or response object" );
@@ -183,7 +179,7 @@ public class ResourceMethodParameter {
 			this.contextValue = ContextValue.NONE;
 		}
 		if( source == ParameterSource.COOKIE ) {
-			if( Cookie.class.isAssignableFrom( type ) ) {
+			if( Cookie.class.isAssignableFrom( type.getUnderlyingClass() ) ) {
 				this.cookieValue = CookieValue.COOKIE;
 			} else {
 				Conditions.checkParameter( theValueTranslator != null, "theValueTranslator", "need a translator" );
@@ -247,17 +243,8 @@ public class ResourceMethodParameter {
 	 * The type of the parameter.
 	 * @return the type of the parameter
 	 */
-	public Class<?> getType( ) {
+	public JavaType getType( ) {
 		return type;
-	}
-	
-	/**
-	 * The generic type for the parameter, which can be used to
-	 * help find type parameter types of this parameter.
-	 * @return the generic type.
-	 */
-	public Type getGenericType( ) {
-		return genericType;
 	}
 	
 	/**

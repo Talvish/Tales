@@ -16,6 +16,7 @@
 package com.tales.parts.sites;
 
 import com.google.common.base.Preconditions;
+import com.tales.parts.reflection.JavaType;
 import com.tales.parts.translators.Translator;
 
 /**
@@ -58,7 +59,7 @@ public class TranslatedDataSite implements DataSite {
 	 * wrapped data type
 	 * @return class representing the type of data
 	 */
-	public Class<?> getType( ) {
+	public JavaType getType( ) {
 		return this.dataSite.getType( );
 	}
 

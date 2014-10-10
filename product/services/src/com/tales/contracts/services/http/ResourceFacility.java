@@ -17,7 +17,6 @@ package com.tales.contracts.services.http;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -30,6 +29,7 @@ import com.google.gson.JsonObject;
 import com.tales.communication.Status;
 import com.tales.contracts.data.DataContractTypeSource;
 import com.tales.parts.naming.LowerCaseEntityNameValidator;
+import com.tales.parts.reflection.JavaType;
 import com.tales.parts.translators.Translator;
 import com.tales.serialization.Readability;
 import com.tales.serialization.json.JsonTranslationFacility;
@@ -177,10 +177,9 @@ public final class ResourceFacility implements Facility {
 	 * The translator translates from a string value, as expected by a http request parameter
 	 * to the specified type.
 	 * @param theType the type to translate from
-	 * @param theGenericType the generic details of the type to translate from
 	 * @return the translator for the type
 	 */
-	public Translator getFromParameterTranslator( Class<?> theType, Type theGenericType ) {
+	public Translator getFromParameterTranslator( JavaType theType ) {
 		Translator translator;
 		// first try to get a simple translator, if there is one then
 		// it is a simple type that we dont' need to do any additional 
@@ -188,7 +187,7 @@ public final class ResourceFacility implements Facility {
 		translator = this.jsonTranslation.getFromStringTranslator( theType );
 		if( translator == null ) {
 			// did not find one so we are now look for something that will be more complicated
-			JsonTypeReference typeReference = this.jsonTranslation.getTypeReference(theType, theGenericType);
+			JsonTypeReference typeReference = this.jsonTranslation.getTypeReference(theType);
 			if( typeReference != null ) {
 				// NOTE: we don't store these because we cannot index off of type/generic type (yet)
 				//       and because of that, jsonTranslators is unable to cache their results
@@ -204,10 +203,9 @@ public final class ResourceFacility implements Facility {
 	 * The translator translates from a value to a string value that would be expected to be sent
 	 * as an http request parameter for the specified type.
 	 * @param theType the type to translate from
-	 * @param theGenericType the generic details of the type to translate to
 	 * @return the translator for the type
 	 */
-	public Translator getToParameterTranslator( Class<?> theType, Type theGenericType ) {
+	public Translator getToParameterTranslator( JavaType theType ) {
 		Translator translator;
 		// first try to get a simple translator, if there is one then
 		// it is a simple type that we dont' need to do any additional 
@@ -215,7 +213,7 @@ public final class ResourceFacility implements Facility {
 		translator = this.jsonTranslation.getToStringTranslator( theType );
 		if( translator == null ) {
 			// did not find one so we are now look for something that will be more complicated
-			JsonTypeReference typeReference = this.jsonTranslation.getTypeReference(theType, theGenericType);
+			JsonTypeReference typeReference = this.jsonTranslation.getTypeReference(theType);
 			if( typeReference != null ) {
 				// NOTE: we don't store these because we cannot index off of type/generic type (yet)
 				//       and because of that, jsonTranslators is unable to cache their results

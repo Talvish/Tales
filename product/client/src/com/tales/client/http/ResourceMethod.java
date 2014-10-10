@@ -26,8 +26,8 @@ import java.util.regex.Pattern;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-
 import com.tales.communication.HttpVerb;
+import com.tales.parts.reflection.JavaType;
 import com.tales.parts.translators.Translator;
 import com.tales.serialization.UrlEncoding;
 import com.tales.serialization.json.JsonTypeReference;
@@ -91,7 +91,7 @@ public class ResourceMethod {
 	 * @param theMethodPath the partial path (doesn't include http scheme, domain, contract root, etc)
 	 * @param theClient the client responsible for creating this ResourceMethod
 	 */
-	protected ResourceMethod( String theName, Class<?> theReturnType, Type theReturnGenericType, HttpVerb theHttpVerb, String theMethodPath, ResourceClient theClient ) {
+	protected ResourceMethod( String theName, JavaType theReturnType, HttpVerb theHttpVerb, String theMethodPath, ResourceClient theClient ) {
 		Preconditions.checkArgument( !Strings.isNullOrEmpty( theName ),  "theName" );
 		Preconditions.checkNotNull( theReturnType, "theReturnType" );
 		Preconditions.checkNotNull( theHttpVerb, "theHttpVerb" );
@@ -101,7 +101,7 @@ public class ResourceMethod {
 		Preconditions.checkArgument( pathMatcher.matches( ), "the path string '%s' for contract '%s' does not conform to the pattern '%s'", theMethodPath, theClient.getContractRoot(), PATH_REGEX );
 
 		name = theName;
-		returnType = new ResourceMethodReturn( theReturnType, theReturnGenericType ); // this will do validation of the reutrn type
+		returnType = new ResourceMethodReturn( theReturnType );// this will do validation (e.g. not null ) of the return type
 		httpVerb = theHttpVerb;
 		methodPath = theMethodPath;
 		methodUrl = generateUrl( theMethodPath, theClient, pathParameterNames );
@@ -174,8 +174,8 @@ public class ResourceMethod {
 	 * @param theType the type of the data
 	 * @return the ResourceMethod again, so calls can be strung together
 	 */
-	public ResourceMethod definePathParameter( String theName, Class<?> theType ) {
-		return definePathParameter( theName, theType, null );
+	public ResourceMethod definePathParameter( String theName, Type theType ) {
+		return definePathParameter( theName, new JavaType( theType ) );
 	}
 
 	/**
@@ -187,7 +187,7 @@ public class ResourceMethod {
 	 * @param theGenericType the generic type, if applicable
 	 * @return the ResourceMethod again, so calls can be strung together
 	 */
-	public ResourceMethod definePathParameter( String theName, Class<?> theType, Type theGenericType ) {
+	public ResourceMethod definePathParameter( String theName, JavaType theType ) {
 		Preconditions.checkArgument( !Strings.isNullOrEmpty( theName ),  "name must be given" );
 		Preconditions.checkArgument( pathParameterIndices.containsKey( theName ), "parameter '%s' was not specified in the path '%s'", theName, this.methodPath );
 		Integer index = pathParameterIndices.get( theName );
@@ -195,22 +195,22 @@ public class ResourceMethod {
 		Preconditions.checkNotNull( pathParameters.get( index ) == null, "parameter '%s' at index '%s' was already defined", theName, index );
 		Preconditions.checkNotNull( theType, "type not specified for '%s'", theName );
 		
-		Translator translator = getSuitableTranslator( theType, theGenericType );  // this doesn't URL encode here, that is done when generating the path during the execute call 
+		Translator translator = getSuitableTranslator( theType );  // this doesn't URL encode here, that is done when generating the path during the execute call 
 		
-		pathParameters.set( index, new ResourceMethodParameter( theName, index, theType, theGenericType, translator ) );
+		pathParameters.set( index, new ResourceMethodParameter( theName, index, theType, translator ) );
 		return this;
 	}
-	
+
 	/**
 	 * Indicates that a path parameter is expected by the service and it is expecting a particular type.
 	 * @param theIndex the index of the parameter
 	 * @param theType the type of the data
 	 * @return the ResourceMethod again, so calls can be strung together
 	 */
-	public ResourceMethod definePathParameter( int theIndex, Class<?> theType ) {
-		return definePathParameter( theIndex, theType, null );
+	public ResourceMethod definePathParameter( int theIndex, Type theType ) {
+		return definePathParameter( theIndex, new JavaType( theType ) );
 	}
-	
+
 	/**
 	 * Indicates that a path parameter is expected by the service and it is expecting a particular type.
 	 * @param theIndex the index of the parameter
@@ -218,14 +218,14 @@ public class ResourceMethod {
 	 * @param theGenericType the generic type, if applicable
 	 * @return the ResourceMethod again, so calls can be strung together
 	 */
-	public ResourceMethod definePathParameter( int theIndex, Class<?> theType, Type theGenericType ) {
+	public ResourceMethod definePathParameter( int theIndex, JavaType theType ) {
 		Preconditions.checkArgument( theIndex < pathParameters.size( ), "a parameter should not exist at index '%s' according to path '%s'", theIndex, this.methodPath );
 		Preconditions.checkArgument( pathParameters.get( theIndex ) == null, "the path parameter at index '%s' was already defined", theIndex );
 		Preconditions.checkNotNull( theType, "theType" );
 
-		Translator translator = getSuitableTranslator( theType, theGenericType );  // this doesn't URL encode here, that is done when generating the path during the execute call
+		Translator translator = getSuitableTranslator( theType );  // this doesn't URL encode here, that is done when generating the path during the execute call
 		
-		pathParameters.set( theIndex, new ResourceMethodParameter( "path_param_" + String.valueOf( theIndex ), theIndex, theType, theGenericType, translator ) );
+		pathParameters.set( theIndex, new ResourceMethodParameter( "path_param_" + String.valueOf( theIndex ), theIndex, theType, translator ) );
 		return this;
 	}
 
@@ -235,10 +235,10 @@ public class ResourceMethod {
 	 * @param theType the type of the data
 	 * @return the ResourceMethod again, so calls can be strung together
 	 */
-	public ResourceMethod defineQueryParameter( String theName, Class<?> theType ) {
-		return defineQueryParameter( theName, theType, null );
+	public ResourceMethod defineQueryParameter( String theName, Type theType ) {
+		return defineQueryParameter( theName, new JavaType( theType ) );
 	}
-
+	
 	/**
 	 * Indicates that a query parameter is expected by the service and it is expecting a particular type.
 	 * @param theName the name of the query parameter
@@ -246,14 +246,14 @@ public class ResourceMethod {
 	 * @param theGenericType the generic type, if applicable
 	 * @return the ResourceMethod again, so calls can be strung together
 	 */
-	public ResourceMethod defineQueryParameter( String theName, Class<?> theType, Type theGenericType ) {
+	public ResourceMethod defineQueryParameter( String theName, JavaType theType ) {
 		Conditions.checkParameter( !Strings.isNullOrEmpty( theName ),  "theName", "name must be given" );
 		Conditions.checkParameter( !queryParameters.containsKey( theName ), "theName", "parameter '%s' was already defined", theName );
 		Preconditions.checkNotNull( theType, "type not specified for '%s'", theName );
 
-		Translator translator = getSuitableTranslator( theType, theGenericType );
+		Translator translator = getSuitableTranslator( theType );
 		
-		queryParameters.put( theName, new ResourceMethodParameter(theName, queryParameters.size( ), theType, theGenericType, translator ) );
+		queryParameters.put( theName, new ResourceMethodParameter(theName, queryParameters.size( ), theType, translator ) );
 		return this;
 	}
 
@@ -263,10 +263,10 @@ public class ResourceMethod {
 	 * @param theType the type of the data
 	 * @return the ResourceMethod again, so calls can be strung together
 	 */
-	public ResourceMethod defineBodyParameter( String theName, Class<?> theType ) {
-		return defineBodyParameter( theName, theType, null );
+	public ResourceMethod defineBodyParameter( String theName, Type theType ) {
+		return defineBodyParameter( theName, new JavaType( theType ) );
 	}
-
+	
 	/**
 	 * Indicates that a body parameter is expected by the service and it is expecting a particular type.
 	 * @param theName the name of the body parameter
@@ -274,14 +274,14 @@ public class ResourceMethod {
 	 * @param theGenericType the generic type, if applicable
 	 * @return the ResourceMethod again, so calls can be strung together
 	 */
-	public ResourceMethod defineBodyParameter( String theName, Class<?> theType, Type theGenericType ) {
+	public ResourceMethod defineBodyParameter( String theName, JavaType theType ) {
 		Conditions.checkParameter( !Strings.isNullOrEmpty( theName ),  "theName", "name must be given" );
 		Conditions.checkParameter( !bodyParameters.containsKey( theName ), "theName", "parameter '%s' was already defined", theName );
 		Preconditions.checkNotNull( theType, "type not specified for '%s'", theName );
 
-		Translator translator = getSuitableTranslator( theType, theGenericType );
+		Translator translator = getSuitableTranslator( theType );
 		
-		bodyParameters.put( theName, new ResourceMethodParameter(theName, bodyParameters.size( ), theType, theGenericType, translator ) );
+		bodyParameters.put( theName, new ResourceMethodParameter(theName, bodyParameters.size( ), theType, translator ) );
 		return this;
 	}
 	
@@ -292,8 +292,8 @@ public class ResourceMethod {
 	 * @param theGenericType the generic type, if applicable
 	 * @return the ResourceMethod again, so calls can be strung together
 	 */
-	public ResourceMethod defineCookieParameter( String theName, Class<?> theType ) {
-		return defineQueryParameter( theName, theType, null );
+	public ResourceMethod defineCookieParameter( String theName, Type theType ) {
+		return defineCookieParameter( theName, new JavaType( theType) );
 	}
 	
 	/**
@@ -303,14 +303,14 @@ public class ResourceMethod {
 	 * @param theGenericType the generic type, if applicable
 	 * @return the ResourceMethod again, so calls can be strung together
 	 */
-	public ResourceMethod defineCookieParameter( String theName, Class<?> theType, Type theGenericType ) {
+	public ResourceMethod defineCookieParameter( String theName, JavaType theType ) {
 		Conditions.checkParameter( !Strings.isNullOrEmpty( theName ),  "theName", "name must be given" );
 		Conditions.checkParameter( !cookieParameters.containsKey( theName ), "theName", "parameter '%s' was already defined", theName );
 		Preconditions.checkNotNull( theType, "type not specified for '%s'", theName );
 
-		Translator translator = getSuitableTranslator( theType, theGenericType );
+		Translator translator = getSuitableTranslator( theType );
 		
-		cookieParameters.put( theName, new ResourceMethodParameter(theName, cookieParameters.size(), theType, theGenericType, translator ) );
+		cookieParameters.put( theName, new ResourceMethodParameter(theName, cookieParameters.size(), theType, translator ) );
 		return this;
 	}
 
@@ -320,8 +320,8 @@ public class ResourceMethod {
 	 * @param theType the type of the data
 	 * @return the ResourceMethod again, so calls can be strung together
 	 */
-	public ResourceMethod defineHeaderParameter( String theName, Class<?> theType ) {
-		return defineHeaderParameter( theName, theType, null );
+	public ResourceMethod defineHeaderParameter( String theName, Type theType ) {
+		return defineHeaderParameter( theName, new JavaType( theType ) );
 	}
 	
 	/**
@@ -331,14 +331,14 @@ public class ResourceMethod {
 	 * @param theGenericType the generic type, if applicable
 	 * @return the ResourceMethod again, so calls can be strung together
 	 */
-	public ResourceMethod defineHeaderParameter( String theName, Class<?> theType, Type theGenericType ) {
+	public ResourceMethod defineHeaderParameter( String theName, JavaType theType ) {
 		Conditions.checkParameter( !Strings.isNullOrEmpty( theName ),  "theName", "name must be given" );
 		Conditions.checkParameter( !headerParameters.containsKey( theName ), "theName", "parameter '%s' was already defined", theName );
 		Preconditions.checkNotNull( theType, "type not specified for '%s'", theName );
 
-		Translator translator = getSuitableTranslator( theType, theGenericType );
+		Translator translator = getSuitableTranslator( theType );
 		
-		headerParameters.put( theName, new ResourceMethodParameter(theName, headerParameters.size(), theType, theGenericType, translator ) );
+		headerParameters.put( theName, new ResourceMethodParameter(theName, headerParameters.size(), theType, translator ) );
 		return this;
 	}
 	
@@ -349,12 +349,12 @@ public class ResourceMethod {
 	 * @param theGenericType the generic types, if given
 	 * @return a suitable translator
 	 */
-	private Translator getSuitableTranslator( Class<?> theType, Type theGenericType ) {
+	private Translator getSuitableTranslator( JavaType theType ) {
 		Translator translator = client.jsonFacility.getToStringTranslator( theType );
 		
 		if( translator == null ) {
 			// did not find one so we are now look for something that will be more complicated
-			JsonTypeReference typeReference = client.jsonFacility.getTypeReference(theType, theGenericType);
+			JsonTypeReference typeReference = client.jsonFacility.getTypeReference(theType);
 			// verify we got something back
 			Preconditions.checkNotNull( typeReference, "Could not get json handler for type '%s'.", theType.getSimpleName() );
 			translator = new ChainToJsonElementToStringTranslator( typeReference.getToJsonTranslator() );

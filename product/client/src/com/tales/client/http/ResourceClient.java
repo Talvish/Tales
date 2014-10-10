@@ -46,6 +46,7 @@ import com.tales.contracts.data.DataContractTypeSource;
 import com.tales.parts.naming.LowerCaseEntityNameValidator;
 import com.tales.parts.naming.NameValidator;
 import com.tales.parts.naming.SegmentedLowercaseEntityNameValidator;
+import com.tales.parts.reflection.JavaType;
 import com.tales.serialization.Readability;
 import com.tales.serialization.json.JsonTranslationFacility;
 import com.tales.serialization.json.JsonTypeMap;
@@ -223,9 +224,11 @@ public class ResourceClient {
 		
 		// now that we have the json facility, let's 
 		// get the reference for the result type
-		JsonTypeMap typeMap = jsonFacility.generateTypeMap( ResourceResult.class );
+		JavaType type = new JavaType( ResourceResult.class );
+		JsonTypeMap typeMap = jsonFacility.generateTypeMap( type ); // TODO: technically I can, if I have the type of the result, now do the full thing (need to have a field for it)
 		resultTypeReference = new JsonTypeReference( 
-				ResourceResult.class, typeMap.getReflectedType().getName(),
+				type,
+				typeMap.getReflectedType().getName(),
     			new JsonObjectToObjectTranslator( typeMap ),
     			new ObjectToJsonObjectTranslator( typeMap ) );				
 	}
@@ -425,10 +428,10 @@ public class ResourceClient {
 	 * @param theMethodPath the relative path (should not have a leading '/') off the contract root for the url to communicate with for the method 
 	 * @return
 	 */
-	public ResourceMethod defineMethod( String theName, Class<?> theReturnType, HttpVerb theHttpVerb, String theMethodPath ) {
-		return this.defineMethod(theName, theReturnType, null, theHttpVerb, theMethodPath);
+	public ResourceMethod defineMethod( String theName, Type theReturnType, HttpVerb theHttpVerb, String theMethodPath ) {
+		return this.defineMethod(theName, new JavaType( theReturnType ), theHttpVerb, theMethodPath);
 	}
-
+	
 	/**
 	 * This is called to define a method that can be communicated with on a service. The method path can 
 	 * contain path parameters that are to be filled out during request creation.
@@ -439,8 +442,8 @@ public class ResourceClient {
 	 * @param theMethodPath the relative path (should not have a leading '/') off the contract root for the url to communicate with for the method 
 	 * @return
 	 */
-	public ResourceMethod defineMethod( String theName, Class<?> theReturnType, Type theReturnGenericType, HttpVerb theHttpVerb, String theMethodPath ) {
-		return new ResourceMethod( theName, theReturnType, theReturnGenericType, theHttpVerb, theMethodPath, this );
+	public ResourceMethod defineMethod( String theName, JavaType theReturnType, HttpVerb theHttpVerb, String theMethodPath ) {
+		return new ResourceMethod( theName, theReturnType, theHttpVerb, theMethodPath, this );
 	}
 
 	/**

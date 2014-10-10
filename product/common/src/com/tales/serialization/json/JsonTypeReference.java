@@ -17,6 +17,8 @@ package com.tales.serialization.json;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+
+import com.tales.parts.reflection.JavaType;
 import com.tales.parts.translators.Translator;
 
 // TODO: consider storing this at the serialization level since it doesn't have to be specific to json.
@@ -27,13 +29,13 @@ import com.tales.parts.translators.Translator;
  *
  */
 public class JsonTypeReference {
-	private final Class<?> type;
+	private final JavaType type;
 	private final String name;
 
 	private final Translator toJsonTranslator;
 	private final Translator fromJsonTranslator;
-	
-	public JsonTypeReference( Class<?> theType, String theName, Translator theFromJsonTranslator, Translator theToJsonTranslator ) {
+
+	public JsonTypeReference( JavaType theType, String theName, Translator theFromJsonTranslator, Translator theToJsonTranslator ) {
 		Preconditions.checkNotNull( theType, "type is required" );
 		Preconditions.checkArgument( !Strings.isNullOrEmpty( theName ), "name is required" );
 		Preconditions.checkNotNull( theToJsonTranslator, "to json translator is required" );
@@ -48,7 +50,7 @@ public class JsonTypeReference {
 	/**
 	 * The type this class is being used for.
 	 */
-	public Class<?> getType(){
+	public JavaType getType( ){ 
 		return this.type;
 	}
 	

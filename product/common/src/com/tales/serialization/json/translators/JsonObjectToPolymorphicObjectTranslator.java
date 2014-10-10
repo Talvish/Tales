@@ -39,7 +39,7 @@ public class JsonObjectToPolymorphicObjectTranslator implements Translator {
 		Preconditions.checkArgument( theTypeReferences.size( ) > 0, "Need at least one value type reference." );
 
 		for( JsonTypeReference typeReference : theTypeReferences ) {
-			Preconditions.checkArgument( !typeReferences.containsKey( typeReference.getType()), String.format( "Attempting to add type reference '%s' more than once.", typeReference.getType( ).getName()));
+			Preconditions.checkArgument( !typeReferences.containsKey( typeReference.getName()), String.format( "Attempting to add type reference '%s' more than once.", typeReference.getType( ).getName()));
 			typeReferences.put( typeReference.getName( ), typeReference );
 		}
 	}

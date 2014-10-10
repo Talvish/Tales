@@ -16,10 +16,10 @@
 package com.tales.parts.sites;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Type;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
+
+import com.tales.parts.reflection.JavaType;
 
 /**
  * This is a simple {@link DataSite} that abstracts getting 
@@ -29,6 +29,7 @@ import com.google.common.base.Strings;
  */
 public class FieldSite implements MemberSite {
 	private final Field field;
+	private final JavaType type;
 	
 	/**
 	 * Constructs the data site based on the {@code Field} reflection instance. 
@@ -40,27 +41,7 @@ public class FieldSite implements MemberSite {
 		field = theField;
 		// make sure, if private, we can access it properly
 		field.setAccessible( true );
-	}
-	
-	/**
-	 * Constructs the data site based on a {@code Class} and name of the field in the class. 
-	 * @param theClass the class of the field to create a site for
-	 * @param theFieldName the name of the field to create a site for, it must exist
-	 */
-	public FieldSite( Class<?> theClass, String theFieldName ) {
-		Preconditions.checkNotNull( theClass, "need a class" );
-		Preconditions.checkArgument( Strings.isNullOrEmpty( theFieldName ), "need a field name" );
-		
-		// now proceed to create a field object from the class/field
-		Field tempField = null;
-		try {
-			tempField = theClass.getField( theFieldName );
-		} catch (SecurityException e) {
-			throw new IllegalArgumentException( String.format( "Could not access %s.%s", theClass.getName( ), theFieldName ), e );
-		} catch (NoSuchFieldException e) {
-			throw new IllegalArgumentException( String.format( "Could not find %s.%s", theClass.getName( ), theFieldName ), e );
-		}
-		field = tempField;
+		type = new JavaType( theField.getGenericType() );
 	}
 	
 	/**
@@ -75,17 +56,8 @@ public class FieldSite implements MemberSite {
 	 * The type of the data in this field.
 	 * @return class representing the type of data
 	 */
-	public Class<?> getType( ) {
-		return this.field.getType( );
-	}
-	
-	/**
-	 * The generic type of the member data site, which is helpful
-	 * for discovering generic parameters used by the data site.
-	 * @return the generic type of the member site.
-	 */
-	public Type getGenericType( ) {
-		return this.field.getGenericType();
+	public JavaType getType( ) {
+		return this.type;
 	}
 	
 	/**

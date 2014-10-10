@@ -15,43 +15,31 @@
 // ***************************************************************************
 package com.tales.client.http;
 
-import java.lang.reflect.Type;
-
 import com.google.common.base.Preconditions;
+import com.tales.parts.reflection.JavaType;
 
 /**
  * This class represents the return type of a resource method.
  * @author jmolnar
  *
  */
-public class ResourceMethodReturn{	
-	private final Class<?> type;
-	private final Type genericType;
+public class ResourceMethodReturn{
+	private final JavaType type;
 
 	/**
 	 * Constructor to create the return type information of a resource method.
 	 * @param theType the class that represents the type.
-	 * @param theGenericType the generic information, if needed
 	 */
-	public ResourceMethodReturn( Class<?> theType, Type theGenericType ) {
+	public ResourceMethodReturn( JavaType theType ) {
 		Preconditions.checkNotNull( theType, "need a type for the reutrn type" );
 		type = theType;
-		genericType = theGenericType;
 	}
 	
 	/**
 	 * The type the resource method returns.
 	 * @return the type the resource method returns
 	 */
-	public Class<?> getType( ) {
+	public JavaType getType( ) {
 		return type;
-	}
-	
-	/**
-	 * The generic type information, if suitable, of the return type of the resource method.
-	 * @return the generic type information
-	 */
-	public Type getGenericType( ) {
-		return genericType;
 	}
 }

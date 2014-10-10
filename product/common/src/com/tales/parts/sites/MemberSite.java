@@ -15,8 +15,6 @@
 // ***************************************************************************
 package com.tales.parts.sites;
 
-import java.lang.reflect.Type;
-
 /**
  * {@link DataSite} extension that targets members of a class.
  * @author jmolnar
@@ -27,14 +25,7 @@ public interface MemberSite extends DataSite {
 	 * The class that contains the member this site targets
 	 * @return the class containing the member
 	 */
-	Class<?> getContainingType( );
-
-	/**
-	 * The generic type of the member data site, which is helpful
-	 * for discovering generic parameters used by the data site.
-	 * @return the generic type of the member site.
-	 */
-	Type getGenericType( );
+	Class<?> getContainingType( ); // TODO: I do not like this being a class
 	
 	/**
 	 * The name of the member this site targets.
