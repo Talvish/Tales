@@ -51,8 +51,20 @@ public final class TypeUtility {
 	 */
 	public static Type extractComponentType( Type theArrayType ) {
 		Preconditions.checkNotNull( theArrayType );
-		Preconditions.checkArgument( theArrayType instanceof GenericArrayType, "the type to get the array component type of is not an array" );
+		Type componentType = null;
 		
-		return ( ( GenericArrayType )theArrayType ).getGenericComponentType( );
+		if( theArrayType instanceof GenericArrayType ) {
+			componentType = ( ( GenericArrayType )theArrayType ).getGenericComponentType( );
+		} else if( theArrayType instanceof Class<?> ) {
+			Class<?> arrayClass = ( Class<?> )theArrayType;
+			if( arrayClass.isArray( ) && arrayClass.getComponentType() != null ) {
+				componentType = arrayClass.getComponentType();
+			} else {
+				throw new IllegalArgumentException( String.format( "Class '%s' is not an array or is missing the component type.", theArrayType.getTypeName() ) );
+			}			
+		} else {
+			throw new IllegalArgumentException( String.format( "Type '%s' is not an array so a component type cannot be extracted.", theArrayType.getTypeName() ) );
+		}
+		return componentType;
 	}
 }

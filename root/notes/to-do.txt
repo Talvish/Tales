@@ -50,6 +50,14 @@ Serialization
 ------------------------------------------------
 - updated JsonTranslationFacility to handle generics better so technically you could ask for a List<a> different than a List<b> 
   though would need to watch the generic of generic scenario
+  
+Generics
+------------------------------------------------
+- Right now the contract cannot have a generic whose type parameter is also a generic because Java doesnt' have the type 
+  information at the Type level on the field BUT it does seem to have it at the type level of the declaring class
+  and therefore, if the types align, could potentially be used (stored on the type itself, or passed in to figure it out) 
+  it could also be that the type information is hidden in the superclass according to 
+  (http://www.artima.com/weblogs/viewpost.jsp?thread=208860) .. though I may need to be reading it more closely
 
 Contracts
 ------------------------------------------------
