@@ -353,10 +353,17 @@ public final class JsonTranslationFacility implements Facility {
 				throw new IllegalStateException( String.format( "Type '%s' is using the name '%s' that does not conform to validator '%s'.", reflectedType.getType().getName(), reflectedType.getName( ), typeNameValidator.getClass().getSimpleName() ) );
 			}
 
-			JsonTypeMap typeMap = new JsonTypeMap( reflectedType );
 			JsonTypeReference jsonTypeReference;
 			List<JsonTypeReference> keyTypeReferences;
 			List<JsonTypeReference> valueTypeReferences;
+			
+			// we save what we created for later use and we
+			// save it early since there is a distinct chance
+			// things will loop forever otherwise, and while
+			// it isn't done, that shouldn't be an issue
+			JsonTypeMap typeMap = new JsonTypeMap( reflectedType );
+			typeMaps.put( theType, typeMap );
+
 		
 			Collection<FieldDescriptor<?,?>> fields = this.typeSource.getSerializedFields( reflectedType );
 			ArrayList<JsonMemberMap> members = new ArrayList<JsonMemberMap>( fields.size() );
@@ -474,10 +481,8 @@ public final class JsonTranslationFacility implements Facility {
 	                members.add( new JsonMemberMap( field, new TranslatedDataSite( field.getSite(), jsonTypeReference.getToJsonTranslator( ), jsonTypeReference.getFromJsonTranslator( ) ), typeMap ) );
 				}
 			}
-			// save the members
+			// save the members now that we have them all
 			typeMap.setMembers( members );
-			// and save what we created for later use
-			typeMaps.put( theType, typeMap );
 			
 			return typeMap;
 		}
