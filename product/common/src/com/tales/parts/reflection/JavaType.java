@@ -25,7 +25,7 @@ public class JavaType {
     	
     	type = theType;
     	underlyingClass = TypeUtility.extractClass( theType );    	
-    	Preconditions.checkNotNull( underlyingClass, "Attempting to get a reference to a type, '%s' (of type '%s'), whose underlying type could not be retrieved, likely due to a generic type having a type parameter that is also a generic type.", theType.getTypeName(), theType.getClass().getSimpleName( ) );
+    	Preconditions.checkNotNull( underlyingClass, "Attempting to get a reference to a type, '%s' (of type '%s'), whose underlying type could not be retrieved, likely due to a generic type having a type parameter that is also a generic type, or an array using a generic type parameter.", theType.getTypeName(), theType.getClass().getSimpleName( ) );
     	if( underlyingClass.getGenericSuperclass( ) != null ) {
     		supertype = new JavaType( underlyingClass.getGenericSuperclass( ) );
     	} else {

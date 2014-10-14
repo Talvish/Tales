@@ -132,18 +132,18 @@ public class DataContractManager implements Facility {
      * Analyzes the field to recursively go through the field type
      * looking at element types if a collection, key/value types
      * if a map and the fields if a complex type.
-     * @param theContainingType the type the field is a member of
+     * @param theDeclaringType the type the field is a member of
      * @param theField the field we are to look at 
      * @return returns the generated data contract field, or null if the field isn't suitable
      */
-	private DataContractField generateField( DataContractType theContainingType, Field theField ) {
+	private DataContractField generateField( DataContractType theDeclaringType, Field theField ) {
 		DataContractField dataContractField = null;
         DataMember dataMemberAnnotation = theField.getAnnotation( DataMember.class );
         // if we have serialization declaration we will save it
         if( dataMemberAnnotation != null ) {
 			Class<?> fieldClass = theField.getType();
 			Type fieldGenericType = theField.getGenericType();
-			FieldSite fieldSite = new FieldSite( theField );
+			FieldSite fieldSite = new FieldSite( theDeclaringType.getType( ).getType(), theField ); // we use this constructor to ensure we get fields that use type parameters
 	
 	        // make sure the field is accessible
 	        theField.setAccessible( true ); 
@@ -173,7 +173,7 @@ public class DataContractManager implements Facility {
 	            	valueTypes.add( new ValueType<>( declaredValueType, _generateType( declaredValueType ) ) );
 	            }
 	            
-	            dataContractField = new DataContractField( fieldName, keyTypes, valueTypes, fieldSite, theContainingType, theContainingType ); 
+	            dataContractField = new DataContractField( fieldName, keyTypes, valueTypes, fieldSite, theDeclaringType, theDeclaringType ); 
 			
 			} else if( ( Collection.class.isAssignableFrom( fieldClass ) && ( fieldGenericType instanceof ParameterizedType ) ) ) {
 				// if we have a collection (e.g list, set, collection itself, etc)
@@ -185,7 +185,7 @@ public class DataContractManager implements Facility {
 	            	valueTypes.add( new ValueType<>( declaredValueType, _generateType( declaredValueType ) ) );
 	            }
 	            // now create the field object we need
-	            dataContractField = new DataContractField( fieldName, FieldDescriptor.FieldValueType.COLLECTION, valueTypes, fieldSite, theContainingType, theContainingType ); 
+	            dataContractField = new DataContractField( fieldName, FieldDescriptor.FieldValueType.COLLECTION, valueTypes, fieldSite, theDeclaringType, theDeclaringType ); 
 
 	    	} else if( fieldClass.isArray( ) ) {
 	    		// if we have an array we basically do the same thing as a collection which means
@@ -197,22 +197,30 @@ public class DataContractManager implements Facility {
 	            	valueTypes.add( new ValueType<>( declaredValueType, generateType( declaredValueType ) ) );
 	            }
 	            // now create the field object we need
-	            dataContractField = new DataContractField( fieldName, FieldDescriptor.FieldValueType.COLLECTION, valueTypes, fieldSite, theContainingType, theContainingType ); 
+	            dataContractField = new DataContractField( fieldName, FieldDescriptor.FieldValueType.COLLECTION, valueTypes, fieldSite, theDeclaringType, theDeclaringType ); 
 
 	    	} else {
-	    		JavaType fieldType = new JavaType( fieldGenericType );
 	    		// we have either a simple type, primitive type, enum or non-collection complex type
-	    		List<ValueType<DataContractType,DataContractField>> valueTypes = extractValueTypes(theField, fieldType, dataMemberAnnotation.valueTypes() );
+	    		List<ValueType<DataContractType,DataContractField>> valueTypes = extractValueTypes(theField, fieldSite.getType(), dataMemberAnnotation.valueTypes() );
 	    		// if there was nothing on the attribute, then we use the type of field itself
 	            if( valueTypes.size() == 0 ) {
-	            	valueTypes.add( new ValueType<>( fieldType, _generateType( fieldType ) ) );
+	            	valueTypes.add( new ValueType<>( fieldSite.getType(), _generateType( fieldSite.getType() ) ) );
 	            }
 	            // now create the field object we need
-	            dataContractField = new DataContractField( fieldName, FieldDescriptor.FieldValueType.OBJECT, valueTypes, fieldSite, theContainingType, theContainingType ); 
+	            dataContractField = new DataContractField( fieldName, FieldDescriptor.FieldValueType.OBJECT, valueTypes, fieldSite, theDeclaringType, theDeclaringType ); 
 	    	}
     	}
         return dataContractField;
 	}
+	
+	/**
+	 * Helper method that ensures that each of the desired types that are request can be 
+	 * assigned to the type used by the field and then setups up the set of value types
+	 * @param theField the field in question
+	 * @param theDeclaredType the Type of the field
+	 * @param theDesiredTypes the set of types request by the developer for use as polymorphic data
+	 * @return the list of value types that can be used on the field
+	 */
 	private List<ValueType<DataContractType,DataContractField>> extractValueTypes( Field theField, JavaType theDeclaredType, Class<?>[] theDesiredTypes ) {
         // we grab the value types field from the annotation,
         // for each type it lists, we confirm that it can be held

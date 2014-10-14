@@ -58,6 +58,14 @@ Generics
   and therefore, if the types align, could potentially be used (stored on the type itself, or passed in to figure it out) 
   it could also be that the type information is hidden in the superclass according to 
   (http://www.artima.com/weblogs/viewpost.jsp?thread=208860) .. though I may need to be reading it more closely
+- don't support resources that are defined using generics ... the method parameters and return will
+  be based on the class definition, and I don't have any of that (may want to be explicit)
+- currently not trying to solve when the field in question has multiple type parameters in part because I'm not sure 
+  of a way to create a ParameterizedType that can return all the types needed (may have to look at the article since
+  it implied it isn't possible)
+- currently not trying to sovle when the field in question is a generic array, but this may be fairly simple (may be able
+  loop on itself) 
+  
 
 Contracts
 ------------------------------------------------

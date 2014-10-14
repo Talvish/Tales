@@ -1,4 +1,4 @@
-Tales Overview
+﻿Tales Overview
 ==============
 
 Tales is an extensible service framework built in Java that provides a) contract creation with native support for HTTP, similar to JAX-RS but with strong versioning, b) automatic status/monitoring support, and c) an object mapping storage system with features that take advantage of the column-oriented nature of HBase.
@@ -33,5 +33,3 @@ A bit of history
 ----------------
 
 I started building this framework in early 2011 because a) I hadn’t used Java in nearly 10 years and wanted to re-familiarize myself and b) when I looked at other frameworks I found they were lacking in some areas I felt strongly about (e.g. versioned contracts). 
-
-While most of what you see here was written in 2011 and 2012, I continue to make updates.

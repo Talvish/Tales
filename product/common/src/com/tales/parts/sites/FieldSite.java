@@ -16,10 +16,11 @@
 package com.tales.parts.sites;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Type;
 
 import com.google.common.base.Preconditions;
-
 import com.tales.parts.reflection.JavaType;
+import com.tales.parts.reflection.TypeUtility;
 
 /**
  * This is a simple {@link DataSite} that abstracts getting 
@@ -42,6 +43,27 @@ public class FieldSite implements MemberSite {
 		// make sure, if private, we can access it properly
 		field.setAccessible( true );
 		type = new JavaType( theField.getGenericType() );
+	}
+	
+	/**
+	 * Constructs the data site based on the {@code Field} reflection instance and a
+	 * parent with more detail than the Field.getDeclaringClass() gives. 
+	 * @param theDeclaringType the class the declared the field
+	 * @param theField the field to create a site for
+	 */
+	public FieldSite( Type theDeclaringType, Field theField ) {
+		Preconditions.checkNotNull( theField, "need a field object" );
+		Preconditions.checkArgument( 
+				theField.getDeclaringClass().equals( TypeUtility.extractClass( theDeclaringType ) ), 
+				"Type '%s' is being used as declaring class for field '%s.%s'.", 
+				theDeclaringType.getTypeName(), 
+				theField.getDeclaringClass().getName(), 
+				theField.getName() );
+		
+		field = theField;
+		// make sure, if private, we can access it properly
+		field.setAccessible( true );
+		type = new JavaType( TypeUtility.determineFieldType( theDeclaringType, theField ) );
 	}
 	
 	/**
