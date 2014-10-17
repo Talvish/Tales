@@ -130,7 +130,7 @@ class HttpServletServer extends Server {
 		// ideally this is called consistently, but can depend on the default servlet handling
 		if( !baseRequest.isHandled() ) {
 			ResponseHelper.writeFailure(requestWrapper, response, Status.CALLER_NOT_FOUND, FailureSubcodes.UNKNOWN_REQUEST, String.format( "Path '%s' has not been assigned a context.", request.getRequestURL().toString( ) ), null );
-			this.boundInterface.getStatus().recordBadUrl();
+			this.boundInterface.recordBadUrl();;
 			baseRequest.setHandled( true );
 		}
 	}

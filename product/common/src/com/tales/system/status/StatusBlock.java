@@ -18,10 +18,10 @@ package com.tales.system.status;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-
 import com.tales.parts.naming.LowerCaseEntityNameValidator;
 import com.tales.parts.naming.NameManager;
 import com.tales.parts.naming.NameValidator;
@@ -35,7 +35,8 @@ import com.tales.parts.naming.NameValidator;
  */
 public class StatusBlock {
 	public static final String STATUS_BLOCK_NAME_VALIDATOR = "status_block_name";
-	
+	public static final Comparator<StatusBlock> COMPARATOR =  ( StatusBlock blockOne, StatusBlock blockTwo ) -> blockOne.name.compareTo(blockTwo.name );	
+
 	static {
 		if( !NameManager.hasValidator( StatusBlock.STATUS_BLOCK_NAME_VALIDATOR ) ) {
 			NameManager.setValidator( StatusBlock.STATUS_BLOCK_NAME_VALIDATOR, new LowerCaseEntityNameValidator() );
@@ -58,7 +59,9 @@ public class StatusBlock {
 		Preconditions.checkNotNull( theStatusValues, "the status block '%s' needs values", theName );
 		
 		name = theName;
-		statusValues = Collections.unmodifiableCollection( new ArrayList<StatusValue>( theStatusValues ) );
+		ArrayList<StatusValue> values = new ArrayList<StatusValue>( theStatusValues ); // we copy, so we are beholden to whatever was sent in
+		Collections.sort( values, StatusValue.COMPARATOR );  // we sort, to make display better
+		statusValues = Collections.unmodifiableCollection( values ); // we make unmodifiable so that no one can lay with it
 	}
 	
 	/**

@@ -17,6 +17,7 @@ package com.tales.system.status;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Comparator;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -35,6 +36,7 @@ import com.tales.parts.naming.NameValidator;
  */
 public class StatusValue {
 	public static final String STATUS_VALUE_NAME_VALIDATOR = "status_value_name";
+	public static final Comparator<StatusValue> COMPARATOR =  ( StatusValue valueOne, StatusValue valueTwo ) -> valueOne.name.compareTo( valueTwo.name );	
 	
 	static {
 		if( !NameManager.hasValidator( StatusValue.STATUS_VALUE_NAME_VALIDATOR ) ) {

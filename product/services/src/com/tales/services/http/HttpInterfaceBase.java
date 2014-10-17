@@ -36,53 +36,38 @@ import org.eclipse.jetty.server.SslConnectionFactory;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletMapping;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.joda.time.Period;
-import org.joda.time.PeriodType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+
 import com.tales.communication.HttpEndpoint;
-import com.tales.contracts.services.ServiceContract;
-import com.tales.contracts.services.ContractManager;
 import com.tales.contracts.services.http.HttpContract;
 import com.tales.contracts.services.http.HttpServletContract;
 import com.tales.serialization.Readability;
-import com.tales.services.Interface;
+import com.tales.services.InterfaceBase;
 import com.tales.services.Service;
 import com.tales.services.ConfigurationConstants;
 import com.tales.services.OperationContext.Details;
 import com.tales.services.http.servlets.DefaultServlet;
 import com.tales.system.ExecutionLifecycleException;
-import com.tales.system.ExecutionLifecycleListener;
-import com.tales.system.ExecutionLifecycleListeners;
-import com.tales.system.ExecutionLifecycleState;
 import com.tales.system.configuration.ConfigurationException;
 import com.tales.system.status.MonitorableStatusValue;
 import com.tales.system.status.RatedLong;
-import com.tales.system.status.StatusBlock;
-import com.tales.system.status.StatusManager;
 
 /**
  * This class represents a host/port that servlets can be bound to. 
  * @author jmolnar
  *
  */
-public abstract class HttpInterfaceBase implements Interface {
+public abstract class HttpInterfaceBase extends InterfaceBase {
 	/**
 	 * Stored information regarding the status of the interface.
 	 * @author jmolnar
 	 *
 	 */
 	public class Status {
-		private DateTime startTime				= null;
-		private DateTime stopTime				= null;
-		private DateTime suspendTime			= null;
-		private AtomicLong suspends				= new AtomicLong( 0 );
-		private RatedLong suspendRate			= new RatedLong( );
 		private AtomicLong badUrls				= new AtomicLong( 0 );
 		private RatedLong badUrlRate			= new RatedLong( );
 		
@@ -93,123 +78,11 @@ public abstract class HttpInterfaceBase implements Interface {
 		}
 
 		/**
-		 * Records the interface starting.
-		 */
-		public void recordStart( ) {
-			startTime = new DateTime( DateTimeZone.UTC );
-			stopTime = null;
-		}
-
-		/**
-		 * Records the interface stopping.
-		 */
-		public void recordStop( ) {
-			Preconditions.checkState( startTime != null, "Cannot record a start when a stop hasn't happend." );
-			stopTime = new DateTime( DateTimeZone.UTC );
-		}
-		
-		/**
-		 * Records the interface being suspended.
-		 */
-		public void recordSuspended( ) {
-			Preconditions.checkState( suspendTime == null, "Cannot record a suspend when a suspend has already happened." );
-			suspendTime = new DateTime( DateTimeZone.UTC );
-			suspends.incrementAndGet();
-			suspendRate.increment();
-		}
-		
-		/**
-		 * Records the interface resuming.
-		 */
-		public void recordResumed( ) {
-			Preconditions.checkState( suspendTime != null, "Cannot record a suspend when a suspend hasn't already happened." );
-			suspendTime = null;
-		}
-		
-		/**
 		 * Returns that a bad URL has occurred.
 		 */
 		public void recordBadUrl( ) {
 			badUrls.incrementAndGet();
 			badUrlRate.increment();
-		}
-
-		/**
-		 * Returns the current execution state of the interface.
-		 * @return the execution state
-		 */
-		@MonitorableStatusValue( name = "state", description = "The current execution state of the interface." )
-		public ExecutionLifecycleState getState( ) {
-			return HttpInterfaceBase.this.lifecycleState;
-		}
-	
-		/**
-		 * Returns the start time that was recorded.
-		 * @return the start time
-		 */
-		@MonitorableStatusValue( name = "start_running_datetime", description = "The date and time the interface started running." )
-		public DateTime getStartTime( ) {
-			return this.startTime;
-		}
-		
-		/**
-		 * Calculates the length of the time the interface has been running.
-		 * @return the running time, or Period. ZERO if not currently running
-		 */
-		@MonitorableStatusValue( name = "elapsed_running_time", description = "The amount of time the interface has been running." )
-		public Period calculateRunningTime( ) {
-			if( stopTime == null  ) {
-				return new Period( startTime, new DateTime( DateTimeZone.UTC ), PeriodType.standard( ) );
-			} else {
-				return Period.ZERO;
-			}
-		}
-		/**
-		 * Returns the stop time that was recorded.
-		 * @return the stop time
-		 */
-		public DateTime getStopTime( ) {
-			return this.stopTime;
-		}
-		
-		/**
-		 * Returns the time the interface was suspended, if currently suspended.
-		 * @return the suspended time, or null if not currently suspended
-		 */
-		@MonitorableStatusValue( name = "start_suspend_datetime", description = "The date and time the interface was suspend." )
-		public DateTime getSuspendTime( ) {
-			return this.suspendTime;
-		}
-		
-		/**
-		 * Calculates the length of the time the interface has been suspended.
-		 * @return the length of time suspended, or Period.ZERO if not suspended.
-		 */
-		@MonitorableStatusValue( name = "elapsed_suspend_time", description = "The amount of time the interface has been suspended." )
-		public Period calculateSuspendTime( ) {
-			if( suspendTime != null  ) {
-				return new Period( suspendTime, new DateTime( DateTimeZone.UTC ), PeriodType.standard( ) );
-			} else {
-				return Period.ZERO;
-			}
-		}
-
-		/**
-		 * Returns the number of times the interface has been suspended.
-		 * @return the total number of suspends
-		 */
-		@MonitorableStatusValue( name = "suspends", description = "The total number of times the interface has been suspended since the interface was started." )
-		public long getSuspends( ) {
-			return this.suspends.get( );
-		}
-
-		/**
-		 * Returns the rate of suspends on the interface.
-		 * @return the suspend ate
-		 */
-		@MonitorableStatusValue( name = "suspend_rate", description = "The rate, in seconds, of the number of suspends as measured over 10 seconds." )
-		public double getSuspendRate( ) {
-			return this.suspendRate.calculateRate();
 		}
 
 		/**
@@ -235,19 +108,12 @@ public abstract class HttpInterfaceBase implements Interface {
 
 	private final SslContextFactory sslFactory;
 	
-	private final Service service;
-	private final String name;
 	private final Collection<HttpEndpoint> endpoints; 
 	private final HttpServletServer server;
 	private final ServletContextHandler servletContext;
-	private final ContractManager contractManager;
 
 	private final Status status = new Status( );
-	private final StatusManager statusManager = new StatusManager( );
 	
-	private ExecutionLifecycleListeners  listeners 	= new ExecutionLifecycleListeners( );
-	private ExecutionLifecycleState lifecycleState	= ExecutionLifecycleState.CREATED;
-
 	// TODO: add a constructor that takes the parameters manually instead of loaded from the configuration
 	
 	/**
@@ -256,22 +122,19 @@ public abstract class HttpInterfaceBase implements Interface {
 	 * @param theService the service the interface will be bound to
 	 */
 	public HttpInterfaceBase( String theName, Service theService ) {
-		Preconditions.checkArgument( !Strings.isNullOrEmpty( theName ), "must have a name" );
-		Preconditions.checkNotNull( theService, "need a service" );
-		
-		service = theService;
-		name = theName;
+		super( theName, theService );
+
 		server = new HttpServletServer( this );
 		
 		// so we need to see if we have SSL settings for this interface
 		String sslKeyStoreConfigName = String.format( ConfigurationConstants.HTTP_INTERFACE_SSL_KEY_STORE, theName );
 		String sslCertAliasConfigName = String.format( ConfigurationConstants.HTTP_INTERFACE_SSL_CERT_ALIAS, theName );
 		// if we have a key store defined on the  service and if so create the ssl factory
-		if( service.getConfigurationManager().contains( sslKeyStoreConfigName ) ) {
-			String keyStoreName = service.getConfigurationManager().getStringValue( sslKeyStoreConfigName ) ;
-			String certAlias = service.getConfigurationManager().getStringValue( sslCertAliasConfigName, "" );
+		if( getService( ).getConfigurationManager().contains( sslKeyStoreConfigName ) ) {
+			String keyStoreName = getService( ).getConfigurationManager().getStringValue( sslKeyStoreConfigName ) ;
+			String certAlias = getService( ).getConfigurationManager().getStringValue( sslCertAliasConfigName, "" );
 			try {
-				KeyStore keyStore = service.getKeyStoreManager().getKeyStore( keyStoreName );
+				KeyStore keyStore = getService( ).getKeyStoreManager().getKeyStore( keyStoreName );
 				
 				if( keyStore == null ) {
 					throw new ConfigurationException( String.format( "Interface '%s' is attempting to use a non-existent key store called '%s'.", theName, keyStoreName ) );
@@ -290,7 +153,7 @@ public abstract class HttpInterfaceBase implements Interface {
 					}
 					// oddly we need to grab the key again, even though the store is open
 					// I'm not very happy with having to do this, but Jetty needs the password again
-					sslFactory.setKeyStorePassword( service.getConfigurationManager().getStringValue( String.format( ConfigurationConstants.SECURITY_KEY_STORE_PASSWORD_FORMAT, keyStoreName ) ) );
+					sslFactory.setKeyStorePassword( getService( ).getConfigurationManager().getStringValue( String.format( ConfigurationConstants.SECURITY_KEY_STORE_PASSWORD_FORMAT, keyStoreName ) ) );
 				}
 			} catch( KeyStoreException e ) {
 				throw new IllegalStateException( String.format( "Interface '%s' is using an invalid key store called '%s'.", theName, keyStoreName ) );
@@ -303,22 +166,22 @@ public abstract class HttpInterfaceBase implements Interface {
 
     	// load up the the connector configuration
     	String connectorName = String.format( ConfigurationConstants.HTTP_INTERFACE_CONNECTOR, this.getName( ) );
-		if( service.getConfigurationManager().contains( connectorName ) ) {
-	    	ConnectorConfigurationManager connectorConfigurationManager = this.service.getFacility( ConnectorConfigurationManager.class );
-	    	String connectorConfigurationName = service.getConfigurationManager().getStringValue( connectorName );
+		if( getService( ).getConfigurationManager().contains( connectorName ) ) {
+	    	ConnectorConfigurationManager connectorConfigurationManager = this.getService( ).getFacility( ConnectorConfigurationManager.class );
+	    	String connectorConfigurationName = getService( ).getConfigurationManager().getStringValue( connectorName );
 		    connectorConfiguration = connectorConfigurationManager.getConfiguration( connectorConfigurationName );
 	    	if( connectorConfiguration == null ) {
-	    		throw new IllegalArgumentException( String.format( "Could not find connector configuration '%s' for interface '%s'.", connectorConfigurationName, this.name ) );
+	    		throw new IllegalArgumentException( String.format( "Could not find connector configuration '%s' for interface '%s'.", connectorConfigurationName, this.getName( ) ) );
 	    	} else {
-	    		logger.info( "Interface '{}' is using connector configuration '{}'.", this.name, connectorConfigurationName );
+	    		logger.info( "Interface '{}' is using connector configuration '{}'.", this.getName( ), connectorConfigurationName );
 	    	}
 		} else {
 			connectorConfiguration = new ConnectorConfiguration( );
-    		logger.info( "Interface '{}' is using default connector configuration.", this.name );
+    		logger.info( "Interface '{}' is using default connector configuration.", this.getName( ) );
 		}
 
 		// load up the endpoints from the configuration and set them on the service
-		List<String> endPoints = service.getConfigurationManager( ).getListValue( String.format( ConfigurationConstants.HTTP_INTERFACE_ENDPOINTS, theName), String.class );
+		List<String> endPoints = getService( ).getConfigurationManager( ).getListValue( String.format( ConfigurationConstants.HTTP_INTERFACE_ENDPOINTS, theName), String.class );
 		Preconditions.checkState( endPoints != null && endPoints.size() > 0, String.format( "HttpInterface '%s' does not have any endpoints defined.",  theName ) );
 
 		int count = 0;
@@ -329,7 +192,7 @@ public abstract class HttpInterfaceBase implements Interface {
 			endpoint = new HttpEndpoint( stringEndpoint, false );
 			if( endpoint.getScheme().equals( "https") ) {
 				if( sslFactory == null ) {
-					throw new IllegalArgumentException( String.format( "The http interface '%s' is attempting to use SSL on endpoint '%s', but SSL is not configured for this interface.", this.name, endpoint.toString( ) ) );
+					throw new IllegalArgumentException( String.format( "The http interface '%s' is attempting to use SSL on endpoint '%s', but SSL is not configured for this interface.", this.getName( ), endpoint.toString( ) ) );
 				}
 				addSecureConnector( String.format( "%s%03d", theName, count ), endpoint, connectorConfiguration  );
 			} else {
@@ -347,29 +210,18 @@ public abstract class HttpInterfaceBase implements Interface {
 		if( connectorConfiguration != null && connectorConfiguration.getMaxFormContentSize() != null ) {
 			servletContext.setMaxFormContentSize( connectorConfiguration.getMaxFormContentSize( ) );
 			server.setAttribute("org.eclipse.jetty.server.Request.maxFormContentSize", connectorConfiguration.getMaxFormContentSize());
-			logger.info( "Interface '{}' is set to use the max form content size of '{}'.", this.name, servletContext.getMaxFormContentSize() );
+			logger.info( "Interface '{}' is set to use the max form content size of '{}'.", this.getName( ), servletContext.getMaxFormContentSize() );
 			
 		} else {
-    		logger.info( "Interface '{}' is set to use the default max form content size of '{}'.", this.name, servletContext.getMaxFormContentSize( ) );
+    		logger.info( "Interface '{}' is set to use the default max form content size of '{}'.", this.getName( ), servletContext.getMaxFormContentSize( ) );
 		}
 		
 		// save these for servlets to access
 		servletContext.setAttribute( AttributeConstants.INTERFACE_SERVLET_CONTEXT, this );
-		servletContext.setAttribute( AttributeConstants.SERVICE_SERVLET_CONTEXT, service );
+		servletContext.setAttribute( AttributeConstants.SERVICE_SERVLET_CONTEXT, getService( ) );
 
-		// make sure we have a contract manager
-		contractManager = new ContractManager();
-		
 		// get the status blocks setup
-		statusManager.register( "http_interface", status );
-	}
-	
-	/**
-	 * Gets the name given to the interface.
-	 * @return the name of the interface
-	 */
-	public final String getName( ) {
-		return name;
+		getStatusManager().register( "interface", status );
 	}
 	
 	/**
@@ -389,52 +241,19 @@ public abstract class HttpInterfaceBase implements Interface {
 	}
 	
 	/**
-	 * Returns the contract manager used by the interface.
-	 * @return the underlying contract manager
-	 */
-	protected final ContractManager getContractManager( ) {
-		return this.contractManager;
-	}
-	
-	/**
-	 * Returns the service this interface is part of.
-	 * @return the service this interface is part of.
-	 */
-	public final Service getService( ) {
-		return this.service;
-	}
-	
-	/**
 	 * Returns the underlying Jetty server managing the servlets
 	 * @return the underlying Jetty server
 	 */
 	protected final HttpServletServer getServer( ) {
 		return this.server;
 	}
-	/**
-	 * Returns the status information for the interface.
-	 * @return
-	 */
-	public final Status getStatus( ) {
-		return this.status;
-	}
 
-	
-	
 	/**
-	 * Returns the set of status blocks for the interface
-	 * @return the interface status blocks
+	 * Method that can be called externally to indicate a bad url 
+	 * was attempted on the interface.
 	 */
-	public final Collection<StatusBlock> getStatusBlocks( ) {
-		return this.statusManager.getStatusBlocks();
-	}
-	
-	/**
-	 * Returns the contracts bound to the interface.
-	 * @return the contracts bound to the interface
-	 */
-	public final Collection<ServiceContract> getBoundContracts( ) {
-		return this.contractManager.getContracts();
+	public final void recordBadUrl( ) {
+		this.status.recordBadUrl();
 	}
 	
 	/**
@@ -454,45 +273,18 @@ public abstract class HttpInterfaceBase implements Interface {
 	}
 
 	/**
-	 * Adds an object interested in getting execution state updates.
-	 * @param theListener the listener to add
-	 */
-	public void addListener( ExecutionLifecycleListener theListener ) {
-		listeners.addListener( theListener );
-	}
-	
-	/**
-	 * Removes an object that was once interested in getting execution state updates.
-	 * @param theListener the listener to remove
-	 */
-	public void removeListener( ExecutionLifecycleListener theListener ) {
-		listeners.removeListener( theListener );
-	}
-
-	
-	/**
-	 * Returns the current lifecycle state of the interface.
-	 * @return the current lifecycle state
-	 */
-	public ExecutionLifecycleState getState( ) {
-		return this.lifecycleState;
-	}
-	
-	/**
 	 * Starts the interface.
 	 * @throws Exception
 	 */
-	public void start( ) {
-		Preconditions.checkState( this.lifecycleState == ExecutionLifecycleState.CREATED, "Cannot start an interface when the status is '%s'.", this.lifecycleState );
-		this.lifecycleState = ExecutionLifecycleState.STARTING;
-		logger.info( "Starting interface '{}' on {}.", this.name, endpointListHelper( ) );
-		this.listeners.onStarting( this, this.lifecycleState );
+	@Override
+	protected void onStart( ) {
+		logger.info( "Interface '{}' starting on {}.", this.getName( ), endpointListHelper( ) );
 		try {
 			// we see if we have a servlet covering the 'defaults' (items not explicitly mapped out)
 			ServletMapping mapping = this.getServletContext().getServletHandler().getServletMapping( "/" ); 
 			if( mapping == null ) {
 				// if we dont' have a default handler, we set one up to handle the 404
-		        HttpContract defaultContract = new HttpServletContract( this.name + "_default", "Default, error throwing, servlet.", new String[] { "20130201" }, new DefaultServlet(), "/" );
+		        HttpContract defaultContract = new HttpServletContract( this.getName( ) + "_default", "Default, error throwing, servlet.", new String[] { "20130201" }, new DefaultServlet(), "/" );
 		    	this.getContractManager( ).register( defaultContract );
 				ContractServletHolder defaultHolder = new LaxContractServletHolder( defaultContract, this );
 				this.getServletContext().addServlet( defaultHolder, "/" );
@@ -505,31 +297,21 @@ public abstract class HttpInterfaceBase implements Interface {
 		} catch( Exception e ) {
 			throw new ExecutionLifecycleException( "Unable to start the underlying server.", e );
 		}
-		this.lifecycleState = ExecutionLifecycleState.STARTED;
-		status.recordStart();
-		this.listeners.onStarted( this, this.lifecycleState );
-		this.lifecycleState = ExecutionLifecycleState.RUNNING;
-		this.listeners.onRunning( this, this.lifecycleState );
 	}
 	
 	/**
 	 * Stops the interface.
 	 * @throws Exception
 	 */
-	public void stop( ) {
-		Preconditions.checkState( this.lifecycleState == ExecutionLifecycleState.STARTED || this.lifecycleState == ExecutionLifecycleState.RUNNING || this.lifecycleState == ExecutionLifecycleState.SUSPENDED, "Cannot stop an interface when the status is '%s'.", this.lifecycleState );
-		this.lifecycleState = ExecutionLifecycleState.STOPPING;
-		logger.info( "Stopping interface '{}' on {}.", this.name, endpointListHelper( ) );
-		this.listeners.onStopping( this, this.lifecycleState );
+	@Override
+	protected void onStop( ) {
+		logger.info( "Interface '{}' stopping on {}.", this.getName( ), endpointListHelper( ) );
 		try {
 			server.stop( );
 			server.join( ); // wait for it to stop
 		} catch( Exception e ) {
 			throw new ExecutionLifecycleException( "Unable to stop or join the underlying server.", e );
 		}
-		this.lifecycleState = ExecutionLifecycleState.STOPPED;
-		status.recordStop();
-		this.listeners.onStopped( this, this.lifecycleState );
 	}
 	
 	/**
@@ -552,61 +334,6 @@ public abstract class HttpInterfaceBase implements Interface {
 		return listBuilder.toString( );
 	}
 	
-	/**
-	 * This is call to suspend an interface, which means requests to
-	 * contracts on this interface will return a Failure.LOCAL_UNAVAILABLE.
-	 * This will not pause any operations in progress.
-	 */
-	public void suspend( ) {
-		suspend( null );
-	}
-	
-	/**
-	 * This is call to suspend an interface, which means requests to
-	 * contracts on this interface will return a Failure.LOCAL_UNAVAILABLE.
-	 * This will not pause any operations in progress.
-	 * The parameter it takes is the length of time we will report that
-	 * the suspend will be running for. This does not mean the suspend
-	 * will automatically resume, it is just a notification to callers.
-	 * @param theLength the length,in seconds, of how long the delay is expected
-	 */
-	private void suspend( Integer theLength ) {
-		Preconditions.checkState( canSuspend( ), "Cannot suspend an interface when the status is '%s'.", this.lifecycleState );
-		Preconditions.checkArgument( theLength == null || theLength >= 0, "The delay length cannot be negative." );
-		this.lifecycleState = ExecutionLifecycleState.SUSPENDED;
-		//this.suspendLength =  theLength;
-		status.recordSuspended();
-		this.listeners.onSuspended( this, this.lifecycleState );
-	}
-	
-	/**
-	 * This is called to resume a previously suspended interface.
-	 */
-	public void resume( ) {
-		Preconditions.checkState( canResume( ), "Cannot resume an interface when the status is '%s'.", this.lifecycleState );
-		this.lifecycleState = ExecutionLifecycleState.RUNNING;
-		status.recordResumed();
-		this.listeners.onRunning( this, this.lifecycleState );
-	}
-	
-	/**
-	 * Helper method that indicates if the interface is in a state that will
-	 * allow suspending.
-	 * @return return true if suspendable, false otherwise
-	 */
-	public boolean canSuspend( ) {
-		return this.lifecycleState == ExecutionLifecycleState.RUNNING;
-	}
-	
-	/**
-	 * Helper method that indicates if the interface is suspended so that
-	 * it can be resumed.
-	 * @return return true if resumable, false otherwise
-	 */
-	public boolean canResume( ) {
-		return this.lifecycleState == ExecutionLifecycleState.SUSPENDED;
-	}
-
 	/**
 	 * Binds a filter into the interface along the specified path.
 	 * @param theFilter the filter being bound

@@ -35,6 +35,12 @@ public interface Interface {
 	String getName( );
 	
 	/**
+	 * Gets the service the interface is bound to.
+	 * @return the interface the service is bound to
+	 */
+	Service getService( );
+	
+	/**
 	 * Returns the set of status blocks for the interface
 	 * @return the interface status blocks
 	 */

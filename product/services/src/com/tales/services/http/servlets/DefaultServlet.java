@@ -126,6 +126,6 @@ public class DefaultServlet extends HttpServlet {
 				
 		logger.info( "Path '{}' is not mapped to a servlet or resource.", requestPath );
 		ResponseHelper.writeFailure(theRequest, theResponse, Status.CALLER_NOT_FOUND, FailureSubcodes.UNKNOWN_REQUEST, String.format( "Path '%s' is not mapped to a servlet or resource.", requestPath ), null );
-		httpInterface.getStatus().recordBadUrl();
+		httpInterface.recordBadUrl();
 	}
 }

@@ -118,6 +118,12 @@ Misc
 - change to not use DateTime but epoch time (for the pieces we care about)
 - make it so the logging level can change per request through an override
 - the AuthenticationException handling in ResourceFacility needs to encode/strip non-RFC 2616 quoted-string compliant characters
+- guarantee the order of Json field member output (JsonTypeMap) and DataContract member output, which would require a list
+  to be used along-side the map ... this allows items which may sign data re-interpret and send out again to be in the same
+  order insted of whatever the maps do
+
+- see if there is an easy way to take the output from a client and send back from a resource call, this allows for proxy calls
+  
 
 Helpers
 ------------------------------------------------
