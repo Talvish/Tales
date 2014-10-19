@@ -308,12 +308,30 @@ public class ConfigurationManager implements Facility {
 	}
  	
 	/**
+	 * Gets a List of a particular type from configuration.
+	 * This will use the default if the list is not available
+	 * @param theName the name of the configuration value to get
+	 * @param theElementType the type of the element in the list
+	 * @param theDefault the default list to use
+	 * @return the list
+	 */
+ 	@SuppressWarnings("unchecked")
+	public <T> List<T> getListValue( String theName, Class<T> theElementType, List<T> theDefault ) {
+ 		LoadedSetting setting = getList( theName, theDefault, theElementType, true ); // does validation, will except if value not there
+		try {
+			return ( List<T> )setting.getValue( );
+		} catch( ClassCastException e ) {
+			throw new ConfigurationException( String.format( "The value for setting '%1$s' is not the requested type.", theName ), e );
+		}
+	}
+ 	
+ 	/**
 	 * Gets a Map of the specified types.
 	 * This will except if the name isn't found or value cannot be converted.
 	 * @param theName the name of the configuration value to get
 	 * @param theKeyType the type of the key of the map to retrieve
 	 * @param theValueType the type of the value of the map to retrieve
-	 * @return the list
+	 * @return the map
 	 */
  	@SuppressWarnings("unchecked")
 	public <K,V> Map<K,V> getMapValue( String theName, Class<K> theKeyType, Class<V> theValueType ) {
@@ -325,6 +343,26 @@ public class ConfigurationManager implements Facility {
 		}
 	}
 
+ 	/**
+	 * Gets a Map of the specified types.
+	 * This will use the default if the map is not available
+	 * @param theName the name of the configuration value to get
+	 * @param theKeyType the type of the key of the map to retrieve
+	 * @param theValueType the type of the value of the map to retrieve
+	 * @param theDefault the default map to use
+	 * @return the map
+	 */
+ 	@SuppressWarnings("unchecked")
+	public <K,V> Map<K,V> getMapValue( String theName, Class<K> theKeyType, Class<V> theValueType, Map<K,V> theDefault ) {
+ 		LoadedSetting setting = getMap( theName, theDefault, theKeyType, theValueType, true ); // does validation, will except if value not there
+		try {
+			return ( Map<K,V> )setting.getValue( );
+		} catch( ClassCastException e ) {
+			throw new ConfigurationException( String.format( "The value for setting '%1$s' is not the requested type.", theName ), e );
+		}
+	}
+
+ 	
 	/**
 	 * Gets configuration setting information for a particular name.
 	 * @param theName the name of the configuration to get setting information for
