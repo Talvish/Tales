@@ -27,6 +27,7 @@ import com.google.common.base.Strings;
 import com.tales.contracts.services.http.HttpContract;
 import com.tales.contracts.services.http.HttpServletContract;
 import com.tales.services.Service;
+import com.tales.system.ExecutionLifecycleState;
 
 
 /**
@@ -37,35 +38,17 @@ import com.tales.services.Service;
 public class WebsiteInterface extends HttpInterface {
 
 	private static final Logger logger = LoggerFactory.getLogger( WebsiteInterface.class );
+	private boolean didBind = false;
 
 	/**
 	 * Constructor taking parameters needed to start a website.
 	 * @param theName the name given to the interface
 	 * @param theService the service the interface will be bound to
-	 * @param theDiskBase the location on disk, relative to the starting directory, where to find files from
-	 * @param theService the service the interface will be bound to
 	 */
-	public WebsiteInterface( String theName, String theDiskBase, Service theService ) {
+	public WebsiteInterface( String theName, Service theService ) {
 		super(theName, theService);
-
-		// precondition handling will occur here
-		setupInterface( theName, theDiskBase, null );
 	}
 
-	/**
-	 * Constructor taking parameters needed to start a website.
-	 * @param theName the name given to the interface
-	 * @param theEndpoints the endpoints exposed by this interface
-	 * @param theDiskBase the location on disk to map where to find files from
-	 * @param theInitParameters an optional set of parameters to configure the jsp servlet with
-	 * @param theService the service the interface will be bound to
-	 */
-	public WebsiteInterface( String theName, String theDiskBase, Map<String,String> theInitParameters, Service theService ) {
-		super(theName, theService);
-
-		setupInterface( theName, theDiskBase, theInitParameters );
-	}
-	
 //	public void bind( String theAreaName, String theDiskBase, String theWebBase ) {
 //		bind( theAreaName, theDiskBase, theWebBase, null );
 //	}
@@ -131,12 +114,15 @@ public class WebsiteInterface extends HttpInterface {
 //	}
 	
 	/**
-	 * Constructor helper method for setting up the default and jsp servlets.
+	 * A bind method for setting up the web location to use for JSP servlets and static files.
+	 * Only one bind can be performed at this time.
 	 * @param theDiskBase the location on disk, relative to the starting directory, where to find files from
 	 * @param theWebBase the location in the URL, relative to the service location, where the system will service from
 	 */
-	private final void setupInterface( String theName, String theDiskBase, Map<String,String> theInitParameters ) {
-		Preconditions.checkArgument( !Strings.isNullOrEmpty( theDiskBase ), String.format( "Website interface '%s' needs a disk location.", theName ) );
+	public void bind( String theDiskBase, Map<String,String> theInitParameters ) {
+		Preconditions.checkState( !didBind, "Cannot bind a web location to interface '%s' because a location was already bound.", this.getName() );
+    	Preconditions.checkState( this.getState() == ExecutionLifecycleState.CREATED || this.getState() == ExecutionLifecycleState.STARTING, "Cannot bind a web location to interface '%s' while it is in the '%s' state.", this.getName(), this.getState( ) );
+		Preconditions.checkArgument( !Strings.isNullOrEmpty( theDiskBase ), String.format( "Website interface '%s' needs a disk location.", getName( ) ) );
 		
 		// information on parameters can be found here: http://wiki.eclipse.org/Jetty/Howto/Configure_JSP
 		// setup our resources and base class loader
@@ -148,14 +134,14 @@ public class WebsiteInterface extends HttpInterface {
 		String webBase = "/";
 		
 		// first we setup the default contract/servlet for handling regular static images and files
-        HttpContract defaultContract = new HttpServletContract( theName + "_web_default", "The default servlet for handling non-JSP files", new String[] { "20130201" }, new DefaultServlet(), webBase );
+        HttpContract defaultContract = new HttpServletContract( getName( ) + "_web_default", "The default servlet for handling non-JSP files", new String[] { "20130201" }, new DefaultServlet(), webBase );
     	this.getContractManager( ).register( defaultContract );
 		ContractServletHolder defaultHolder = new LaxContractServletHolder( defaultContract, this );
 		this.getServletContext().addServlet( defaultHolder, "/" );
 		
     	
 		// next we setup the jsp contract/servlet for handling jsp files
-        HttpContract jspContract = new HttpServletContract( theName + "_web_jsp", "The jsp servlet for handling JSP files", new String[] { "20130201" }, new JspServlet(), webBase );
+        HttpContract jspContract = new HttpServletContract( getName( ) + "_web_jsp", "The jsp servlet for handling JSP files", new String[] { "20130201" }, new JspServlet(), webBase );
     	this.getContractManager( ).register( jspContract );
 		ContractServletHolder jspHolder = new LaxContractServletHolder( jspContract, this );
 		this.getServletContext().addServlet( jspHolder, "*.jsp" ); // TODO: this should be relative somehow

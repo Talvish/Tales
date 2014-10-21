@@ -40,6 +40,7 @@ public class HttpResourceContract extends HttpContract {
 			// NOTE: this is a hack job since this isn't the proper parent
 			//       I should see about using ResourceType / Resource Method directly
 			//       and not have this class
+			// NOTE: if we keep this, we need to not have more than one of the same subcontract
 			subcontracts.add( method );
 		}
 		resourceSubcontracts = Collections.unmodifiableCollection( subcontracts );

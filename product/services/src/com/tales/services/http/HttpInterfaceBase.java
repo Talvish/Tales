@@ -41,7 +41,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-
 import com.tales.communication.HttpEndpoint;
 import com.tales.contracts.services.http.HttpContract;
 import com.tales.contracts.services.http.HttpServletContract;
@@ -52,6 +51,7 @@ import com.tales.services.ConfigurationConstants;
 import com.tales.services.OperationContext.Details;
 import com.tales.services.http.servlets.DefaultServlet;
 import com.tales.system.ExecutionLifecycleException;
+import com.tales.system.ExecutionLifecycleState;
 import com.tales.system.configuration.ConfigurationException;
 import com.tales.system.status.MonitorableStatusValue;
 import com.tales.system.status.RatedLong;
@@ -340,6 +340,7 @@ public abstract class HttpInterfaceBase extends InterfaceBase {
 	 * @param theRoot the path the filter is being bound to
 	 */
 	public void bind( Filter theFilter, String theRoot ) {
+    	Preconditions.checkState( this.getState() == ExecutionLifecycleState.CREATED || this.getState() == ExecutionLifecycleState.STARTING, "Cannot bind a filter to interface '%s' while it is in the '%s' state.", this.getName(), this.getState( ) );
     	Preconditions.checkNotNull( theFilter, "must provide a filter" );
     	Preconditions.checkArgument( !Strings.isNullOrEmpty( theRoot ), "need a path to bind to" );
     	Preconditions.checkArgument( theRoot.startsWith( "/" ), "the path '%s' must be a reference from the root (i.e. start with '/')", theRoot );

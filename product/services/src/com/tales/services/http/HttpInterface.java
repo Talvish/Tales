@@ -59,6 +59,8 @@ public class HttpInterface extends HttpInterfaceBase {
      * @param theRoot the path to bind to
      */
     public void bind( Servlet theServlet, String theRoot ) {
+    	Preconditions.checkState( this.getState() == ExecutionLifecycleState.CREATED || this.getState() == ExecutionLifecycleState.STARTING, "Cannot bind to servlet to interface '%s' while it is in the '%s' state.", this.getName(), this.getState( ) );
+    	
     	Preconditions.checkNotNull( theServlet, "must provide a servlet" );
     	Preconditions.checkArgument( !Strings.isNullOrEmpty( theRoot ), "need a path to bind to" );
     	Preconditions.checkArgument( theRoot.startsWith( "/" ), "the path '%s' must be a reference from the root (i.e. start with '/')", theRoot );
@@ -107,7 +109,7 @@ public class HttpInterface extends HttpInterfaceBase {
      * @param theRoot the root path being bound to
      */
     private void _bind( Object theResource, String theRoot, KeySource<HttpServletRequest> theKeySource ) {
-    	Preconditions.checkState( this.getState() == ExecutionLifecycleState.CREATED || this.getState() == ExecutionLifecycleState.STARTING, "Cannot bind to an interface '%s' while it is in the '%s' state.", this.getName(), this.getState( ) );
+    	Preconditions.checkState( this.getState() == ExecutionLifecycleState.CREATED || this.getState() == ExecutionLifecycleState.STARTING, "Cannot bind a resource to interface '%s' while it is in the '%s' state.", this.getName(), this.getState( ) );
     	Preconditions.checkNotNull( theResource, "must provide a resource object ");
     	Preconditions.checkArgument( !Strings.isNullOrEmpty( theRoot ), "need a path to bind to" );
     	Preconditions.checkArgument( theRoot.startsWith( "/" ), "the path '%s' must be a reference from the root (i.e. start with '/')", theRoot );

@@ -13,26 +13,27 @@
 // *  See the License for the specific language governing permissions and
 // *  limitations under the License.
 // ***************************************************************************
-package com.tales.services.http;
+package com.tales.services;
 
+import com.google.common.base.Strings;
 import com.tales.contracts.services.http.ResourceFacility;
 import com.tales.serialization.json.JsonTranslationFacility;
-import com.tales.services.Service;
+import com.tales.system.configuration.PropertySource;
 
 /**
- * This is a convenience class for someone looking to create an http-based
+ * This is a convenience class for someone looking to create a default service.
  * service.
  * @author jmolnar
  *
  */
-public abstract class HttpService extends Service {
+public abstract class StandardService extends Service {
 	/**
 	 * Constructor taking the name of the service.
 	 * @param theCanonicalName the canonical name of the service
 	 * @param theFriendlyName a visual name for the service
 	 * @param theDescription a description of the service
 	 */
-	protected HttpService( String theCanonicalName, String theFriendlyName, String theDescription ) {
+	protected StandardService( String theCanonicalName, String theFriendlyName, String theDescription ) {
 		super( theCanonicalName, theFriendlyName, theDescription );
 	}
 
@@ -51,4 +52,13 @@ public abstract class HttpService extends Service {
 	public ResourceFacility getResourceFacility( ) {
 		return this.facilityManager.getFacility( ResourceFacility.class );
 	}
+
+	@Override
+	protected void onInitializeConfiguration() {
+		String filename = this.getConfigurationManager( ).getStringValue( "settings.file", null ); // get a config filename	 from command-line, if available
+		
+		if( !Strings.isNullOrEmpty( filename ) ) {
+			this.getConfigurationManager( ).addSource( new PropertySource( filename) );
+		}
+	};
 }

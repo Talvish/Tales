@@ -54,6 +54,25 @@ public class InterfaceManager {
 	}
 	
 	/**
+	 * Returns the interface with the specified name.
+	 * @param theName the name of the interface to get
+	 * @param theType the type of the interface expected
+	 * @return the interface with the specified name or {@code null} if not found
+	 */
+	@SuppressWarnings("unchecked")
+	public <T extends Interface> T getInterface( String theName, Class<T> theType ) {
+		Preconditions.checkArgument( !Strings.isNullOrEmpty( theName ), "need the name of the interface");
+		Preconditions.checkNotNull( theType, "need a type to get interface '%s'", theName );
+		try {
+			Preconditions.checkArgument( !Strings.isNullOrEmpty( theName ), "need the name of the interface");
+			return ( T )this.interfaceMap.get( theName );
+		} catch( ClassCastException e ) {
+			throw new IllegalArgumentException( String.format( "The interface '%s' is not of type '%s'.", theName, theType.getName( ) ), e );
+		}
+	}
+	
+	
+	/**
 	 * Returns the interfaces exposed by the service.
 	 * @return the list of interfaces
 	 */

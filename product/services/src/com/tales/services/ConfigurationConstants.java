@@ -27,11 +27,15 @@ public final class ConfigurationConstants {
 	public static String SECURITY_KEY_STORE_TYPE_FORMAT = SECURITY_KEY_STORES + ".%s.type";
 	public static String SECURITY_KEY_STORE_PROVIDER_FORMAT = SECURITY_KEY_STORES + ".%s.format";
 	
-	public static String HTTP_INTERFACES = "service.http_interfaces";
-	public static String HTTP_INTERFACE_ENDPOINTS = HTTP_INTERFACES + ".%s.endpoints"; 
-	public static String HTTP_INTERFACE_SSL_KEY_STORE = HTTP_INTERFACES + ".%s.ssl.key_store"; 
-	public static String HTTP_INTERFACE_SSL_CERT_ALIAS = HTTP_INTERFACES + ".%s.ssl.cert_alias";
-	public static String HTTP_INTERFACE_CONNECTOR = HTTP_INTERFACES + ".%s.connector";
+	public static String SERVICE_TYPE = "service.type";
+	
+	public static String INTERFACES = "service.interfaces";
+	public static String INTERFACE_TYPE = INTERFACES + ".%s.type";
+	
+	public static String HTTP_INTERFACE_ENDPOINTS = INTERFACES + ".%s.endpoints"; 
+	public static String HTTP_INTERFACE_SSL_KEY_STORE = INTERFACES + ".%s.ssl.key_store"; 
+	public static String HTTP_INTERFACE_SSL_CERT_ALIAS = INTERFACES + ".%s.ssl.cert_alias";
+	public static String HTTP_INTERFACE_CONNECTOR = INTERFACES + ".%s.connector";
 	
 	public static String HTTP_CONNECTORS = "service.http_connectors";
 	public static String HTTP_CONNECTORS_ACCEPTORS = HTTP_CONNECTORS + ".%s.acceptors";

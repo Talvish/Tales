@@ -18,7 +18,9 @@ package com.tales.contracts.services.http;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -97,6 +99,7 @@ public class ResourceType extends Contract {
 	void setMethods( Collection<ResourceMethod> theMethods ) {
 		Preconditions.checkNotNull( theMethods, "need the methods" );
 
+		Set<String> newMethodNames = new HashSet<String>( theMethods.size( ) ); // to help with duplicates
 		ArrayList<ResourceMethod> newMethods = new ArrayList<ResourceMethod>( theMethods );
 
 		ArrayList<ResourceMethod> newGetMethods = new ArrayList<ResourceMethod>( 0 ); 
@@ -107,20 +110,25 @@ public class ResourceType extends Contract {
 
 		// for speed reasons during execution, we separate the different method to the http verbs
 		for( ResourceMethod method : newMethods ) {
-			for( String verb : method.getVerbs( ) ) {
-				if( verb.equals( "GET" ) ) {
-					insertPath( method, newGetMethods );
-				} else if( verb.equals( "POST" ) ) {
-					insertPath( method, newPostMethods );
-				} else if( verb.equals( "PUT" ) ) {
-					insertPath( method, newPutMethods );
-				} else if( verb.equals( "DELETE" ) ) {
-					insertPath( method, newDeleteMethods );
-				} else if( verb.equals( "HEAD" ) ) {
-					insertPath( method, newHeadMethods );
-				} else {
-					throw new IllegalStateException( String.format( "Method '%s.%s' references unrecognized HTTP verb '%s'", boundClass.getName( ), method.getName( ), verb ) );
+			if( newMethodNames.contains( method.getName( ) ) ) {
+				throw new IllegalStateException( String.format( "Resource '%s' already contains a method with name '%s'.", this.getName(), method.getName() ) );
+			} else {
+				for( String verb : method.getVerbs( ) ) {
+					if( verb.equals( "GET" ) ) {
+						insertPath( method, newGetMethods );
+					} else if( verb.equals( "POST" ) ) {
+						insertPath( method, newPostMethods );
+					} else if( verb.equals( "PUT" ) ) {
+						insertPath( method, newPutMethods );
+					} else if( verb.equals( "DELETE" ) ) {
+						insertPath( method, newDeleteMethods );
+					} else if( verb.equals( "HEAD" ) ) {
+						insertPath( method, newHeadMethods );
+					} else {
+						throw new IllegalStateException( String.format( "Method '%s.%s' references unrecognized HTTP verb '%s'", boundClass.getName( ), method.getName( ), verb ) );
+					}
 				}
+				newMethodNames.add( method.getName() );
 			}
 		}
 		

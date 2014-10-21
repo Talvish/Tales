@@ -81,6 +81,8 @@ Contracts
   but also for automatic generation of the clients
 - change the contract to take an array of HttpVerbs instead of being part of the regex 
 
+- support methods (aka JavaBeans) for MemberSites ... it will need both the getter and setter to function
+
 Status
 ------------------------------------------------
 - track status by version of Resource

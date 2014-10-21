@@ -19,6 +19,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.Thread.UncaughtExceptionHandler;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -39,7 +41,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-
 import com.tales.contracts.data.DataContractManager;
 import com.tales.contracts.data.DataContractTypeSource;
 import com.tales.contracts.services.http.ResourceFacility;
@@ -455,6 +456,7 @@ public abstract class Service implements Runnable {
 			loadConnectorConfigurations( );
 			
 			// setup the admin interface
+			// TODO: are we consistent and force the type look to know what we have?
 	        HttpInterface adminInterface = new HttpInterface( "admin", this );
 	        this.interfaceManager.register( adminInterface );
 	        
@@ -468,6 +470,44 @@ public abstract class Service implements Runnable {
 	        adminInterface.bind( new ContractsServlet( ), "/service/contracts");
 	        adminInterface.bind( new StatusServlet( ), "/service/status");
 	        adminInterface.bind( new AlertsServlet( ), "/service/alerts");
+	        
+	        // now we look to see if any interfaces were defined and if so, we create and register them
+	        List<String> interfaces = configurationFacility.getListValue( ConfigurationConstants.INTERFACES, String.class, null );
+	        
+	        if( interfaces != null ) {
+		        String interfaceType	= null;
+		        Class<?> interfaceClass	= null;
+		        Constructor<?> interfaceConstructor = null;
+		        Interface interfaceInstance;
+		        
+		        ClassLoader classLoader = Service.class.getClassLoader();
+		        
+		        for( String interfaceName : interfaces ) {
+			        try {
+			        	// we need to get the type
+			        	interfaceType = configurationFacility.getStringValue( String.format( ConfigurationConstants.INTERFACE_TYPE, interfaceName ) );
+			        	// now we load the type
+			        	interfaceClass = classLoader.loadClass( interfaceType );
+			        	Preconditions.checkState( Interface.class.isAssignableFrom( interfaceClass ), "Failed to setup interface '%s' since class '%s' does not implement Interface.", interfaceName, interfaceType );
+			        	
+			        	// and then get the constructor we expected
+			        	interfaceConstructor = interfaceClass.getConstructor( String.class, Service.class );
+			        	// create the interface
+			        	interfaceInstance = ( Interface )interfaceConstructor.newInstance( interfaceName, this );
+			        	// and finally register
+			        	this.interfaceManager.register( interfaceInstance );
+			        	
+			        } catch( ClassNotFoundException e ) {
+			        	throw new ConfigurationException( String.format( "Failed to setup interface '%s' since class '%s' could not be found.", interfaceName, interfaceType ), e );
+			        } catch( NoSuchMethodException e ) {
+			        	throw new ConfigurationException( String.format( "Failed to setup interface '%s' since class '%s' is missing a constructor taking two parameters, a String (for the interface name) and a Service.", interfaceName, interfaceType ), e );
+			        } catch( IllegalAccessException | SecurityException e ) {
+			        	throw new ConfigurationException( String.format( "Failed to setup interface '%s' using class '%s' due to a security exception.", interfaceName, interfaceType ), e );
+			        } catch( IllegalArgumentException | InstantiationException | InvocationTargetException e ) {
+			        	throw new ConfigurationException( String.format( "Failed to setup interface '%s' using class '%s' due to an exception.", interfaceName, interfaceType ), e );
+			        }
+		        }
+			}
 	        
 			// now let subclasses override, we expect
 	        // initialization and registration
