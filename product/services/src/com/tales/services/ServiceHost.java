@@ -19,7 +19,9 @@ package com.tales.services;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
-import com.google.common.base.Preconditions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Strings;
 
 import com.tales.parts.ArgumentParser;
@@ -39,15 +41,19 @@ import com.tales.system.configuration.PropertySource;
  *
  */
 public final class ServiceHost {
+	private static final Logger logger = LoggerFactory.getLogger( ServiceHost.class );
+
 	/**
-	 * The standard Java main entry point, which in this case will
-	 * instantiate and run the service and then wait for it to be 
-	 * shutdown.
-	 * @param theArgs the arguments containing the start-up or override parameters
-	 * @throws Exception any potential uncaught exception
+	 * Helper method that will create a ConfigurationManager that contains
+	 * a command-line parser and a properties file parser pointed to by
+	 * the command-line argument 'settings.file'. 
+	 * @param theArgs the command line arguments
+	 * @return the ConfigurationManager
 	 */
-    public static void main( String[ ] theArgs ) throws Exception {
-		// first thing we need is for configuration handling 
+	public static ConfigurationManager instantiateConfiguration( String[] theArgs ) {
+    	logger.info( "Service host is setting up the configuration manager." );
+
+    	// first thing we need is for configuration handling 
 		ConfigurationManager configurationManager = new ConfigurationManager( );
 		// which will start with command line source
 		configurationManager.addSource( new MapSource( "command-line", ArgumentParser.parse( theArgs ) ) );
@@ -57,42 +63,102 @@ public final class ServiceHost {
 		if( !Strings.isNullOrEmpty( filename ) ) {
 			configurationManager.addSource( new PropertySource( filename ) );
 		}
+		
+		return configurationManager;
+	}
+	
 
+	/**
+	 * Helper method that will use a class loader to load a class that must extend
+	 * Service and whose type name is based on the configuration setting 'service.type'.
+	 * @param theManager the configuration manager to use
+	 * @return the class representing the service
+	 */
+	@SuppressWarnings("unchecked")
+	public static Class<? extends Service> loadServiceClass( ConfigurationManager theManager ) {
 		// now we see what we have in the way of which service to start        
 		ClassLoader classLoader = null;
         String serviceType = null;
-    	Class<?> serviceClass = null;
-    	Constructor<?> serviceConstructor = null;
-    	Service serviceInstance = null;
+    	Class<? extends Service> serviceClass = null;
+    	
+    	// TODO: need to fix that we have two forms of configuration ...
 		
     	try {
         	// need a class loader to create the class
 	        classLoader = ServiceHost.class.getClassLoader();
         	// we need to get the service type
-            serviceType = configurationManager.getStringValue( ConfigurationConstants.SERVICE_TYPE );
-        	// now we load the type
-        	serviceClass = classLoader.loadClass( serviceType );
-        	Preconditions.checkState( Service.class.isAssignableFrom( serviceClass ), "Failed to setup service since class '%s' does not extend Service.", serviceType );
+            serviceType = theManager.getStringValue( ConfigurationConstants.SERVICE_TYPE );
+
+        	logger.info( "Service host is attempting to load the service '{}'.", serviceType )
+        	;
+            // now we load the type
+        	serviceClass = ( Class<? extends Service> )classLoader.loadClass( serviceType );
+        	
+        } catch( ClassNotFoundException e ) {
+        	throw new ConfigurationException( String.format( "Failed to load service class since the class '%s' could not be found.", serviceType ), e );
+        } catch( ClassCastException e ) {
+        	throw new ConfigurationException( String.format( "Failed to load service class since the class '%s' does not extend Service.", serviceType ), e );
+        } catch( SecurityException e ) {
+        	throw new ConfigurationException( String.format( "Failed to load service class '%s' due to a security exception.", serviceType ), e );
+        } catch( IllegalArgumentException e ) {
+        	throw new ConfigurationException( String.format( "Failed to load service class '%s' due to an exception.", serviceType ), e );
+        }
+    	return serviceClass;
+	}
+	
+	/**
+	 * A helper method that takes a class that extends Service and instantiates it.
+	 * The method looks for a default (parameterless) constructor.
+	 * This and the loadServiceClass are separated to allow for custom hosts to 
+	 * instantiate services in a different manner than described below.
+	 * @param theServiceClass the class of the service to instantiate
+	 * @return the instantiated service
+	 */
+	public static Service instantiateService( Class<? extends Service> theServiceClass ) {
+		// now we see what we have in the way of which service to start        
+    	Constructor<?> serviceConstructor = null;
+    	Service serviceInstance = null;
+    	
+    	try {
+        	logger.info( "Service host is attempting to create the service '{}'.", theServiceClass.getName( ) );
         	
         	// and then get the constructor we expected
-        	serviceConstructor = serviceClass.getConstructor( );
+        	serviceConstructor = theServiceClass.getConstructor( );
         	// create the interface
         	serviceInstance = ( Service )serviceConstructor.newInstance( );
         	
-        } catch( ClassNotFoundException e ) {
-        	throw new ConfigurationException( String.format( "Failed to setup service since class '%s' could not be found.", serviceType ), e );
+        	
+        } catch( ClassCastException e ) {
+        	throw new ConfigurationException( String.format( "Failed to instantiate service since class '%s' does not extend Service.", theServiceClass.getName( ) ), e );
         } catch( NoSuchMethodException e ) {
-        	throw new ConfigurationException( String.format( "Failed to setup service since class '%s' is missing a default (parameter-less) constructor.", serviceType ), e );
+        	throw new ConfigurationException( String.format( "Failed to instantiate service since class '%s' is missing a default (parameterless) constructor.", theServiceClass.getName( ) ), e );
         } catch( IllegalAccessException | SecurityException e ) {
-        	throw new ConfigurationException( String.format( "Failed to setup service using class '%s' due to a security exception.", serviceType ), e );
+        	throw new ConfigurationException( String.format( "Failed to instantiate service using class '%s' due to a security exception.", theServiceClass.getName( ) ), e );
         } catch( IllegalArgumentException | InstantiationException | InvocationTargetException e ) {
-        	throw new ConfigurationException( String.format( "Failed to setup service using class '%s' due to an exception.", serviceType ), e );
+        	throw new ConfigurationException( String.format( "Failed to instantiate service using class '%s' due to an exception.", theServiceClass.getName( ) ), e );
         }
+    	return serviceInstance;
+	}
 
+	
+	/**
+	 * The standard Java main entry point, which in this case will
+	 * instantiate and run the service and then wait for it to be 
+	 * shutdown.
+	 * @param theArgs the arguments containing the start-up or override parameters
+	 * @throws Exception any potential uncaught exception
+	 */
+    public static void main( String[ ] theArgs ) throws Exception {
+    	logger.info( "Service host is initializing." );
+    	
+    	ConfigurationManager configurationManager = instantiateConfiguration( theArgs );
+    	Class<? extends Service > serviceClass = loadServiceClass( configurationManager );
+    	Service serviceInstance = instantiateService( serviceClass );
+    	
     	// now we have the service create 
     	// so let's get it running and wait
     	// for it to finish
-    	serviceInstance.start( theArgs );
+    	serviceInstance.start( configurationManager );
     	serviceInstance.run( );
     	serviceInstance.stop( );
 	}

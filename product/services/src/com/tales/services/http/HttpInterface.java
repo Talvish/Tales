@@ -70,7 +70,9 @@ public class HttpInterface extends HttpInterfaceBase {
         Preconditions.checkState( contractAnnotation != null, "The object of type '%s' does not have a service contract defined.", theServlet.getClass().getName() );
         Preconditions.checkState( !Strings.isNullOrEmpty( contractAnnotation.name() ), "must have a contract name" );
 		Preconditions.checkState( contractAnnotation.versions() != null && contractAnnotation.versions().length > 0, "must have at least one version" );
-    	
+
+    	logger.info( "Binding servlet '{}' on interface '{}' to http path '{}'.", contractAnnotation.name(), this.getName(), theRoot );
+
     	// create and save the contract we can use it in the class below and for validation
         HttpContract contract = new HttpServletContract( contractAnnotation.name( ), contractAnnotation.description( ),contractAnnotation.versions( ),theServlet, theRoot  );
 

@@ -41,10 +41,10 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+
 import com.tales.contracts.data.DataContractManager;
 import com.tales.contracts.data.DataContractTypeSource;
 import com.tales.contracts.services.http.ResourceFacility;
-import com.tales.parts.ArgumentParser;
 import com.tales.parts.naming.LowerCaseEntityNameValidator;
 import com.tales.parts.naming.NameManager;
 import com.tales.parts.naming.NameValidator;
@@ -68,7 +68,6 @@ import com.tales.system.FacilityManager;
 import com.tales.system.SimpleFacilityManager;
 import com.tales.system.configuration.ConfigurationException;
 import com.tales.system.configuration.ConfigurationManager;
-import com.tales.system.configuration.MapSource;
 import com.tales.system.status.MonitorableStatusValue;
 import com.tales.system.status.RatedLong;
 import com.tales.system.status.StatusManager;
@@ -353,6 +352,22 @@ public abstract class Service implements Runnable {
 	}
 
 	/**
+	 * Convenience method for getting the JSON translation facility.
+	 * @return the JSON translation facility
+	 */
+	public JsonTranslationFacility getJsonTranslationFacility( ) {
+		return this.facilityManager.getFacility( JsonTranslationFacility.class );
+	}
+
+	/**
+	 * Convenience method for getting the resource facility.
+	 * @return the resource facility
+	 */
+	public ResourceFacility getResourceFacility( ) {
+		return this.facilityManager.getFacility( ResourceFacility.class );
+	}
+	
+	/**
 	 * Gets all the facilities supported by the manager.
 	 * @return the collection of facilities
 	 */
@@ -411,11 +426,13 @@ public abstract class Service implements Runnable {
 	 * onStart method.
 	 * @param theArgs the arguments passed in from the main method
 	 */
-	public final void start( String[] theArgs ) {
+	public final void start( ConfigurationManager theConfigurationManager ) {
 		try {
 			Preconditions.checkState( this.lifecycleState == ExecutionLifecycleState.CREATED, "Cannot start the service when the status is '%s'.", this.lifecycleState );
+			Preconditions.checkNotNull( theConfigurationManager, "A configuration manager must be provided by the service host." );
+			
 			this.lifecycleState = ExecutionLifecycleState.STARTING;
-			logger.info( "Starting service '{}'.", canonicalName );
+			logger.info( "Starting service '{}' (of type '{}').", canonicalName, this.getClass().getName( ) );
 			listeners.onStarting( this, this.lifecycleState );
 			
 			// ensure we get uncaught exceptions and log them
@@ -427,6 +444,11 @@ public abstract class Service implements Runnable {
 			});
 			
 			// now we setup a bunch of facilities
+
+			// add the configuration facility, and make sure configuration is setup 
+			this.facilityManager.addFacility( ConfigurationManager.class, theConfigurationManager );
+			// now let subclasses do any additional configuration setup
+			onInitializeConfiguration();
 			
 			// add the json facility (used by servlets, admin, etc)
 			NameValidator jsonHttpFieldNameValidator = new LowerCaseEntityNameValidator();
@@ -442,13 +464,6 @@ public abstract class Service implements Runnable {
 			ResourceFacility resourceFacility = new ResourceFacility( jsonFacility );
 			this.facilityManager.addFacility( ResourceFacility.class, resourceFacility );
 
-			// add the configuration facility, and make sure configuration is setup 
-			ConfigurationManager configurationFacility = new ConfigurationManager( );
-			this.facilityManager.addFacility( ConfigurationManager.class, configurationFacility );
-			// load up the base configuration manager with command-line support to start
-			configurationFacility.addSource( new MapSource( "command-line", ArgumentParser.parse( theArgs ) ) );
-			// now let subclasses do any additional configuration setup
-			onInitializeConfiguration();
 
 			// load up key stores if we have them
 			loadKeyStores( );
@@ -460,10 +475,6 @@ public abstract class Service implements Runnable {
 	        HttpInterface adminInterface = new HttpInterface( "admin", this );
 	        this.interfaceManager.register( adminInterface );
 	        
-	        // TODO: I could do something similar to the keystore, and have the ones to start based on a 'service.http_interfaces' setting
-	        //       so people don't need to do anything particular, but request a particular interface after ... could mean I could get
-	        //       rid of the HttpService base class
-
 	        // these are the base admin servlets we need
 	        adminInterface.bind( new ControlServlet( ), "/service/control/*");
 	        adminInterface.bind( new ConfigurationServlet( ), "/service/configuration");
@@ -472,7 +483,7 @@ public abstract class Service implements Runnable {
 	        adminInterface.bind( new AlertsServlet( ), "/service/alerts");
 	        
 	        // now we look to see if any interfaces were defined and if so, we create and register them
-	        List<String> interfaces = configurationFacility.getListValue( ConfigurationConstants.INTERFACES, String.class, null );
+	        List<String> interfaces = theConfigurationManager.getListValue( ConfigurationConstants.INTERFACES, String.class, null );
 	        
 	        if( interfaces != null ) {
 		        String interfaceType	= null;
@@ -485,7 +496,7 @@ public abstract class Service implements Runnable {
 		        for( String interfaceName : interfaces ) {
 			        try {
 			        	// we need to get the type
-			        	interfaceType = configurationFacility.getStringValue( String.format( ConfigurationConstants.INTERFACE_TYPE, interfaceName ) );
+			        	interfaceType = theConfigurationManager.getStringValue( String.format( ConfigurationConstants.INTERFACE_TYPE, interfaceName ) );
 			        	// now we load the type
 			        	interfaceClass = classLoader.loadClass( interfaceType );
 			        	Preconditions.checkState( Interface.class.isAssignableFrom( interfaceClass ), "Failed to setup interface '%s' since class '%s' does not implement Interface.", interfaceName, interfaceType );
@@ -514,11 +525,12 @@ public abstract class Service implements Runnable {
 			onStart( );
 			
 			// now start the interfaces that were registered
-			logger.info( "Starting all interfaces." );
+			logger.info( "Starting all interfaces for '{}'.", this.getCanonicalName( ) );
 			this.interfaceManager.start();
 			status.recordStart();
 			this.lifecycleState = ExecutionLifecycleState.STARTED;
 			listeners.onStarted( this, this.lifecycleState );
+			logger.info( "Started service '{}'.", canonicalName );
 
 		} catch( Exception e ) {
 			logger.error( "Forcing service exit during start due to exception.", e );
@@ -532,7 +544,7 @@ public abstract class Service implements Runnable {
 	private void loadKeyStores( ) {
 		KeyStoreManager keyStoreManager = new KeyStoreManager();
 		if( getConfigurationManager( ).contains( ConfigurationConstants.SECURITY_KEY_STORES ) ) {
-			logger.info( "Preparing keystores for the service." );
+			logger.info( "Preparing keystores for '{}'.", this.getCanonicalName( ) );
 			KeyStore keyStore = null;
 			
 			// key stores are loaded based firstly on the list found in the config
@@ -611,7 +623,7 @@ public abstract class Service implements Runnable {
 	private void loadConnectorConfigurations( ) {
 		ConnectorConfigurationManager connectorConfigurationManager = new ConnectorConfigurationManager();
 		if( getConfigurationManager( ).contains( ConfigurationConstants.HTTP_CONNECTORS ) ) {
-			logger.info( "Preparing connector configurations for the service." );
+			logger.info( "Preparing connector configurations for '{}'.", this.getCanonicalName( ) );
 			ConnectorConfiguration connectorConfiguration = null;
 			
 			// configurations are loaded based firstly on the list found in the config 
@@ -662,6 +674,7 @@ public abstract class Service implements Runnable {
 		Preconditions.checkState( this.lifecycleState == ExecutionLifecycleState.STARTED, "Cannot run the service when the status is '%s'.", this.lifecycleState );
 		this.lifecycleState = ExecutionLifecycleState.RUNNING;
 		listeners.onRunning( this, this.lifecycleState );
+		logger.info( "Running service '{}'.", canonicalName );
 		synchronized( this.shutdownLock ) {
 			try {
 				this.shutdownLock.wait();

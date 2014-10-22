@@ -26,8 +26,11 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.joda.time.DateTime;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
+
 import com.tales.system.Facility;
 
 /**
@@ -37,6 +40,8 @@ import com.tales.system.Facility;
  *
  */
 public class ConfigurationManager implements Facility {
+	private static final Logger logger = LoggerFactory.getLogger( ConfigurationManager.class );
+
 	private final ReentrantReadWriteLock settingsLock = new ReentrantReadWriteLock( );
 	private final Lock settingsReadLock = settingsLock.readLock();
 	private final Lock settingsWriteLock = settingsLock.writeLock();
@@ -48,7 +53,8 @@ public class ConfigurationManager implements Facility {
 	 * Constructor taking nothing.
 	 */
 	public ConfigurationManager( ) {
-		sources = new ArrayList<ConfigurationSource>( 0 );
+		logger.info( "Configuration manager is initalizing." );
+		sources = new ArrayList<ConfigurationSource>( 0 );		
 	}
 
 	/**
@@ -57,9 +63,11 @@ public class ConfigurationManager implements Facility {
 	 * @param theSources
 	 */
 	public ConfigurationManager( ConfigurationSource ... theSources ) {
+		logger.info( "Configuration manager is initalizing." );
 		Preconditions.checkNotNull( theSources );
 		
 		sources = new ArrayList<ConfigurationSource>( theSources.length + 1 );
+		sources.forEach(  source->logger.info( "Adding source '{}' (of type '{}') to configuration manager.", source.getName(), source.getClass().getName( ) ) );
 		Collections.addAll( sources, theSources );
 	}
 
@@ -83,6 +91,7 @@ public class ConfigurationManager implements Facility {
 		// yes this adds to heap usage but we expect the source count to be small and calls to 
 		// add sources to be minimal
 		ArrayList<ConfigurationSource> newSources = new ArrayList<ConfigurationSource>( this.sources );
+		logger.info( "Adding source '{}' (of type '{}') to configuration manager.", aSource.getName(), aSource.getClass().getName( ) );
 		newSources.add( aSource );
 		sources = newSources; // replace the list
 	}
