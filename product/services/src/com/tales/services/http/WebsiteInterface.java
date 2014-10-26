@@ -17,6 +17,8 @@ package com.tales.services.http;
 
 import java.util.Map;
 
+import javax.servlet.Servlet;
+
 import org.apache.jasper.servlet.JspServlet;
 import org.eclipse.jetty.servlet.DefaultServlet;
 import org.slf4j.Logger;
@@ -134,16 +136,18 @@ public class WebsiteInterface extends HttpInterface {
 		String webBase = "/";
 		
 		// first we setup the default contract/servlet for handling regular static images and files
-        HttpContract defaultContract = new HttpServletContract( getName( ) + "_web_default", "The default servlet for handling non-JSP files", new String[] { "20130201" }, new DefaultServlet(), webBase );
+		Servlet defaultServlet = new DefaultServlet();
+        HttpContract defaultContract = new HttpServletContract( getName( ) + "_web_default", "The default servlet for handling non-JSP files", new String[] { "20130201" }, defaultServlet, webBase );
     	this.getContractManager( ).register( defaultContract );
-		ContractServletHolder defaultHolder = new LaxContractServletHolder( defaultContract, this );
+		ContractServletHolder defaultHolder = new LaxContractServletHolder( defaultContract, defaultServlet, this );
 		this.getServletContext().addServlet( defaultHolder, "/" );
 		
     	
 		// next we setup the jsp contract/servlet for handling jsp files
-        HttpContract jspContract = new HttpServletContract( getName( ) + "_web_jsp", "The jsp servlet for handling JSP files", new String[] { "20130201" }, new JspServlet(), webBase );
+		JspServlet jspServlet = new JspServlet();
+        HttpContract jspContract = new HttpServletContract( getName( ) + "_web_jsp", "The jsp servlet for handling JSP files", new String[] { "20130201" }, jspServlet, webBase );
     	this.getContractManager( ).register( jspContract );
-		ContractServletHolder jspHolder = new LaxContractServletHolder( jspContract, this );
+		ContractServletHolder jspHolder = new LaxContractServletHolder( jspContract, jspServlet, this );
 		this.getServletContext().addServlet( jspHolder, "*.jsp" ); // TODO: this should be relative somehow
 
 

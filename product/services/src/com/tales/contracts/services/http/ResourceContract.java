@@ -45,4 +45,12 @@ public @interface ResourceContract {
      * @return the description of the contract.
      */
     String description( ) default "";
+    
+    /**
+     * Sets up the default execution mode from which the resource will execute 
+     * resource methods. If not specified it defaults to
+     * non-blocking. 
+     * @return the default execution mode for the resource methods
+     */
+    ResourceOperation.Mode mode( ) default  ResourceOperation.Mode.NONBLOCKING;
 }

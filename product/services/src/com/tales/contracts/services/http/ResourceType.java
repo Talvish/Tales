@@ -43,7 +43,8 @@ public class ResourceType extends Contract {
 	private List<ResourceMethod> headMethods = Collections.unmodifiableList( new ArrayList<ResourceMethod>() );
 	
 	private final Class<?> boundClass;
-	private final String rootPath;
+	private final String boundPath;
+	private final ResourceOperation.Mode mode;
 	
 	private static final String ROOT_PATH_REGEX = String.format( "/(?:%1$s/)*((?:%1$s)/?)?", ResourceMethod.SEGMENT_COMPONENT_REGEX );
 	private static final Pattern ROOT_PATH_PATTERN = Pattern.compile( ROOT_PATH_REGEX );
@@ -53,26 +54,29 @@ public class ResourceType extends Contract {
 	 * @param theName the name of the contract
 	 * @param theDescription the description of the contract
 	 * @param theVersions the versions of the contract
-	 * @param theRootPath the path the resource is bound to
+	 * @param theBoundPath the path the resource is bound to
 	 * @param theClass the class that backs this resource
 	 */
-	ResourceType( String theName, String theDescription, String[] theVersions, String theRootPath, Class<?> theClass ) {
+	ResourceType( String theName, String theDescription, String[] theVersions, String theBoundPath, Class<?> theClass, ResourceOperation.Mode theMode ) {
 		super( theName, theDescription, theVersions );
 		Preconditions.checkNotNull( theClass, "need the bound class" );
-		Preconditions.checkArgument( !Strings.isNullOrEmpty( theRootPath ), "need a root path for the object" );
-		Matcher pathMatcher = ROOT_PATH_PATTERN.matcher( theRootPath );
-		Preconditions.checkArgument( pathMatcher.matches( ), String.format( "the path string '%s' for type '%s' does not conform to the pattern '/URL_PATH'", theRootPath, theClass.getName( ) ) );
+		Preconditions.checkArgument( !Strings.isNullOrEmpty( theBoundPath ), String.format( "need a root path for the resource '%s'", theClass.getName( ) ) );
+		Matcher pathMatcher = ROOT_PATH_PATTERN.matcher( theBoundPath );
+		Preconditions.checkArgument( pathMatcher.matches( ), String.format( "the path string '%s' for type '%s' does not conform to the pattern '/URL_PATH'", theBoundPath, theClass.getName( ) ) );
+		Preconditions.checkNotNull( theMode, String.format( "need an executionn mode for the resource '%s'", theClass.getName( ) ) );
+		Preconditions.checkArgument( theMode != ResourceOperation.Mode.DEFAULT, String.format( "the execution cannot be set to DEFAULT for resource '%s'", theClass.getName( ) ) );
 
 		boundClass = theClass;
-		rootPath = theRootPath;
+		boundPath = theBoundPath;
+		mode = theMode;
 	}
 	
 	/**
 	 * The root path the resource is bound to.
 	 * @return the root path the resource is bound to 
 	 */
-	public String getRootPath( ) {
-		return this.rootPath;
+	public String getBoundPath( ) {
+		return this.boundPath;
 	}
 	
 	/**
@@ -89,6 +93,16 @@ public class ResourceType extends Contract {
 	 */
 	public Collection<ResourceMethod> getMethods( ) {
 		return methods;
+	}
+	
+	/**
+	 * The default execution mode for resource methods
+	 * that are exposed as part of this resource.
+	 * Individual methods may override this behaviour.
+	 * @return the default execution mode for resource methods
+	 */
+	public ResourceOperation.Mode getMode( ) {
+		return mode;
 	}
 	
 	/**

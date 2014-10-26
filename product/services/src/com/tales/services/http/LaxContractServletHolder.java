@@ -15,6 +15,7 @@
 // ***************************************************************************
 package com.tales.services.http;
 
+import javax.servlet.Servlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -31,9 +32,11 @@ public class LaxContractServletHolder extends ContractServletHolder {
 	/**
 	 * The constructor taking the contract and the servlet it is associated with.
 	 * @param theContract the contract associated with the servlet
+	 * @param theServlet the servlet the contract is to be bound to
+	 * @param theInterface the interface the servlet is running on
 	 */
-	public LaxContractServletHolder( HttpContract theContract, HttpInterfaceBase theInterface ) {
-		super( theContract, theInterface );
+	public LaxContractServletHolder( HttpContract theContract, Servlet theServlet, HttpInterfaceBase theInterface ) {
+		super( theContract, theServlet, theInterface );
 	}
 
 	/**

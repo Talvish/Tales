@@ -20,6 +20,7 @@ import java.util.Enumeration;
 
 import javax.servlet.AsyncEvent;
 import javax.servlet.AsyncListener;
+import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -79,9 +80,11 @@ public abstract class ContractServletHolder extends ServletHolder {
 	/**
 	 * The constructor taking the contract and the servlet it is associated with.
 	 * @param theContract the contract associated with the servlet
+	 * @param theServlet the servlet the contract is to be bound to
+	 * @param theInterface the interface the servlet is running on
 	 */
-	public ContractServletHolder( HttpContract theContract, HttpInterfaceBase theInterface ) {
-		super( theContract.getBoundServlet() ); // super() could throw a null pointer exception, but I prefer that to passing in both contract and servlet
+	public ContractServletHolder( HttpContract theContract, Servlet theServlet, HttpInterfaceBase theInterface ) {
+		super( theServlet ); // super() could throw a null pointer exception, but I prefer that to passing in both contract and servlet
 		Preconditions.checkNotNull( theInterface, String.format( "Contract '%s' is attempting to bind to a null http interface.", theContract.getName() ) );
 		contract = theContract;
 		httpInterface = theInterface;
@@ -144,15 +147,20 @@ public abstract class ContractServletHolder extends ServletHolder {
 			} else if( !filterContract( httpRequest, httpResponse, version ) ) {
 				// not filtered, so we can do default handling, which 
 				// ultimately means let the bound servlet handle it
-				logger.info( "Executing a request for contract '{}/{}'.", this.contract.getName(), version );
-				
-				Enumeration<?> names = theRequest.getHeaderNames();
-				
-				while( names.hasMoreElements() ) {
-					String name = ( String )names.nextElement();
-					logger.info( "Found header '{}' with value '{}'", name, theRequest.getHeader( name ) );
+
+				// let's log some items if we have info enabled
+				if( logger.isInfoEnabled( ) ) {
+					logger.info( "Executing a request for contract '{}/{}'.", this.contract.getName(), version );
+					
+					Enumeration<?> names = theRequest.getHeaderNames();
+					
+					while( names.hasMoreElements() ) {
+						String name = ( String )names.nextElement();
+						logger.info( "Found header '{}' with value '{}'", name, theRequest.getHeader( name ) );
+					}
 				}
 				
+				// now let the servlet bound do the work
 				super.handle( theRequest, theServletRequest, theServletResponse );
 			}
 		} catch( Exception e ) {
@@ -218,8 +226,8 @@ public abstract class ContractServletHolder extends ServletHolder {
 		contract.getStatus().recordExecutionTime( executionTime );
 
 		logger.info( 
-				"Executed a request, {}, for contract '{}/{}' in {} ms resulting in http status {}.", new Object[]{
-				wasAsync ? "asynchronously" : "synchronously",
+				"Executed a {} request for contract '{}/{}' in {} ms resulting in http status {}.", new Object[]{
+				wasAsync ? "non-blocking" : "blocking",
 				this.contract.getName(), 
 				theRequest.getParameter( "version" ), 
 				( ( double )executionTime ) * 0.000001, 

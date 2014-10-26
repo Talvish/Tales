@@ -36,7 +36,11 @@ General Website handling
 
 Signing Support
 ------------------------------------------------
-- fix or remove what is there
+- consider supporting signing results automatically
+  http://www.java2s.com/Tutorial/Java/0490__Security/SimpleDigitalSignatureExample.htm
+  http://stackoverflow.com/questions/521101/using-sha1-and-rsa-with-java-security-signature-vs-messagedigest-and-cipher
+  
+
 
 Services
 ------------------------------------------------

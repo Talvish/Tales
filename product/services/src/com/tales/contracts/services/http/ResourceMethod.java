@@ -46,6 +46,7 @@ import com.tales.contracts.services.ContractStatus;
 import com.tales.contracts.services.http.ResourceMethodParameter.ContextValue;
 import com.tales.contracts.services.http.ResourceMethodParameter.CookieValue;
 import com.tales.contracts.services.http.ResourceMethodParameter.ParameterSource;
+import com.tales.contracts.services.http.ResourceOperation.Mode;
 import com.tales.parts.RegularExpressionHelper;
 import com.tales.parts.naming.LowerCaseEntityNameValidator;
 import com.tales.parts.naming.NameManager;
@@ -120,8 +121,6 @@ public class ResourceMethod extends Subcontract {
 	private final String pathRegex;
 	private final Pattern pathPattern;
 	private final ResourceType resourceType;
-	private final ResourceOperation.Signed signedRequest;
-	private final ResourceOperation.Signed signedResponse;
 	
 	private final List<String> pathParams;
 	private final List<ResourceMethodParameter> methodParameters;
@@ -145,8 +144,6 @@ public class ResourceMethod extends Subcontract {
 			String theMethodPath,
 			Method theMethod, 
 			ResourceOperation.Mode theMode, 
-			ResourceOperation.Signed isRequestSigned,
-			ResourceOperation.Signed isResponseSigned,
 			ResourceType theResourceType, 
 			ResourceFacility theResourceFacility ) {
 		super( theName, theDescription, theVersions, theResourceType );
@@ -156,8 +153,6 @@ public class ResourceMethod extends Subcontract {
 		Preconditions.checkArgument( nameValidator.isValid( theName ), String.format( "Resource method '%s' does not conform to validator '%s'.", theName, nameValidator.getClass().getSimpleName() ) );
 		Preconditions.checkNotNull( theMethod, "need a reflected method" );
 		Preconditions.checkNotNull( theMode, "need a mode" );
-		Preconditions.checkNotNull( isRequestSigned, "need an indication for when the request is signed" );
-		Preconditions.checkNotNull( isResponseSigned, "need an indication for when the response is signed" );
 		Preconditions.checkNotNull( theResourceType, "need a resource type" );
 		Matcher pathMatcher = METHODS_PATH_PATTERN.matcher( theMethodPath );
 		Preconditions.checkArgument( pathMatcher.matches( ), String.format( "the path string '%s' on '%s.%s' does not conform to the pattern '%s'", theMethodPath, theResourceType.getType( ).getName(), theMethod.getName(), METHODS_PATH_REGEX ) );
@@ -172,9 +167,6 @@ public class ResourceMethod extends Subcontract {
 		}
 		verbs = Collections.unmodifiableList( verbsList );
 		mode = theMode;
-		signedRequest = isRequestSigned;
-		signedResponse = isResponseSigned;
-		
 		
 		specifiedPath = pathMatcher.group( PATH_GROUP );
 		method = theMethod;
@@ -183,7 +175,7 @@ public class ResourceMethod extends Subcontract {
 		List<String> newPathParams = new ArrayList<String>( );
 				
 		// FIRST, we need to create the proper path to match and save the path references generated
-		String[] paths = generatePaths( specifiedPath, resourceType.getRootPath(), newPathParams );
+		String[] paths = generatePaths( specifiedPath, resourceType.getBoundPath(), newPathParams );
 		parameterPath = paths[ 2 ];
 		orderingPath = paths[ 1 ];
 		pathRegex = paths[ 0 ];
@@ -552,27 +544,23 @@ public class ResourceMethod extends Subcontract {
 	}
 	
 	/**
-	 * Returns how the method should be executed.
-	 * @return how to run the method
+	 * Returns how the method was declared to execute.
+	 * This may return DEFAULT which means you need to
+	 * look to the type to see how it should run.
+	 * If you want to see how it should run use 
+	 * getUsableMethod( ).
+	 * @return how the method wsa declared to execute.
 	 */
-	public ResourceOperation.Mode getMode( ) {
+	public ResourceOperation.Mode getDeclaredMode( ) {
 		return mode;
-	}
-	
-	/**
-	 * Returns when the request is signed.
-	 * @return is the request is signed
-	 */
-	public ResourceOperation.Signed getSignedRequest( ) {
-		return this.signedRequest;
 	}
 
 	/**
-	 * Returns when the response is signed.
-	 * @return is the request is signed
+	 * Returns how the method should be 
+	 * @return how the method wsa declared to execute.
 	 */
-	public ResourceOperation.Signed getSignedResponse( ) {
-		return this.signedResponse;
+	public ResourceOperation.Mode getUsableMode( ) {
+		return mode == Mode.DEFAULT ? this.resourceType.getMode( ) : mode;
 	}
 
 	/**
@@ -736,13 +724,13 @@ public class ResourceMethod extends Subcontract {
 	 * to match the path if successful, it will execute the method.
 	 * @param theObject the instance to run the method against
 	 * @param theRequest the request to extra URI and parameter information for execution
-	 * @return returns null if it didn't match, otherwise a result objec describing the success or failure
+	 * @return a result object describing the success or failure
 	 */
 	public ResourceMethodResult execute( Object theObject, HttpServletRequest theRequest, HttpServletResponse theResponse, OperationContext theContext ,Matcher thePathMatcher, ResourceFacility theResourceFacility ) {
 		// TODO: move this entire method out
 		logger.info( 
-				"Executing, {}, resource method '{}.{}' (aka '{}').", new Object[]{
-				theRequest.isAsyncStarted() ? "asynchronously" : "synchronously",
+				"Executing {} resource method '{}.{}' (aka '{}').", new Object[]{
+				theRequest.isAsyncStarted() ? "non-blocking" : "blocking",
 				this.resourceType.getType().getName(), 
 				this.method.getName( ), 
 				this.getName( ) } );
@@ -905,8 +893,8 @@ public class ResourceMethod extends Subcontract {
 			long executionTime = System.nanoTime( ) - startTimestamp;
 			status.recordExecutionTime( executionTime );
 			logger.info( 
-					"Executed, {}, resource method '{}.{}' (aka '{}') in {} ms with {} parameter(s) resulting in status '{}'. {}", new Object[]{ 
-					theRequest.isAsyncStarted() ? "asynchronously" : "synchronously",
+					"Executed {} resource method '{}.{}' (aka '{}') in {} ms with {} parameter(s) resulting in status '{}'. {}", new Object[]{ 
+					theRequest.isAsyncStarted() ? "non-blocking" : "blocking",
 					this.resourceType.getType().getName(),
 					this.method.getName( ), 
 					this.getName( ), 

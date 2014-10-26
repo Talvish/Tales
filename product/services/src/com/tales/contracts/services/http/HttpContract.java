@@ -16,14 +16,12 @@
 package com.tales.contracts.services.http;
 
 
-import javax.servlet.Servlet;
-
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.tales.contracts.services.ServiceContract;
 
 /**
- * This class represents a contract where a path is bound to an object within a service.
+ * This class represents a contract where a path is bound to an object.
  * This is an abstract class that allows subclasses to provide particular details.
  * @author jmolnar
  * 
@@ -34,7 +32,6 @@ import com.tales.contracts.services.ServiceContract;
 // TODO: SO it would be the SAME path, but a different version, to know how to route
 public abstract class HttpContract extends ServiceContract {
  	private final String boundPath;
- 	private final Servlet boundServlet;
 
  	/**
  	 * This is the contract constructor taking the required parameters.
@@ -42,17 +39,14 @@ public abstract class HttpContract extends ServiceContract {
 	 * @param theDescription the optional description of the contract
 	 * @param theVersions the versions supported by the contract
  	 * @param theBoundObject the object the contract is bound to
- 	 * @param theBoundServlet the servlet that contract is bound to
  	 * @param theBoundPath the path the servlet is bound to
  	 */
-	public HttpContract( String theName, String theDescription, String[] theVersions, Object theBoundObject, Servlet theBoundServlet, String theBoundPath ) {
+	public HttpContract( String theName, String theDescription, String[] theVersions, Object theBoundObject, String theBoundPath ) {
 		super( theName, theDescription, theVersions, theBoundObject );
-		Preconditions.checkNotNull( theBoundServlet, "must have a servlet" );
 		Preconditions.checkArgument( !Strings.isNullOrEmpty( theBoundPath ), "must have a path binding" );
 		
 		// save all the basic items
 		boundPath = theBoundPath;
-		boundServlet = theBoundServlet;
 	}
 
 	/**
@@ -61,14 +55,5 @@ public abstract class HttpContract extends ServiceContract {
 	 */
 	public String getBoundPath( ) {
 		return boundPath;
-	}
-	
-	/**
-	 * The servlet this contract is bound to. This may
-	 * also represent the bound boject.
-	 * @return the bound servlet
-	 */
-	public Servlet getBoundServlet( ) {
-		return boundServlet;
 	}
 }

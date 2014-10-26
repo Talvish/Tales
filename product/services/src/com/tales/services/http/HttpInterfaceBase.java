@@ -26,6 +26,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import javax.servlet.DispatcherType;
 import javax.servlet.Filter;
+import javax.servlet.Servlet;
 
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.server.HttpConfiguration;
@@ -284,9 +285,10 @@ public abstract class HttpInterfaceBase extends InterfaceBase {
 			ServletMapping mapping = this.getServletContext().getServletHandler().getServletMapping( "/" ); 
 			if( mapping == null ) {
 				// if we dont' have a default handler, we set one up to handle the 404
-		        HttpContract defaultContract = new HttpServletContract( this.getName( ) + "_default", "Default, error throwing, servlet.", new String[] { "20130201" }, new DefaultServlet(), "/" );
+				Servlet defaultServlet = new DefaultServlet();
+		        HttpContract defaultContract = new HttpServletContract( this.getName( ) + "_default", "Default, error throwing, servlet.", new String[] { "20130201" }, defaultServlet, "/" );
 		    	this.getContractManager( ).register( defaultContract );
-				ContractServletHolder defaultHolder = new LaxContractServletHolder( defaultContract, this );
+				ContractServletHolder defaultHolder = new LaxContractServletHolder( defaultContract, defaultServlet, this );
 				this.getServletContext().addServlet( defaultHolder, "/" );
 				logger.info( "Default servlet handling for interface '{}' under context '{}' is handled by the default Tales servlet.", this.getName(), this.servletContext.getContextPath( ) );
 			} else {
@@ -468,7 +470,7 @@ public abstract class HttpInterfaceBase extends InterfaceBase {
     	if( theConfiguration.getOutputBufferSize( ) != null ) {
     		httpConfiguration.setOutputBufferSize( theConfiguration.getOutputBufferSize( ) );
     	}
-    	httpConfiguration.setSendDateHeader( false ); // not sure what this does exactly
+    	httpConfiguration.setSendDateHeader( false ); // TODO: verify if I should manually do this, and in what way this sets it (UTC, local, etc)
     	httpConfiguration.setSendServerVersion( false );
     	httpConfiguration.setSendXPoweredBy( false );
 

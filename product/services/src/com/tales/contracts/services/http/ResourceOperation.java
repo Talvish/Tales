@@ -30,42 +30,29 @@ import java.lang.annotation.Target;
 @Target( ElementType.METHOD )
 public @interface ResourceOperation {
 	public enum Mode {
+
 		/**
-		 * The caller of the operation doesn't have to wait since
-		 * the execution will return immediately.
+		 * Indicates that the mode will be set to whatever the
+		 * Resource itself is set to.
 		 */
-		ASYNC,
+		DEFAULT, 
+		
 		/**
 		 * The caller of the operation waits, but will run in a 
 		 * non-blocking fashion in the service. This is largely intended
 		 * for longer running operations, such as operations that call other 
 		 * services, database calls, etc.
 		 */
-		WAIT_NONBLOCK,
+		NONBLOCKING,
 		/**
 		 * caller of the operation waits and the executing thread, if 
 		 * calling other services will block and wait. This is largely
 		 * intended to short operations that do not rely on other
 		 * services, etc.
 		 */
-		WAIT_BLOCK,
+		BLOCKING,
 	}
 	
-	public enum Signed {
-		/**
-		 * The signature is not to be sent.
-		 */
-		NO,
-		/**
-		 * The signature is not required.
-		 */
-		OPTIONAL,
-		/**
-		 * The signature is required.
-		 */
-		REQUIRED,
-	}
-
 	/**
 	 * The path of the method, relative to the parent.
 	 * @return the path of the method
@@ -101,19 +88,5 @@ public @interface ResourceOperation {
      * It defaults to being a blocking wait.
      * @return the mode to run the operation
      */
-    Mode mode( ) default Mode.WAIT_NONBLOCK;
-    
-    /**
-     * This indicates when the request is signed. 
-     * It defaults to not being signed.
-     * @return if request is signed
-     */
-    Signed signedRequest( ) default Signed.NO;
-
-    /**
-     * This indicates when the response is signed. 
-     * It defaults to not being signed.
-     * @return when the resource is signed
-     */
-    Signed signedResponse( ) default Signed.NO;
+    Mode mode( ) default Mode.DEFAULT;
 }

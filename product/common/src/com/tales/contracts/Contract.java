@@ -48,7 +48,10 @@ public abstract class Contract {
 	private final String name;
 	private final String description; 
 	private final Map<String, ContractVersion> versions;
-	private final Collection<Subcontract> subcontracts = new ArrayList<Subcontract>( 0 );
+	
+	// this is static because it is never set nor used and will always be empty so might as well share across all instances
+	// subclasses that have subcontracts need to manage their subcontracts themselves
+	private static final Collection<Subcontract> subcontracts = Collections.unmodifiableCollection( new ArrayList<Subcontract>( 0 ) );
 
  	/**
  	 * This is the contract constructor taking the required parameters.
@@ -190,6 +193,8 @@ public abstract class Contract {
 	
 	/**
 	 * Returns the list of subcontracts, if any, carried by this contract.
+	 * This class, conveniently, returns an empty list. Subclasses that
+	 * support subcontracts must override this to provide their list.
 	 * The list will never be null but may be empty. 
 	 * @return the list of subcontracts
 	 */

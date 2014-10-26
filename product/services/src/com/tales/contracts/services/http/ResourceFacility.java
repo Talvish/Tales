@@ -259,7 +259,8 @@ public final class ResourceFacility implements Facility {
 				resourceAnnotation.description(),
 				resourceAnnotation.versions(),
 				thePath, 
-				theResourceClass );
+				theResourceClass,
+				resourceAnnotation.mode( ) );
 
 		// if not, we analyze and then store it
 		ArrayList<ResourceMethod> resourceMethods = new ArrayList<ResourceMethod>( );
@@ -283,8 +284,6 @@ public final class ResourceFacility implements Facility {
 							operationAnnotation.path( ), 
 							method, 
 							operationAnnotation.mode( ), 
-							operationAnnotation.signedRequest( ),
-							operationAnnotation.signedResponse( ),
 							resourceType, 
 							this ) );
 				}
