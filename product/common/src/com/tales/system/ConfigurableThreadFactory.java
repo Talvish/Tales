@@ -31,7 +31,8 @@ public class ConfigurableThreadFactory implements ThreadFactory {
 	private final ThreadGroup threadGroup;
 	private final static AtomicInteger lastPoolNumber = new AtomicInteger( 1 );
 	private final AtomicInteger lastThreadNumber = new AtomicInteger( 1 );
-	private final String namePrefix;
+	private final String threadNamePrefix;
+	
 	
 	private final int defaultPriority;
 	private final boolean defaultDaemon;
@@ -55,12 +56,12 @@ public class ConfigurableThreadFactory implements ThreadFactory {
 	
 	/**
 	 * Constructor for the thread factory taking all parameters that can be set.
-	 * @param theNamePrefix the base prefix to use
+	 * @param theName the base prefix to use
 	 * @param defaultPriority the priority to use for creating threads
 	 * @param producesDaemon indicates if the threads created are daemon threads
 	 */
 	public ConfigurableThreadFactory( String theNamePrefix, int theDefaultPriority, boolean isDefaultDaemon ) {
-		Preconditions.checkArgument( !Strings.isNullOrEmpty( theNamePrefix), "need a name prefix to use for thread creation" );
+		Preconditions.checkArgument( !Strings.isNullOrEmpty( theNamePrefix ), "need a name prefix to use for thread creation" );
 		Preconditions.checkArgument( theDefaultPriority >= Thread.MIN_PRIORITY && theDefaultPriority <= Thread.MAX_PRIORITY, "the priority '%s' is not within range for thread factory with prefix '%s'", theDefaultPriority, theNamePrefix );
 		
 		SecurityManager securityManager = System.getSecurityManager( );
@@ -69,7 +70,7 @@ public class ConfigurableThreadFactory implements ThreadFactory {
 		} else {
 			threadGroup = Thread.currentThread( ).getThreadGroup();
 		}
-		namePrefix = String.format( "%s_%s_", theNamePrefix, lastPoolNumber.getAndIncrement( ) );
+		threadNamePrefix = String.format( "%s_%s_", theNamePrefix, lastPoolNumber.getAndIncrement( ) );
 		defaultPriority = theDefaultPriority;
 		defaultDaemon = isDefaultDaemon;
 	}
@@ -82,7 +83,7 @@ public class ConfigurableThreadFactory implements ThreadFactory {
 		Thread thread = new Thread( 
 				this.threadGroup, 
 				theRunnable, 
-				this.namePrefix + lastThreadNumber.getAndIncrement(), 
+				this.threadNamePrefix + lastThreadNumber.getAndIncrement(), 
 				0 );
 
 		// reset daemon to expectations of the factor

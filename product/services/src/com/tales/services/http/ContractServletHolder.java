@@ -226,7 +226,7 @@ public abstract class ContractServletHolder extends ServletHolder {
 		contract.getStatus().recordExecutionTime( executionTime );
 
 		logger.info( 
-				"Executed a {} request for contract '{}/{}' in {} ms resulting in http status {}.", new Object[]{
+				"Executed, {}, a request for contract '{}/{}' in {} ms resulting in http status {}.", new Object[]{
 				wasAsync ? "non-blocking" : "blocking",
 				this.contract.getName(), 
 				theRequest.getParameter( "version" ), 

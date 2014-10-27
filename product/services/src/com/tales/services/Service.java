@@ -28,6 +28,10 @@ import java.security.NoSuchProviderException;
 import java.security.cert.CertificateException;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.joda.time.DateTime;
@@ -41,7 +45,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-
 import com.tales.contracts.data.DataContractManager;
 import com.tales.contracts.data.DataContractTypeSource;
 import com.tales.contracts.services.http.ResourceFacility;
@@ -55,14 +58,17 @@ import com.tales.services.http.ConnectorConfiguration;
 import com.tales.services.http.ConnectorConfigurationManager;
 import com.tales.services.http.HttpInterface;
 import com.tales.services.http.HttpInterfaceBase;
+import com.tales.services.http.ThreadingConstants;
 import com.tales.services.http.servlets.AlertsServlet;
 import com.tales.services.http.servlets.ConfigurationServlet;
 import com.tales.services.http.servlets.ContractsServlet;
 import com.tales.services.http.servlets.ControlServlet;
 import com.tales.services.http.servlets.StatusServlet;
+import com.tales.system.ConfigurableThreadFactory;
 import com.tales.system.ExecutionLifecycleListener;
 import com.tales.system.ExecutionLifecycleListeners;
 import com.tales.system.ExecutionLifecycleState;
+import com.tales.system.ExecutorManager;
 import com.tales.system.Facility;
 import com.tales.system.FacilityManager;
 import com.tales.system.SimpleFacilityManager;
@@ -350,6 +356,16 @@ public abstract class Service implements Runnable {
 	public KeyStoreManager getKeyStoreManager( ) {
 		return this.getFacility( KeyStoreManager.class );
 	}
+	
+	/**
+	 * Returns the executor manager used by the service.
+	 * This manages thread pools and overall execution
+	 * services used by things like resources.
+	 * @return the executor manager
+	 */
+	public ExecutorManager getExecutorManager( ) {
+		return this.getFacility( ExecutorManager.class );
+	}
 
 	/**
 	 * Convenience method for getting the JSON translation facility.
@@ -445,12 +461,13 @@ public abstract class Service implements Runnable {
 			
 			// now we setup a bunch of facilities
 
-			// add the configuration facility, and make sure configuration is setup 
+			// first, we add the configuration facility, and make sure configuration is setup 
 			this.facilityManager.addFacility( ConfigurationManager.class, theConfigurationManager );
-			// now let subclasses do any additional configuration setup
+			// now let subclasses do any additional configuration setup since it may be 
+			// required (or nice for overrides) for facilities about to be added
 			onInitializeConfiguration();
 			
-			// add the json facility (used by servlets, admin, etc)
+			// now add the json facility (used by servlets, admin, etc)
 			NameValidator jsonHttpFieldNameValidator = new LowerCaseEntityNameValidator();
 			NameValidator jsonHttpClassNameValidator = new SegmentedLowercaseEntityNameValidator();
 			JsonTranslationFacility jsonFacility = new JsonTranslationFacility( 
@@ -464,14 +481,17 @@ public abstract class Service implements Runnable {
 			ResourceFacility resourceFacility = new ResourceFacility( jsonFacility );
 			this.facilityManager.addFacility( ResourceFacility.class, resourceFacility );
 
+			// we now load up some re-usable items 
+			// commonly used through-out tales including...
 
-			// load up key stores if we have them
+			// loading key stores (used for SSL or encryption)
 			loadKeyStores( );
-			// load up the connector settings
+			// loading connector settings (for interfaces, particularly http interfaces)
 			loadConnectorConfigurations( );
+			// thread pools (commonly used for async resource execution)
+			loadThreadPools( );
 			
-			// setup the admin interface
-			// TODO: are we consistent and force the type look to know what we have?
+			// now we setup one interface that must exist, admin interface
 	        HttpInterface adminInterface = new HttpInterface( "admin", this );
 	        this.interfaceManager.register( adminInterface );
 	        
@@ -623,13 +643,13 @@ public abstract class Service implements Runnable {
 	private void loadConnectorConfigurations( ) {
 		ConnectorConfigurationManager connectorConfigurationManager = new ConnectorConfigurationManager();
 		if( getConfigurationManager( ).contains( ConfigurationConstants.HTTP_CONNECTORS ) ) {
-			logger.info( "Preparing connector configurations for '{}'.", this.getCanonicalName( ) );
+			logger.info( "Preparing connectors for '{}'.", this.getCanonicalName( ) );
 			ConnectorConfiguration connectorConfiguration = null;
 			
 			// configurations are loaded based firstly on the list found in the config 
 			List<String> connectorConfigurations = getConfigurationManager( ).getListValue( ConfigurationConstants.HTTP_CONNECTORS, String.class );
-			for( String connectorConfigurationNames : connectorConfigurations ) {
-				connectorConfiguration = loadConnectorConfiguration( connectorConfigurationNames );
+			for( String connectorConfigurationName : connectorConfigurations ) {
+				connectorConfiguration = loadConnectorConfiguration( connectorConfigurationName );
 				connectorConfigurationManager.register( connectorConfiguration );
 			}
 		}
@@ -646,6 +666,92 @@ public abstract class Service implements Runnable {
 	private ConnectorConfiguration loadConnectorConfiguration( String theName ) {
     	return new ConnectorConfiguration( theName, this.getConfigurationManager() );
     }
+	
+	/**
+	 * Private method that will load thread pool definitions from configuration and
+	 * then create the thread pools.
+	 */
+	private void loadThreadPools( ) {
+		ExecutorManager executorManager = new ExecutorManager();
+		if( getConfigurationManager( ).contains( ConfigurationConstants.THREAD_POOLS ) ) {
+			logger.info( "Preparing thread pools for '{}'.", this.getCanonicalName( ) );
+			Executor executor = null;
+			
+			// configurations are loaded based firstly on the list found in the config 
+			List<String> threadPools = getConfigurationManager( ).getListValue( ConfigurationConstants.THREAD_POOLS, String.class );
+			for( String threadPoolName : threadPools ) {
+				executor = loadThreadPool( threadPoolName );
+				executorManager.register( threadPoolName, executor );
+			}
+		}
+		// now we see if the standard thread pool has been configured and if
+		// not then we add one in so at least one exists in the system
+		if( executorManager.getExecutor( ThreadingConstants.DEFAULT_THREAD_POOL ) == null ) {
+			int coreThreads = Runtime.getRuntime( ).availableProcessors( ) * ThreadingConstants.DEFAULT_CORE_THREADS_FACTOR;
+			int maxThreads = coreThreads * ThreadingConstants.DEFAULT_MAX_THREAD_FACTOR;			
+	    	
+			ThreadPoolExecutor executor = new ThreadPoolExecutor(
+	    			coreThreads, 
+	    			maxThreads, 
+	    			ThreadingConstants.DEFAULT_KEEP_ALIVE_TIME,
+	                TimeUnit.MILLISECONDS, 
+	                new ArrayBlockingQueue<Runnable>( maxThreads ),
+	                new ConfigurableThreadFactory( ThreadingConstants.DEFAULT_THREAD_POOL, ThreadingConstants.DEFAULT_THREAD_PRIORITY, ThreadingConstants.DEFAULT_IS_DAEMON ) );
+
+	    	// should we prestart the core threads?
+	    	if( ThreadingConstants.DEFAULT_PRESTART_CORE ) {
+				executor.prestartAllCoreThreads();
+			}
+	    	executorManager.register( ThreadingConstants.DEFAULT_THREAD_POOL, executor );
+		}
+		// we register this regardless of having any loaded this
+		// allows others to manual register if they so desire
+		this.facilityManager.addFacility( ExecutorManager.class, executorManager );
+	}
+	
+	/**
+	 * Private method that will load and create the thread pool configuration
+	 * for a particular thread pools.
+	 * @param theName the name of the thread pool to load and create
+	 * @return the created thread pool
+	 */
+	private Executor loadThreadPool( String theName ) {
+		// we get the settings to make the executor, which includes using defaults (except for core threads have to be specified if something is going to be specified)
+    	int coreThreads = getConfigurationManager( ).getIntegerValue( 
+    			String.format( ConfigurationConstants.THREAD_POOL_CORE_SIZE, theName ) );
+    	int maxThreads = getConfigurationManager( ).getIntegerValue(
+    			String.format( ConfigurationConstants.THREAD_POOL_MAX_SIZE, theName ), 
+    			coreThreads * ThreadingConstants.DEFAULT_MAX_THREAD_FACTOR );
+    	long keepAliveTime = getConfigurationManager( ).getLongValue( 
+    			String.format( ConfigurationConstants.THREAD_POOL_KEEP_ALIVE_TIME, theName ), 
+    			ThreadingConstants.DEFAULT_KEEP_ALIVE_TIME );
+    	boolean prestartCore = getConfigurationManager( ).getBooleanValue( 
+    			String.format( ConfigurationConstants.THREAD_POOL_PRESTART_CORE, theName ), 
+    			ThreadingConstants.DEFAULT_PRESTART_CORE );
+
+    	String prefix = getConfigurationManager( ).getStringValue( 
+    			String.format( ConfigurationConstants.THREAD_POOL_THREAD_NAME_PREFIX, theName ), 
+    			theName );
+    	int priority = getConfigurationManager( ).getIntegerValue( 
+    			String.format( ConfigurationConstants.THREAD_POOL_THREAD_PRIORITY, theName ), 
+    			ThreadingConstants.DEFAULT_THREAD_PRIORITY );
+    	boolean isDaemon = getConfigurationManager( ).getBooleanValue( 
+    			String.format( ConfigurationConstants.THREAD_POOL_THREAD_IS_DAEMON, theName ), 
+    			ThreadingConstants.DEFAULT_IS_DAEMON );
+
+    	ThreadPoolExecutor executor = new ThreadPoolExecutor(
+    			coreThreads, 
+    			maxThreads, 
+    			keepAliveTime,
+                TimeUnit.MILLISECONDS, 
+                new ArrayBlockingQueue<Runnable>( maxThreads ),
+                new ConfigurableThreadFactory( prefix, priority, isDaemon ) );
+    	
+    	if( prestartCore ) {
+    		executor.prestartAllCoreThreads();
+    	}
+		return executor;
+	}
 
 	/**
 	 * Initializes the configuration systems. This

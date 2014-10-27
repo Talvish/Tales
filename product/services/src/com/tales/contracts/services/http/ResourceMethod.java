@@ -728,9 +728,10 @@ public class ResourceMethod extends Subcontract {
 	 */
 	public ResourceMethodResult execute( Object theObject, HttpServletRequest theRequest, HttpServletResponse theResponse, OperationContext theContext ,Matcher thePathMatcher, ResourceFacility theResourceFacility ) {
 		// TODO: move this entire method out
+		boolean isAsync = theRequest.isAsyncStarted( ); 
 		logger.info( 
-				"Executing {} resource method '{}.{}' (aka '{}').", new Object[]{
-				theRequest.isAsyncStarted() ? "non-blocking" : "blocking",
+				"Executing, {}, resource method '{}.{}' (aka '{}').", new Object[]{
+				 isAsync ? "non-blocking" : "blocking",
 				this.resourceType.getType().getName(), 
 				this.method.getName( ), 
 				this.getName( ) } );
@@ -893,8 +894,8 @@ public class ResourceMethod extends Subcontract {
 			long executionTime = System.nanoTime( ) - startTimestamp;
 			status.recordExecutionTime( executionTime );
 			logger.info( 
-					"Executed {} resource method '{}.{}' (aka '{}') in {} ms with {} parameter(s) resulting in status '{}'. {}", new Object[]{ 
-					theRequest.isAsyncStarted() ? "non-blocking" : "blocking",
+					"Executed, {}, resource method '{}.{}' (aka '{}') in {} ms with {} parameter(s) resulting in status '{}'. {}", new Object[]{ 
+					isAsync ? "non-blocking" : "blocking",
 					this.resourceType.getType().getName(),
 					this.method.getName( ), 
 					this.getName( ), 

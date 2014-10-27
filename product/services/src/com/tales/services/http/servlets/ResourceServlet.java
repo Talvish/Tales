@@ -57,6 +57,13 @@ import com.tales.services.http.ResponseHelper;
  */
 @SuppressWarnings("serial")
 public class ResourceServlet extends HttpServlet {
+
+	// TODO: see below about potentially changing this...
+	
+	private static class ExecutionState {
+		public boolean executed = false;
+	}
+	
 	// TODO: have the methods, from the resource type, listed per contract 
 
 	private Map<String,List<ResourceMethod>> getMethods = new HashMap<String,List<ResourceMethod>>( );
@@ -204,6 +211,13 @@ public class ResourceServlet extends HttpServlet {
 			// limit is reached it will report back a 503
 			if( executionMode == Mode.NONBLOCKING ) {
 				try {
+					ExecutionState executionState = new ExecutionState();
+					
+					// TODO: need to do something, perhaps, a bit different than this
+					//       the execute still occurs during a time-out and outputs
+					//		 as if it was done (though technically it was, BUT
+					//		 the caller never sees the results)
+					executionState.executed = false;
 					// need to indicate we are going async
 					AsyncContext asyncContext = theRequest.startAsync();
 					
@@ -211,6 +225,7 @@ public class ResourceServlet extends HttpServlet {
 					asyncContext.addListener( new AsyncListener( ) {
 						@Override
 						public void onTimeout(AsyncEvent theEvent) throws IOException {
+							executionState.executed = true;
 							ResponseHelper.writeFailure( theRequest, theResponse, Status.LOCAL_TIMEOUT, null, String.format( "Timed-out executing resource method '%s.%s'.", resourceType.getName( ), method.getName( ) ), null );
 							theEvent.getAsyncContext().complete( );
 						}
@@ -221,6 +236,7 @@ public class ResourceServlet extends HttpServlet {
 						
 						@Override
 						public void onError(AsyncEvent theEvent) throws IOException {
+							executionState.executed = true;
 							ResponseHelper.writeFailure( theRequest, theResponse, Status.LOCAL_ERROR, FailureSubcodes.UNHANDLED_EXCEPTION, String.format( "Unknown exception executing resource method '%s.%s'.", resourceType.getName( ), method.getName( ) ), null );
 							theEvent.getAsyncContext().complete( );
 						}
@@ -235,13 +251,16 @@ public class ResourceServlet extends HttpServlet {
 					executor.execute( ( ) -> {
 							ResourceMethodResult asyncResult = null;
 							asyncResult = method.execute( resource, theRequest, theResponse, operationContext, pathMatcher, resourceFacility );
-							if( asyncResult != null ) {
-								ResponseHelper.writeResponse (theRequest, theResponse, asyncResult);
-							} else {
-								ResponseHelper.writeFailure( theRequest, theResponse, Status.CALLER_NOT_FOUND, FailureSubcodes.UNKNOWN_REQUEST, String.format( "Path '%s' maps to resource '%s.%s' but execution did not return a result.", theRequest.getRequestURL().toString( ), resourceType.getName( ), method.getName( ) ), null );
+							// check to make sure that an error/timeout/response has already happened
+							if( !executionState.executed ) {
+								if( asyncResult != null ) {
+									ResponseHelper.writeResponse( theRequest, theResponse, asyncResult );
+								} else {
+									ResponseHelper.writeFailure( theRequest, theResponse, Status.CALLER_NOT_FOUND, FailureSubcodes.UNKNOWN_REQUEST, String.format( "Path '%s' maps to resource '%s.%s' but execution did not return a result.", theRequest.getRequestURL().toString( ), resourceType.getName( ), method.getName( ) ), null );
+								}
+								executionState.executed = true;
+								asyncContext.complete( );
 							}
-
-							asyncContext.complete( );
 					} );
 
 				} catch( RejectedExecutionException e ) {

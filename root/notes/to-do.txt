@@ -40,6 +40,10 @@ Signing Support
   http://www.java2s.com/Tutorial/Java/0490__Security/SimpleDigitalSignatureExample.htm
   http://stackoverflow.com/questions/521101/using-sha1-and-rsa-with-java-security-signature-vs-messagedigest-and-cipher
   
+Load
+------------------------------------------------
+ - https://webtide.com/servlet-3-1-async-io-and-jetty/
+   http://www.eclipse.org/jetty/documentation/current/high-load.html
 
 
 Services

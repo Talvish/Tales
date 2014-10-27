@@ -30,6 +30,9 @@ import com.tales.system.ExecutionLifecycleState;
 
 /**
  * A utility class that manages the interfaces used by a service. 
+ * It makes the assumptions that a lot of registration doesn't
+ * occur since it makes copies of objects during the registration
+ * process.
  * @author jmolnar
  *
  */

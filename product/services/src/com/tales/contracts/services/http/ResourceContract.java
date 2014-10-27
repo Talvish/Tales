@@ -48,9 +48,8 @@ public @interface ResourceContract {
     
     /**
      * Sets up the default execution mode from which the resource will execute 
-     * resource methods. If not specified it defaults to
-     * non-blocking. 
+     * resource methods. If not specified it defaults to blocking.
      * @return the default execution mode for the resource methods
      */
-    ResourceOperation.Mode mode( ) default  ResourceOperation.Mode.NONBLOCKING;
+    ResourceOperation.Mode mode( ) default  ResourceOperation.Mode.BLOCKING;
 }
