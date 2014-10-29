@@ -150,7 +150,7 @@ public abstract class ContractServletHolder extends ServletHolder {
 
 				// let's log some items if we have info enabled
 				if( logger.isInfoEnabled( ) ) {
-					logger.info( "Executing a request for contract '{}/{}'.", this.contract.getName(), version );
+					logger.info( "Attempting a request for contract '{}/{}'.", this.contract.getName(), version );
 					
 					Enumeration<?> names = theRequest.getHeaderNames();
 					
@@ -226,7 +226,7 @@ public abstract class ContractServletHolder extends ServletHolder {
 		contract.getStatus().recordExecutionTime( executionTime );
 
 		logger.info( 
-				"Executed, {}, a request for contract '{}/{}' in {} ms resulting in http status {}.", new Object[]{
+				"Processed, {}, a request for contract '{}/{}' in {} ms resulting in http status {}.", new Object[]{
 				wasAsync ? "non-blocking" : "blocking",
 				this.contract.getName(), 
 				theRequest.getParameter( "version" ), 

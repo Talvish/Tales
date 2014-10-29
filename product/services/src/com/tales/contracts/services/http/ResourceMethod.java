@@ -40,6 +40,7 @@ import com.google.common.base.Strings;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+
 import com.tales.communication.Status;
 import com.tales.contracts.Subcontract;
 import com.tales.contracts.services.ContractStatus;
@@ -60,6 +61,7 @@ import com.tales.serialization.UrlEncoding;
 import com.tales.serialization.json.JsonTypeReference;
 import com.tales.services.OperationContext;
 import com.tales.services.http.FailureSubcodes;
+import com.tales.services.http.servlets.ResourceServlet.AsyncState;
 
 /**
  * This class represents a method that is mapping from a http request 
@@ -726,12 +728,19 @@ public class ResourceMethod extends Subcontract {
 	 * @param theRequest the request to extra URI and parameter information for execution
 	 * @return a result object describing the success or failure
 	 */
-	public ResourceMethodResult execute( Object theObject, HttpServletRequest theRequest, HttpServletResponse theResponse, OperationContext theContext ,Matcher thePathMatcher, ResourceFacility theResourceFacility ) {
+	public ResourceMethodResult execute( 
+			Object theObject, 
+			HttpServletRequest theRequest, 
+			HttpServletResponse theResponse, 
+			OperationContext theContext ,
+			Matcher thePathMatcher, 
+			ResourceFacility theResourceFacility, 
+			AsyncState theAsyncState ) {
+
 		// TODO: move this entire method out
-		boolean isAsync = theRequest.isAsyncStarted( ); 
 		logger.info( 
 				"Executing, {}, resource method '{}.{}' (aka '{}').", new Object[]{
-				 isAsync ? "non-blocking" : "blocking",
+				 theAsyncState != null ? "non-blocking" : "blocking",
 				this.resourceType.getType().getName(), 
 				this.method.getName( ), 
 				this.getName( ) } );
@@ -744,8 +753,6 @@ public class ResourceMethod extends Subcontract {
 			// first we need to get the request URI and ensure it matches
 			String uri = theRequest.getRequestURI();
 	
-			status.recordReceivedRequest();
-
 			// if we have a match, we need to generate the parameters to use 
 			Object[] parameters	= new Object[ this.methodParameters.size( ) ];
 			String stringValue;
@@ -894,8 +901,8 @@ public class ResourceMethod extends Subcontract {
 			long executionTime = System.nanoTime( ) - startTimestamp;
 			status.recordExecutionTime( executionTime );
 			logger.info( 
-					"Executed, {}, resource method '{}.{}' (aka '{}') in {} ms with {} parameter(s) resulting in status '{}'. {}", new Object[]{ 
-					isAsync ? "non-blocking" : "blocking",
+					"Executed, {}, resource method '{}.{}' (aka '{}') in {} ms with {} parameter(s) resulting in status '{}'. {}", new Object[] {
+					( theAsyncState != null ? "non-blocking" + ( theAsyncState.hasCompleted() ? " though timed-out" : "" ) : "blocking" ),
 					this.resourceType.getType().getName(),
 					this.method.getName( ), 
 					this.getName( ), 

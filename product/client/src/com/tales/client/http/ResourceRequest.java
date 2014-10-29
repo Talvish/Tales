@@ -222,7 +222,7 @@ public class ResourceRequest {
 				objectResult.setResult( null );
 			}
 
-			// TODO: need to do HTTP header and cookie support
+			// TODO: need to do cookie support
 			HttpFields headers = response.getHeaders();
 			String headerName;
 			String headerValue;

@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 
 import javax.servlet.AsyncContext;
@@ -58,10 +59,55 @@ import com.tales.services.http.ResponseHelper;
 @SuppressWarnings("serial")
 public class ResourceServlet extends HttpServlet {
 
-	// TODO: see below about potentially changing this...
-	
-	private static class ExecutionState {
-		public boolean executed = false;
+	/**
+	 * A simple helper class that manages if the non-blocking
+	 * call was executed or not, in part because, at least in
+	 * Jetty, the AsyncContext/ServletResponse cannot bec
+	 * checked (without exceptions or re-set data) 
+	 * @author jmolnar
+	 *
+	 */
+	public static class AsyncState {
+		private final AsyncContext context;
+		private AtomicBoolean completed = new AtomicBoolean( false );
+		
+		/**
+		 * Constructor taking the AsyncContext 
+		 * this state is associated with.
+		 * @param theContext the associated context
+		 */
+		public AsyncState( AsyncContext theContext ) {
+			Preconditions.checkNotNull( theContext, "need a context" );
+			context = theContext;
+		}
+
+		/**
+		 * Returns the associated context.
+		 * @return the assocated context.
+		 */
+		public AsyncContext getContext(  ) {
+			return context;
+		}
+		
+		/**
+		 * Indicates if the associated context/operation has completed.
+		 * @return indicates operation has completed or not
+		 */
+		public final boolean hasCompleted( ) {
+			return completed.get();
+		}
+		
+		/**
+		 * Sets the completed state to true indicating the 
+		 * associating context/operation is done. It is not
+		 * an indication of success.
+		 * @return indicates if the state was set during this call or or not, indicating whether this was the call to update the state, or it previously been set
+		 */
+		public final boolean setCompleted( ) {
+			// as a note, a race condition is possible in generally knowing which condition occurred
+			// between successful finish, a time, or even a rejected queue insertion (meaning too busy)
+			return !completed.getAndSet( true );
+		}
 	}
 	
 	// TODO: have the methods, from the resource type, listed per contract 
@@ -204,81 +250,100 @@ public class ResourceServlet extends HttpServlet {
 			Matcher pathMatcher = bestStatus.getPathMatcher();
 			OperationContext operationContext = ( OperationContext )theRequest.getAttribute( AttributeConstants.OPERATION_REQUEST_CONTEXT );
 			ResourceOperation.Mode executionMode = method.getUsableMode();
-			
+
 			// so at this point we need to collect up the 
 			// request into an object and queue it, if it is async
 			// the queue will have a limit on it though so if the 
 			// limit is reached it will report back a 503
 			if( executionMode == Mode.NONBLOCKING ) {
-				try {
-					ExecutionState executionState = new ExecutionState();
-					
-					// TODO: need to do something, perhaps, a bit different than this
-					//       the execute still occurs during a time-out and outputs
-					//		 as if it was done (though technically it was, BUT
-					//		 the caller never sees the results)
-					executionState.executed = false;
-					// need to indicate we are going async
-					AsyncContext asyncContext = theRequest.startAsync();
-					
-					asyncContext.setTimeout( executionTimeout );
-					asyncContext.addListener( new AsyncListener( ) {
-						@Override
-						public void onTimeout(AsyncEvent theEvent) throws IOException {
-							executionState.executed = true;
+				// TODO: explore if the onTimeout/Error occurs on a shared thread
+				//       and therefore can slow things down if these write failures
+				//		 are talking to a slow enough client
+				// TODO: since the work still executes when time-outd out, consider
+				//       if we need a way to abort/interrupt the working thread to
+				//		 shut it down, though behaviour may be call specific
+
+				// need to indicate we are going async
+				AsyncContext asyncContext = theRequest.startAsync();
+				AsyncState asyncState = new AsyncState( asyncContext );
+				
+				asyncContext.setTimeout( executionTimeout );
+				asyncContext.addListener( new AsyncListener( ) {
+					@Override
+					public void onTimeout(AsyncEvent theEvent) throws IOException {
+						// we set completed, and this call was the call to set it
+						// then we can write our failures and set to completed
+						if( asyncState.setCompleted( ) ) {
 							ResponseHelper.writeFailure( theRequest, theResponse, Status.LOCAL_TIMEOUT, null, String.format( "Timed-out executing resource method '%s.%s'.", resourceType.getName( ), method.getName( ) ), null );
 							theEvent.getAsyncContext().complete( );
 						}
-						@Override
-						public void onStartAsync(AsyncEvent theEvent) throws IOException {
-							// nothing to do here
-						}
-						
-						@Override
-						public void onError(AsyncEvent theEvent) throws IOException {
-							executionState.executed = true;
-							ResponseHelper.writeFailure( theRequest, theResponse, Status.LOCAL_ERROR, FailureSubcodes.UNHANDLED_EXCEPTION, String.format( "Unknown exception executing resource method '%s.%s'.", resourceType.getName( ), method.getName( ) ), null );
+					}
+					@Override
+					public void onStartAsync(AsyncEvent theEvent) throws IOException {
+						// nothing to do here
+					}
+					
+					@Override
+					public void onError(AsyncEvent theEvent) throws IOException {
+						// we set completed, and this call was the call to set it
+						// then we can write our failures and set to completed
+						if( asyncState.setCompleted( ) ) {
+							ResponseHelper.writeFailure( theRequest, theResponse, Status.LOCAL_ERROR, FailureSubcodes.UNHANDLED_EXCEPTION, String.format( "Unknown exception executing resource method '%s.%s'.", resourceType.getName( ), method.getName( ) ), theEvent.getThrowable() );
 							theEvent.getAsyncContext().complete( );
 						}
-						
-						@Override
-						public void onComplete(AsyncEvent theEvent) throws IOException {
-							updateStatus( method, ( HttpServletResponse )theEvent.getSuppliedResponse( ) );
-						}
-					});
+					}
+					
+					@Override
+					public void onComplete(AsyncEvent theEvent) throws IOException {
+						updateCompletionStatus( method, ( HttpServletResponse )theEvent.getSuppliedResponse( ) );
+					}
+				});
 
-					// at this point we queue for execution, which is 
+				// now we place it in the queue for background handling
+				// which, if we have hit our limit, will throw the
+				// RejectedExecutionException
+				try {
+					// update we have a call attempt being made
+					updateAttemptStatus( method );;
+					// at this point we queue for execution 
 					executor.execute( ( ) -> {
-							ResourceMethodResult asyncResult = null;
-							asyncResult = method.execute( resource, theRequest, theResponse, operationContext, pathMatcher, resourceFacility );
-							// check to make sure that an error/timeout/response has already happened
-							if( !executionState.executed ) {
-								if( asyncResult != null ) {
-									ResponseHelper.writeResponse( theRequest, theResponse, asyncResult );
-								} else {
-									ResponseHelper.writeFailure( theRequest, theResponse, Status.CALLER_NOT_FOUND, FailureSubcodes.UNKNOWN_REQUEST, String.format( "Path '%s' maps to resource '%s.%s' but execution did not return a result.", theRequest.getRequestURL().toString( ), resourceType.getName( ), method.getName( ) ), null );
-								}
-								executionState.executed = true;
-								asyncContext.complete( );
+						ResourceMethodResult asyncResult = null;
+						asyncResult = method.execute( resource, theRequest, theResponse, operationContext, pathMatcher, resourceFacility, asyncState );
+						// check to make sure that an error/timeout/response has already happened
+						if( asyncState.setCompleted( ) ) {
+							if( asyncResult != null ) {
+								ResponseHelper.writeResponse( theRequest, theResponse, asyncResult );
+							} else {
+								ResponseHelper.writeFailure( theRequest, theResponse, Status.CALLER_NOT_FOUND, FailureSubcodes.UNKNOWN_REQUEST, String.format( "Path '%s' maps to resource '%s.%s' but execution did not return a result.", theRequest.getRequestURL().toString( ), resourceType.getName( ), method.getName( ) ), null );
 							}
+							asyncContext.complete( );
+						}
 					} );
 
 				} catch( RejectedExecutionException e ) {
-					// TODO: at his point it makes sense to give a retry header back on when to 
-					//       come back given how busy things are ... may want to give control on 
-					//       this mind you
-					ResponseHelper.writeFailure(theRequest, theResponse, Status.LOCAL_UNAVAILABLE, null, String.format( "Service too busy to execute '%s.", theRequest.getRequestURL().toString( ) ), null );
+					// TODO: it makes sense, if we can approximate time period, to give a retry header back on when  
+					//       to come back given how busy things are ... may want to give control on this mind you
+					//       curious if the time period for retry could be a combination of length of queue and 
+					//		 average length of execution on the contract along with some other factor
+					
+					// we set completed, and this call was the call to set it
+					// then we can write our failures and set to completed
+					if( asyncState.setCompleted( ) ) {
+						ResponseHelper.writeFailure(theRequest, theResponse, Status.LOCAL_UNAVAILABLE, null, String.format( "Service too busy to execute '%s.", theRequest.getRequestURL().toString( ) ), null );
+						asyncContext.complete( );
+					}
 				}
-				
 
 			} else {
-				result = method.execute( resource, theRequest, theResponse, operationContext, pathMatcher, resourceFacility );
+				// update we have a call attempt being made
+				updateAttemptStatus( method );;
+				result = method.execute( resource, theRequest, theResponse, operationContext, pathMatcher, resourceFacility, null );
 				if( result != null ) {
 					try {
 						ResponseHelper.writeResponse(theRequest, theResponse, result);
 					} finally {
 						// update status, which we only do if we have a match
-						updateStatus( method, theResponse );
+						updateCompletionStatus( method, theResponse );
 					}
 				} else {
 					ResponseHelper.writeFailure(theRequest, theResponse, Status.CALLER_NOT_FOUND, FailureSubcodes.UNKNOWN_REQUEST, String.format( "Path '%s' maps to resource '%s.%s' but execution did not return a result.", theRequest.getRequestURL().toString( ), this.resourceType.getName( ), method.getName( ) ), null );
@@ -290,11 +355,19 @@ public class ResourceServlet extends HttpServlet {
    	}
 	
 	/**
+	 * Private helper method that tracks that a method was called.
+	 * @param theMethod the method being called
+	 */
+	private final void updateAttemptStatus( final ResourceMethod theMethod ) {
+		theMethod.getStatus( ).recordReceivedRequest();
+	}
+	
+	/**
 	 * Private helper method use to track the success or failure of a particular method on the resource.
 	 * @param theMethod the method containing the status to update for
 	 * @param theResponse the response to track
 	 */
-	private void updateStatus( ResourceMethod theMethod, HttpServletResponse theResponse ) {
+	private final void updateCompletionStatus( final ResourceMethod theMethod, final HttpServletResponse theResponse ) {
 		int status = theResponse.getStatus( );
 		
 		if( !HttpStatus.isError( status ) ) {

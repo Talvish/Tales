@@ -42,7 +42,7 @@ public class ConfigurableThreadFactory implements ThreadFactory {
 	 * normal default priority and is not a default daemon. 
 	 */
 	public ConfigurableThreadFactory( ) {
-		this( "tp", Thread.NORM_PRIORITY, false );
+		this( "default", Thread.NORM_PRIORITY, false );
 	}
 	
 	/**
@@ -70,7 +70,7 @@ public class ConfigurableThreadFactory implements ThreadFactory {
 		} else {
 			threadGroup = Thread.currentThread( ).getThreadGroup();
 		}
-		threadNamePrefix = String.format( "%s_%s_", theNamePrefix, lastPoolNumber.getAndIncrement( ) );
+		threadNamePrefix = String.format( "%s_p%s_t", theNamePrefix, lastPoolNumber.getAndIncrement( ) );
 		defaultPriority = theDefaultPriority;
 		defaultDaemon = isDefaultDaemon;
 	}
