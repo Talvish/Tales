@@ -83,6 +83,7 @@ public class ResourceClient {
 	protected final String contractVersion;	// e.g. 20140901
 	
 	protected final String userAgent; // the user agent to use
+	protected final int defaultMaxResponseSize	= 2 * 1024 * 1024; // the maximum size, in bytes, that the response buffer can hold
 	
 	// these are volatile because when we add/remove headers here it reset these members
 	// since they are expected to change through-out the life-time of the resource client
@@ -310,6 +311,16 @@ public class ResourceClient {
 	 */
 	public final String getUserAgent( ) {
 		return this.userAgent;
+	}
+	
+	/**
+	 * The default maximum buffer size, in bytes, for responses.
+	 * Methods may have different values depending on their needs.
+	 * If responses are bigger exceptions may occur.
+	 * @return the default maximum response buffer size
+	 */
+	public final int getDefaultMaxResponseSize( ) {
+		return this.defaultMaxResponseSize;
 	}
 
 	/**

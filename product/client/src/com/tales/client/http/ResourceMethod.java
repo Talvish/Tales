@@ -81,6 +81,7 @@ public class ResourceMethod {
 	private final Map<String,ResourceMethodParameter> headerParameters = new HashMap<String,ResourceMethodParameter>( );
 	private final Map<String,ResourceMethodParameter> externalHeaderParameters = Collections.unmodifiableMap( headerParameters );;
 	
+	private volatile int maxResponseSize		; // the maximum size, in bytes, that the response buffer can hold
 	private final ResourceClient client;
 	
 	/**
@@ -121,6 +122,7 @@ public class ResourceMethod {
 			pathParameters.add( null ); 
 		}
 		client = theClient;
+		maxResponseSize = theClient.getDefaultMaxResponseSize();
 	}
 	
 	/**
@@ -166,6 +168,27 @@ public class ResourceMethod {
 		return httpVerb;
 	}
 
+	/**
+	 * The maximum buffer size, in bytes, for this method.
+	 * If responses are bigger exceptions may occur.
+	 * @return the maximum response buffer size
+	 */
+	public final int getMaxResponseSize( ) {
+		return this.maxResponseSize;
+	}
+	
+	/**
+	 * Sets the maximum response size that can be used for this method.
+	 * Values too small will result in failed requests.
+	 * @param theMaxResponseSize the maximum response size for this method
+	 * @return the ResourceMethod again, so calls can be strung together
+	 */
+	public final ResourceMethod setMaxResponseSize( int theMaxResponseSize ) {
+		Preconditions.checkArgument( theMaxResponseSize > 0, "the maximum response size, %s, for method '%s', is too small", theMaxResponseSize, this.getName( ) );
+		this.maxResponseSize = theMaxResponseSize;
+		return this;
+	}
+	
 	/**
 	 * Indicates that a path parameter is expected by the service and it is expecting a particular type.
 	 * Using names is a convenience/debugging mechanism since setting path parameters is done in the 

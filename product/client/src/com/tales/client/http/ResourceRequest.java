@@ -19,20 +19,14 @@ import java.net.HttpCookie;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.Future;
 
-import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
-import org.eclipse.jetty.http.HttpField;
-import org.eclipse.jetty.http.HttpFields;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParseException;
 import com.tales.communication.CommunicationException;
-import com.tales.communication.HeaderConstants;
 import com.tales.parts.translators.TranslationException;
 import com.tales.serialization.UrlEncoding;
 
@@ -89,7 +83,30 @@ public class ResourceRequest {
 		.newRequest( String.format( method.getMethodUrl(), pathParameters ) )
 		.method( method.getHttpVerb().getValue() ); 
 	}
+	
+	/**
+	 * Convenience getter to retrieve the client the request is working through.
+	 * @return the associated client
+	 */
+	protected ResourceClient getClient( ) {
+		return client;
+	}
+	/**
+	 * Convenience getter to retrieve the method being called
+	 * @return the underlying method being called
+	 */
+	protected ResourceMethod getMethod( ) {
+		return method;
+	}
 
+	/**
+	 * Convenience getter to retrieve the underlying request object.
+	 * @return the underlying request object
+	 */
+	protected Request getRequest( ) {
+		return request;
+	}
+	
 	/**
 	 * Sets the data to use for a particular query string parameter. 
 	 * @param theName the name of the parameter
@@ -171,119 +188,84 @@ public class ResourceRequest {
 	}
 	
 	/**
-	 * This method is called to perform the actual request and return the server response.
-	 * @return returns a structure containing the exact response from the service
+	 * This method is used to perform a synchronous request to the service. The call
+	 * will block and return when the results have been received from the service.
+	 * @return returns a structure containing the response from the service
 	 * @throws InterruptedException this occurs if the the request is interrupted
 	 */
-	@SuppressWarnings("unchecked")
-	public <T> ResourceResult<T> execute( ) throws InterruptedException {
+	public <T> ResourceResult<T> call( ) throws InterruptedException {
 		logger.info( 
 				"Executing, synchronously, resource method '{}' from contract '{}'.", new Object[] {
 						this.method.getName(),
 						this.client.contractRoot } );
-		long startTimestamp = System.nanoTime(); 
-		ContentResponse response;
+
+		Future<ResourceResult<T>> future = _send( false );
 		try {
-			// check to see if we have any body parameters to deal with
-			if( this.bodyParameters.size() > 0 ) {
-				// create the content provider with the body parameters
-				request.content( new BodyContentProvider( this.bodyParameters ) );
-			}
-			
-			// check to see if we have any header overrides to deal with
-			Map<String, String> headerOverrides = client.getHeaderOverrides(); // we do this in case the underlying version changes
-			if( headerOverrides.size() > 0 ) {
-				for( Map.Entry<String, String> header : headerOverrides.entrySet() ) {
-					request.param( header.getKey(), header.getValue() );
-				}
-			}
-			
-			// TODO: consider a configuration setting for this
-			//request.param( "override.response.details", "ALL" );
-
-			// now let it rip and get that response back
-			response = request.send( );			
-			String responseString = response.getContentAsString();
-			
-			logger.trace( "Service return '{}'.", responseString );
-
-			// grab the response as a string, it should all be json, so let's interpret
-			JsonElement jsonResult = client.jsonParser.parse( responseString );
-			// now we need to convert what was returned as a result object ... BUT ..
-			ResourceResult<T> objectResult = ( ResourceResult<T> )client.getResultType().getFromJsonTranslator().translate( jsonResult );
-			// the actual result is not interpreted since we don't the type at registration time so we deal with the result
-			// value separately
-			JsonElement jsonReturn = jsonResult.getAsJsonObject().get( "return" );
-			// we need to make sure we have a result and if not then we 
-			// assume we didn't get a response
-			if( jsonReturn != null )  {
-				objectResult.setResult( ( T )client.getJsonFacility().fromJsonElement( jsonReturn, method.getReturn().getType() ) );
-			} else {
-				objectResult.setResult( null );
-			}
-
-			// TODO: need to do cookie support
-			HttpFields headers = response.getHeaders();
-			String headerName;
-			String headerValue;
-			
-			for( HttpField header : headers ) {
-				headerName = header.getName( );
-				headerValue = header.getValue( );
-				if( objectResult.getHeaders().containsKey( headerName ) ) {
-					// we shouldn't have two of the same headers, but if we do, at least warn
-					logger.warn( 
-							"Duplicate header '{}' found while processing result from resource method '{}' from contract '{}'.", 
-							headerName,
-							this.method.getName(),
-							this.client.contractRoot );
-				} else {
-					objectResult.setHeader( headerName, headerValue );
-					switch( headerName ) {
-					case HeaderConstants.CACHE_CONTROL:
-						objectResult.setCacheControl( CacheControl.create( headerValue ) );
-						break;
-					default:
-						// nothing else to do yet
-						break;
-					}
-				}
-			}
-	
-			return objectResult;		
-
-		} catch( JsonParseException e ) {
-			throw new CommunicationException( String.format( "Invalid json response from '%s'.", this.method.getMethodUrl( ) ), e );
-			
-		} catch( TranslationException e ) {
-			throw new CommunicationException( String.format( "Unexpected data while converting response from '%s'. Verify defined parameter and return types match what is sent on the wire.", this.method.getMethodUrl( ) ), e );
-			
-		} catch( TimeoutException e ) {
-			throw new CommunicationException( String.format( "Timed out while communicating with '%s'.", e.getClass().getSimpleName(), this.method.getMethodUrl( ) ), e );
+			return future.get();
 			
 		} catch( ExecutionException e ) {
+			// we catch these exceptions and do some amount of processing
+			// to not require the caller to handle
 			Throwable cause = e.getCause();
-			if( cause != null ) {
+			if( cause == null ) {
 				throw new CommunicationException( 
-						String.format( "A problem of type '%s' with message '%s' occurred while communicating with '%s'.", 
-								cause.getClass().getSimpleName(), 
-								cause.getMessage(), 
-								this.method.getMethodUrl( ) ),
-						e);
-			} else {
-				throw new CommunicationException( 
-						String.format( "For some unknown reason, could not communicate with '%s'.",
+						String.format( "An exception occurred while attempting to communicate with '%s' but the cause was not recorded.",
 								this.method.getMethodUrl( ) ), 
 						e );
+			} else if( cause instanceof TranslationException ) {
+				throw new CommunicationException( 
+						String.format( "Unexpected data while converting response from '%s'. Verify that the defined parameter and return types match what is sent on the wire.", 
+								this.method.getMethodUrl( ) ), e );
+			} else {
+				throw new CommunicationException( 
+						String.format( "A problem of type '%s' with message '%s' occurred while communicating with '%s'.", 
+								cause.getClass().getSimpleName( ), 
+								cause.getMessage(), 
+								this.method.getMethodUrl( ) ) );
 			}
-		} finally {
-			// status block handling would go here
-			long executionTime = System.nanoTime( ) - startTimestamp;
-			logger.info( 
-					"Executed, synchronously, resource method '{}' from contract '{}' in {} ms.", new Object[] {
-							this.method.getName(),
-							this.client.contractRoot,
-							( ( double )executionTime ) * 0.000001 } );
+		}		
+	}
+
+	/**
+	 * This method is used to perform an asynchronous request to the service. The call
+	 * will not block. Instead the call will use the Future to get or wait for the results.
+	 * Error handling will also need to be considered.
+	 * @return the Future that can be used to get the results
+	 */
+	public <T> Future<ResourceResult<T>> send( ) {
+		logger.info( 
+				"Executing, asynchronously, resource method '{}' from contract '{}'.", new Object[] {
+						this.method.getName(),
+						this.client.contractRoot } );
+		return _send( true );
+	}
+
+	/**
+	 * This is the private method that sets up the actual request to be made to the Tales
+	 * service, returning the future to allow getting at the results.
+	 * @param isAsync indicates if the original request was intended for async or not
+	 * @return returns a structure containing the exact response from the service
+	 * @throws InterruptedException this occurs if the the request is interrupted
+	 */
+	private <T> Future<ResourceResult<T>> _send( boolean isAsync ) {
+		// check to see if we have any body parameters to deal with
+		if( this.bodyParameters.size() > 0 ) {
+			// create the content provider with the body parameters
+			request.content( new BodyContentProvider( this.bodyParameters ) );
 		}
+		
+		// check to see if we have any header overrides to deal with
+		Map<String, String> headerOverrides = client.getHeaderOverrides(); // we do this in case the underlying version changes
+		if( headerOverrides.size() > 0 ) {
+			for( Map.Entry<String, String> header : headerOverrides.entrySet() ) {
+				request.param( header.getKey(), header.getValue() );
+			}
+		}
+
+		// now setup the listener/future, and make the request
+		ResourceResponseFuture<T> future = new ResourceResponseFuture<T>( this, method.getMaxResponseSize(), isAsync );
+		request.send( future );
+		return future;
+
 	}
 }
