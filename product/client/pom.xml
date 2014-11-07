@@ -7,7 +7,7 @@
   <url>https://github.com/Talvish/Tales</url>
  
   <parent>
-    <groupId>tales</groupId>
+    <groupId>com.talvish.tales</groupId>
     <artifactId>tales.root</artifactId>
     <version>1.6.1-SNAPSHOT</version>
     <relativePath>../../root/pom.xml</relativePath>
@@ -38,7 +38,7 @@
 
   <dependencies>
   	<dependency>
-		<groupId>tales</groupId>
+		<groupId>com.talvish.tales</groupId>
 		<artifactId>tales.common</artifactId>
 		<version>${project.version}</version>
 	</dependency>
