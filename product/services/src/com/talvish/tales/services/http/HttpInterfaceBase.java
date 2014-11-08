@@ -51,6 +51,7 @@ import com.talvish.tales.services.InterfaceBase;
 import com.talvish.tales.services.Service;
 import com.talvish.tales.services.OperationContext.Details;
 import com.talvish.tales.services.http.servlets.DefaultServlet;
+import com.talvish.tales.services.http.servlets.EnableHeaderOverridesFilter;
 import com.talvish.tales.system.ExecutionLifecycleException;
 import com.talvish.tales.system.ExecutionLifecycleState;
 import com.talvish.tales.system.configuration.ConfigurationException;
@@ -294,7 +295,25 @@ public abstract class HttpInterfaceBase extends InterfaceBase {
 			} else {
 				logger.info( "Default servlet handling for interface '{}' under context '{}' is handled by '{}'.", this.getName(), this.servletContext.getContextPath( ), mapping.getServletName() );
 			}
-
+			// now see if we have header overrides enable
+			boolean enableHeaderOverrides = getService( ).getConfigurationManager().getBooleanValue( String.format( ConfigurationConstants.HTTP_INTERFACE_ENABLE_HEADER_OVERRIDES, this.getName( ) ), false ) ;
+			if( enableHeaderOverrides ) {
+				logger.warn( "Interface '{}' has default header overrides enabled, allowing clients to override headers using query string parameters. This should only be used for debugging purposes.", this.getName( ) );
+				this.bind( new EnableHeaderOverridesFilter( ), "/" );
+			} else {
+				logger.warn( "Interface '{}' has default header overrides disabled.", this.getName( ) );
+			}
+			// now we setup the default response readability
+			String defaultResponseReadabilityString = getService( ).getConfigurationManager().getStringValue( String.format( ConfigurationConstants.HTTP_INTERFACE_DEFAULT_RESPONSE_READABILITY, this.getName( ) ), "MACHINE" ) ;
+			Readability defaultResponseReadability = Readability.HUMAN;
+			try {
+				defaultResponseReadability = Readability.valueOf( Readability.class, defaultResponseReadabilityString );
+			} catch( IllegalArgumentException e ) {
+				// absorbing since it doesn't really matter, but we log
+				logger.warn( "Interface '{}' unable to set the default response responsibility since the value '{}' is not valid.", this.getName( ), defaultResponseReadabilityString );
+			}
+			logger.info( "Interface '{}' has default response readability set to '{}'.", this.getName( ), defaultResponseReadability );
+			this.setDefaultResponseReadability( defaultResponseReadability );
 			server.start();
 		} catch( Exception e ) {
 			throw new ExecutionLifecycleException( "Unable to start the underlying server.", e );

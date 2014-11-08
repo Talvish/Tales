@@ -41,6 +41,8 @@ public final class ConfigurationConstants {
 	
 	public static final String INTERFACE_TYPE = INTERFACES + ".%s.type";	
 	public static final String HTTP_INTERFACE_ENDPOINTS = INTERFACES + ".%s.endpoints"; 
+	public static final String HTTP_INTERFACE_ENABLE_HEADER_OVERRIDES = INTERFACES + ".%s.enable_header_overrides"; 
+	public static final String HTTP_INTERFACE_DEFAULT_RESPONSE_READABILITY = INTERFACES + ".%s.default_response_readability"; 
 	public static final String HTTP_INTERFACE_SSL_KEY_STORE = INTERFACES + ".%s.ssl.key_store"; 
 	public static final String HTTP_INTERFACE_SSL_CERT_ALIAS = INTERFACES + ".%s.ssl.cert_alias";
 	public static final String HTTP_INTERFACE_CONNECTOR = INTERFACES + ".%s.connector";

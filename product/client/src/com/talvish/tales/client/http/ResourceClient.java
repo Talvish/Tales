@@ -392,7 +392,7 @@ public class ResourceClient {
 	 * @param theMethodIndex the index of the method to retrieve
 	 * @return the method at the index specified
 	 */
-	public ResourceMethod getMethod( int theMethodIndex ) {
+	protected ResourceMethod getMethod( int theMethodIndex ) {
 		Conditions.checkParameter( theMethodIndex >= 0 && theMethodIndex < methods.length, "theMethodIndex", "The specific method index is not within range." );
 		
 		return methods[ theMethodIndex ];
@@ -402,7 +402,7 @@ public class ResourceClient {
 	 * The underlying http communication client being used.
 	 * @return the underlying communication client being used
 	 */
-	public HttpClient getHttpClient( ) {
+	protected HttpClient getHttpClient( ) {
 		return httpClient;
 	}
 	
@@ -410,7 +410,7 @@ public class ResourceClient {
 	 * The underlying json parsing being used.
 	 * @return the underlying json parsing being used
 	 */
-	public JsonParser getJsonParser( ) {
+	protected JsonParser getJsonParser( ) {
 		return jsonParser;
 	}
 	
@@ -418,7 +418,7 @@ public class ResourceClient {
 	 * A special type used to validate and parse the response from all method requests.
 	 * @return the special type representing all service responses
 	 */
-	public JsonTypeReference getResultType( ) {
+	protected JsonTypeReference getResultType( ) {
 		return resultTypeReference;
 	}
 	
@@ -426,7 +426,7 @@ public class ResourceClient {
 	 * The JsonTranslationFacility being used to read and write json.
 	 * @return the JsonTranslationFacility being used
 	 */
-	public JsonTranslationFacility getJsonFacility( ) {
+	protected JsonTranslationFacility getJsonFacility( ) {
 		return this.jsonFacility;
 	}
 	
@@ -439,7 +439,7 @@ public class ResourceClient {
 	 * @param theMethodPath the relative path (should not have a leading '/') off the contract root for the url to communicate with for the method 
 	 * @return
 	 */
-	public ResourceMethod defineMethod( String theName, Type theReturnType, HttpVerb theHttpVerb, String theMethodPath ) {
+	protected ResourceMethod defineMethod( String theName, Type theReturnType, HttpVerb theHttpVerb, String theMethodPath ) {
 		return this.defineMethod(theName, new JavaType( theReturnType ), theHttpVerb, theMethodPath);
 	}
 	
@@ -453,7 +453,7 @@ public class ResourceClient {
 	 * @param theMethodPath the relative path (should not have a leading '/') off the contract root for the url to communicate with for the method 
 	 * @return
 	 */
-	public ResourceMethod defineMethod( String theName, JavaType theReturnType, HttpVerb theHttpVerb, String theMethodPath ) {
+	protected ResourceMethod defineMethod( String theName, JavaType theReturnType, HttpVerb theHttpVerb, String theMethodPath ) {
 		return new ResourceMethod( theName, theReturnType, theHttpVerb, theMethodPath, this );
 	}
 
@@ -463,7 +463,7 @@ public class ResourceClient {
 	 * @param thePathParameters the path parameters that are needed
 	 * @return the ResourceRequest that can be used to talk to the service
 	 */
-	public ResourceRequest createRequest( ResourceMethod theMethod, Object ... thePathParameters ) {
+	protected ResourceRequest createRequest( ResourceMethod theMethod, Object ... thePathParameters ) {
 		return new ResourceRequest( this, theMethod, thePathParameters );
 	}
 }
