@@ -104,43 +104,29 @@ public class ResourceClient {
 	 * @param theUserAgent the user agent that this client should use
 	 * @param allowUntrustedSSL indicates whether SSL will be trusted or not, which can be useful for self-certs, early development, etc
 	 */
-	public ResourceClient( String theEndpoint, String theContractRoot, String theContractVersion, String theUserAgent, boolean allowUntrustedSSL ) {
-		this( theEndpoint, theContractRoot, theContractVersion, theUserAgent, null, allowUntrustedSSL, null );
+	public ResourceClient( ResourceConfiguration theConfiguration, String theContractRoot, String theContractVersion, String theUserAgent ) {
+		this( theConfiguration, theContractRoot, theContractVersion, theUserAgent, null, null );
 	}
 	
 	/**
 	 * Creates a resource client that will use the specified HttpClient and JsonTypeFacility.
 	 * The endpoint and contract root should already have url encoded anything that needs url encoding.
-	 * This constructor assumes all SSL setup, if needed, has already been handled and setup in the HttpClient.
-	 * @param theEndpoint the end point to talk to which should be of the form http(s)?//name:port, e.g. http://localhost:8000
+	 * @param theConfiguration the parameters we expect to change based on configuration
 	 * @param theContractRoot the contract root to talk to, which is of the form /name, e.g. /login
 	 * @param theContractVersion the version of the contract which is a date of the form yyyyMMDD, e.g. 20140925
 	 * @param theUserAgent the user agent that this client should use
 	 * @param theClient the HttpClient to use
 	 * @param theJsonFacility the JsonTypeFacility to use
 	 */
-	public ResourceClient( String theEndpoint, String theContractRoot, String theContractVersion, String theUserAgent, HttpClient theClient, JsonTranslationFacility theJsonFacility ) {
-		this( theEndpoint, theContractRoot, theContractVersion, theUserAgent, theClient, false, theJsonFacility );
-	}
-	/**
-	 * Creates a resource client that will use the specified HttpClient and JsonTypeFacility.
-	 * The endpoint and contract root should already have url encoded anything that needs url encoding.
-	 * @param theEndpoint the end point to talk to which should be of the form http(s)?//name:port, e.g. http://localhost:8000
-	 * @param theContractRoot the contract root to talk to, which is of the form /name, e.g. /login
-	 * @param theContractVersion the version of the contract which is a date of the form yyyyMMDD, e.g. 20140925
-	 * @param theUserAgent the user agent that this client should use
-	 * @param theClient the HttpClient to use
-	 * @param theJsonFacility the JsonTypeFacility to use
-	 */
-	private ResourceClient( String theEndpoint, String theContractRoot, String theContractVersion, String theUserAgent, HttpClient theClient, boolean allowUntrustedSSL, JsonTranslationFacility theJsonFacility ) {
-		Preconditions.checkArgument( !Strings.isNullOrEmpty( theEndpoint ), "need a valid service endpoint" );
+	private ResourceClient( ResourceConfiguration theConfiguration, String theContractRoot, String theContractVersion, String theUserAgent, HttpClient theClient, JsonTranslationFacility theJsonFacility ) {
+		Preconditions.checkNotNull( theConfiguration, "need a configuration object so we can get our endpoint" );
     	Preconditions.checkArgument( !Strings.isNullOrEmpty( theContractRoot ), "need a contract root" );
     	Preconditions.checkArgument( theContractRoot.startsWith( "/" ), "the contract root '%s' must be a reference from the root (i.e. start with '/')", theContractRoot );
     	Preconditions.checkArgument( !Strings.isNullOrEmpty( theContractVersion ), "need a version for contract root '%s'", theContractRoot );
     	Preconditions.checkArgument( ContractVersion.isValidVersion( theContractVersion),  "the version string '%s' for contract root '%s' is not valid", theContractVersion, theContractRoot );
 		Preconditions.checkArgument( !Strings.isNullOrEmpty( theUserAgent ), "need a user agent for this client" );
 
-		endpoint = new HttpEndpoint( theEndpoint ); // this will do validation on the endpoint 
+		endpoint = new HttpEndpoint( theConfiguration.getEndpoint( ) ); // this will do validation on the endpoint 
 		contractRoot = theContractRoot; 
 		contractVersion = theContractVersion;
 		userAgent = theUserAgent;
@@ -151,7 +137,7 @@ public class ResourceClient {
 			    SslContextFactory sslContextFactory = null;
 	
 			    if( endpoint.isSecure( ) ) {
-			    	if( allowUntrustedSSL ) {
+			    	if( theConfiguration.getAllowUntrustedSsl() ) {
 			    		// so we need SSL communication BUT we don't need to worry about it being valid, likley
 			    		// because the caller is self-cert'ing or in early development ... we may need to do 
 			    		// more here mind you
