@@ -18,9 +18,11 @@ package com.talvish.tales.services;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URL;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -33,6 +35,11 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.jar.Attributes;
+import java.util.jar.JarFile;
+import java.util.jar.Manifest;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -93,8 +100,6 @@ import com.talvish.tales.system.status.StatusManager;
  *  - consider an interface servlet
  *  - have the info-header (query param?) used  to indicate what information to show or not show
  *    which could impact the data in logs and in administrative contracts
- *  - figure out how to use guice for configuration
- *  - make it so we don't need to inherit from HttpService
  *  - there can be administrative servlets for specific services as well (like changing watermark settings in Facebook queuing)
  */
 public abstract class Service implements Runnable {
@@ -249,14 +254,15 @@ public abstract class Service implements Runnable {
 		canonicalName = theCanonicalName;
 		friendlyName = theFriendlyName;
 		description = theDescription;
-		userAgent = String.format( "%s", canonicalName );
-	
+		
+		userAgent = prepareUserAgent( canonicalName );
+		
 		// store the status manager's blocks
 		statusManager.register( "service", status );
 	}
 	
-	//private String prepareUserAgent( String theServiceName ) {
-		// this is based on RFC 2616, what is allowed in a user agent (particularly the token definition):
+	private final String prepareUserAgent( String theServiceName ) {
+		// this is loosely based on RFC 2616 and defacto values for user agents
 		//
 		// User-Agent       = "User-Agent" ":" 1*( product | comment )
 		// product          = token ["/" product-version]
@@ -267,9 +273,154 @@ public abstract class Service implements Runnable {
 	    //                  | "/" | "[" | "]" | "?" | "="
 	    //                  | "{" | "}" | SP | HT
 		//
-		// format will be: canonical_service/version tales/version
+		// format will be: canonical_service/version ( os/version; arch) tales/version
 	    // also need to set the system wide property: System.setProperty("http.agent", ""); 
-	//}
+
+		StringBuffer buffer = new StringBuffer( );
+		String manifestName = getManifestName( );
+		
+		buffer.append( theServiceName );
+		// we try to get the tales version from the manifest
+		buffer.append( "/" );
+		buffer.append( filterUserAgentValue( getServiceVersion( manifestName ) ) );
+		buffer.append( " (" );
+		buffer.append( filterUserAgentValue( System.getProperty( "os.name" ) ) );
+		buffer.append( "/" );
+		buffer.append( filterUserAgentValue( System.getProperty( "os.version" ) ) );
+		buffer.append( "; " );
+		buffer.append( filterUserAgentValue( System.getProperty( "os.arch" ) ) );
+		buffer.append( ") " );
+		buffer.append( "tales");
+		buffer.append( "/" );
+		buffer.append( filterUserAgentValue( getTalesVersion( manifestName ) ) );
+		
+		return buffer.toString( );
+	}
+	
+	/**
+	 * Helper method that gets the string representing the version of the tales framework.
+	 * It returns the value associated with the 'Tales-Version' string from the primary 
+	 * manifest file.
+	 * @param theManifestName the name to use for manifest file resource loading
+	 * @return the string for the version or 'unknown' if not found
+	 */
+	private final String getTalesVersion( String theManifestName ) {
+		String value = null;
+		
+		try {
+			Manifest manifest = getClassManifest( Service.class, theManifestName );
+			Attributes manifestAttributes = manifest.getMainAttributes( );
+			value = manifestAttributes.getValue( "Tales-Version" );
+		} catch( Exception e ) {
+			// we purposefully absorb
+		}
+		return Strings.isNullOrEmpty( value ) ? "unknown" : value;
+	}
+
+	/**
+	 * Helper method that gets the string representing the version of the service.
+	 * It returns the value associated with the 'Service-Version' string from the primary 
+	 * manifest file.
+	 * @param theManifestName the name to use for manifest file resource loading
+	 * @return the string for the version or 'unknown' if not found
+	 */
+	private final String getServiceVersion( String theManifestName ) {
+		String value = null;
+		
+		try {			
+			Manifest manifest = new Manifest( Service.class.getResourceAsStream( "/" + theManifestName ) );
+			Attributes manifestAttributes = manifest.getMainAttributes( );
+			value = manifestAttributes.getValue( "Service-Version" );
+		} catch( Exception e ) {
+			// we purposefully absorb
+		}
+		return Strings.isNullOrEmpty( value ) ? "unknown" : value;
+	}
+	
+	/**
+	 * Simple helper method that will make sure we get the manifest name 
+	 * that will be used to load resources. It ensures there is no 
+	 * leading "/".
+	 * @return the manifest name to use to get resources
+	 */
+	private final String getManifestName( ) {
+		String manifestName = JarFile.MANIFEST_NAME;
+		
+		if( manifestName.startsWith( "/" ) ) {
+			return manifestName.substring( 1 );
+		} else {
+			return manifestName;
+		}
+	}
+
+	/**
+	 * Helper method, that given a particular class, file find the actual
+	 * manifest for the jar file that the class was part of.
+	 * @param theClass the class to find
+	 * @param theManifestPath the manifest name to use as the resource to load
+	 * @return the manifest or null if not found / available
+	 */
+	public final Manifest getClassManifest( Class<?> theClass, String theManifestName ) {
+		Manifest manifest = null;
+		InputStream manifestStream = null;
+		
+		try {
+			// first we need to figure out the jar file that class was found in
+			// which is basically using the full package name of the class and converting to a resource path 
+			String classPath = theClass.getName( ).replace( ".", "/" ) + ".class";
+			// the converting that to a resource URL reference
+			URL classUrl = theClass.getClassLoader().getResource( classPath );
+			if( classUrl != null ) {
+				String classUrlString = classUrl.toString();
+				// then we need to strip off some of the resource URL quirks
+				if( classUrlString.startsWith( "jar:" ) ) {
+					int separatorIndex = classUrlString.lastIndexOf( '!' );
+					if( separatorIndex > 0 ) {
+						// and finally we then use that reference from the class to put the manifest name
+						// as the resource we are looking to get
+						String manifestUrlString = classUrlString.substring( 0, separatorIndex + 2 ) + theManifestName;
+						URL manifestUrl = new URL( manifestUrlString );
+						// and then we have our manifest file to load
+						manifestStream = manifestUrl.openStream( );
+						manifest = new Manifest( manifestStream ); 
+					}
+				}
+			}
+		} catch( Exception e ) {
+			// absorb, since doesn't matter
+		} finally {
+			if( manifestStream != null ) {
+				try {
+					manifestStream.close();
+				} catch( Exception e ) {
+					// absorb, since doesn't matter
+				}
+			}
+		
+		}
+		return manifest;
+	}
+	
+	private static String NON_TOKEN_CHARS  = "[\\(\\)\\<\\>\\@\\,\\;\\:\\\\\\\"\\/\\[\\]\\?\\=\\{\\}\\x00-\\x1f\\x7f]";
+	private static Pattern NON_TOKEN_REGEX = Pattern.compile( NON_TOKEN_CHARS );
+	
+	/**
+	 * Takes the value that was given and ensures it is a valid
+	 * token value as outlined in RFC 2616.
+	 * @param theValue
+	 * @return
+	 */
+	private String filterUserAgentValue( String theValue ) {
+		// token            = 1*<any CHAR except CTLs or separators>
+	    // separators       = "(" | ")" | "<" | ">" | "@"
+	    //                  | "," | ";" | ":" | "\" | <">
+	    //                  | "/" | "[" | "]" | "?" | "="
+	    //                  | "{" | "}" | SP | HT
+	    // CTL              = <any US-ASCII control character
+        //                 (octets 0 - 31) and DEL (127)>
+		Matcher matcher = NON_TOKEN_REGEX.matcher( theValue );
+		return matcher.replaceAll( "" );
+	}
 	
 	/**
 	 * Returns the canonical name of the service.

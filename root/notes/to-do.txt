@@ -106,6 +106,8 @@ Config
 - network based config
 - map source config should copy the input to be save (in case something underlying changes them)
 - change the list format to mirror map (e.g. [] instead of ,)
+- love a way for me to map config in program to config files, so I don't have to keep writing my
+  loadXXX methods
 
 Client
 ------------------------------------------------
