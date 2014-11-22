@@ -8,6 +8,7 @@ import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 
 public final class TypeUtility {
 	/**
@@ -119,5 +120,22 @@ public final class TypeUtility {
 		} else {
 			throw new IllegalArgumentException( String.format( "Could not create a field type for '%s.%s' due to unknown field type '%s'.", theDeclaringType.getTypeName( ), fieldType.getTypeName( ), fieldType.getClass( ).getName() ) );
 		}	
+	}
+
+	/**
+	 * Extracts the generic type for a field.
+	 * @param theClass the class in that has the field
+	 * @param theField the field in the class to get the generic type for
+	 * @return the generic type for the field
+	 */
+	public static Type extractFieldType( Class<?> theClass, String theField ) {
+		Preconditions.checkNotNull( theClass, "need a class" );
+		Preconditions.checkArgument( !Strings.isNullOrEmpty( theField ), "need a field name in order get the field type from the class '%s'", theClass.getSimpleName( ) );
+		
+		try {
+			return theClass.getDeclaredField( theField ).getGenericType( );
+		} catch ( NoSuchFieldException | SecurityException e ) {
+			throw new IllegalArgumentException( String.format( "could not find field '%s' on type '%s'", theField, theClass.getSimpleName( ) ), e );
+		}
 	}
 }
