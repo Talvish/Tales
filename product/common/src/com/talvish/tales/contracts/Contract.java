@@ -37,7 +37,7 @@ import com.talvish.tales.parts.naming.SegmentedLowercaseEntityNameValidator;
 // 		 hide the servlet details, we could use the service version to route, within one 
 //       servlet, to the particular version implementation
 public abstract class Contract {
-	public static final String CONTRACT_NAME_VALIDATOR = "contract_name";
+	public static final String CONTRACT_NAME_VALIDATOR = "tales.contracts.contract_name";
 	
 	static {
 		if( !NameManager.hasValidator( Contract.CONTRACT_NAME_VALIDATOR ) ) {

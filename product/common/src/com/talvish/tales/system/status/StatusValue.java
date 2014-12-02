@@ -35,7 +35,7 @@ import com.talvish.tales.parts.naming.NameValidator;
  *
  */
 public class StatusValue {
-	public static final String STATUS_VALUE_NAME_VALIDATOR = "status_value_name";
+	public static final String STATUS_VALUE_NAME_VALIDATOR = "tales.status.status_value_name";
 	public static final Comparator<StatusValue> COMPARATOR =  ( StatusValue valueOne, StatusValue valueTwo ) -> valueOne.name.compareTo( valueTwo.name );	
 	
 	static {

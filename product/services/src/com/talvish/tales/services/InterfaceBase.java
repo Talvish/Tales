@@ -48,7 +48,7 @@ import com.talvish.tales.system.status.StatusManager;
  *
  */
 public abstract class InterfaceBase implements Interface {
-	public static final String INTERFACE_NAME_VALIDATOR = "interface_name";
+	public static final String INTERFACE_NAME_VALIDATOR = "tales.services.interface_name";
 	
 	static {
 		if( !NameManager.hasValidator( InterfaceBase.INTERFACE_NAME_VALIDATOR ) ) {

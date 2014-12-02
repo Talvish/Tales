@@ -90,6 +90,7 @@ Contracts
 - change the contract to take an array of HttpVerbs instead of being part of the regex 
 
 - support methods (aka JavaBeans) for MemberSites ... it will need both the getter and setter to function
+- given we support different types of interfaces, perhaps we have a way to mark the datacontracts with tags for dealing with projections into the different interfaces
 
 Status
 ------------------------------------------------

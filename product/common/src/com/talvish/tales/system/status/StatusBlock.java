@@ -34,7 +34,7 @@ import com.talvish.tales.parts.naming.NameValidator;
  *
  */
 public class StatusBlock {
-	public static final String STATUS_BLOCK_NAME_VALIDATOR = "status_block_name";
+	public static final String STATUS_BLOCK_NAME_VALIDATOR = "tales.status.status_block_name";
 	public static final Comparator<StatusBlock> COMPARATOR =  ( StatusBlock blockOne, StatusBlock blockTwo ) -> blockOne.name.compareTo(blockTwo.name );	
 
 	static {
