@@ -29,8 +29,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.talvish.tales.parts.reflection.TypeDescriptor;
+
 import com.talvish.tales.parts.translators.TranslationException;
+import com.talvish.tales.serialization.SerializationType;
 
 /**
  * Represents a type and its representation as a json object.
@@ -40,14 +41,14 @@ import com.talvish.tales.parts.translators.TranslationException;
 public class JsonTypeMap {
     private static final Logger logger = LoggerFactory.getLogger( JsonTypeMap.class ); // log against the id, so we can group up from anywhere
 	private final boolean strictMatch = false;
-	private final TypeDescriptor<?,?> reflectedType;
+	private final SerializationType<?,?> reflectedType;
 	private Map<String, JsonMemberMap> members = Collections.unmodifiableMap( new HashMap<String, JsonMemberMap>( ) );
 	
 	/**
 	 * Constructor taking the type it represents.
 	 * @param theContractType the type 
 	 */
-	public JsonTypeMap( TypeDescriptor<?,?> theReflectedType ) {
+	public JsonTypeMap( SerializationType<?,?> theReflectedType ) {
 		Preconditions.checkNotNull( theReflectedType, "need a reflected type type" );
 		reflectedType = theReflectedType;
 	}
@@ -56,7 +57,7 @@ public class JsonTypeMap {
 	 * The type the map represents.
 	 * @return
 	 */
-	public TypeDescriptor<?,?> getReflectedType( ) {
+	public SerializationType<?,?> getReflectedType( ) {
 		return reflectedType;
 	}
 
@@ -101,6 +102,8 @@ public class JsonTypeMap {
 				member.setData( theInstance, entry.getValue( ) );
 			}
 		}
+		// call the deserialized hook (this method verifies the hook is there)
+		reflectedType.callDeserializedHook( theInstance );
 	}
 
 	/**

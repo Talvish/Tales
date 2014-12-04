@@ -15,15 +15,16 @@
 // ***************************************************************************
 package com.talvish.tales.contracts.data;
 
+import java.lang.reflect.Method;
+
 import com.talvish.tales.parts.reflection.JavaType;
-import com.talvish.tales.parts.reflection.TypeDescriptor;
+import com.talvish.tales.serialization.SerializationType;
 
 /**
  * This class represents a class which is to be serialized.
  * @author jmolnar
  */
-public class DataContractType extends TypeDescriptor< DataContractType, DataContractField> {
-	private final boolean supportsValidation;
+public class DataContractType extends SerializationType< DataContractType, DataContractField > {
     private final DataContractType baseType;
     
     /**
@@ -33,22 +34,15 @@ public class DataContractType extends TypeDescriptor< DataContractType, DataCont
      * objects. 
      * @param theName the name to give the type
      * @param theType the underlying type
+     * @param theDeserializedHook the method to call if the type wants to participate when an instance is deserialized 
      * @param validationSupport indicates if the contract supports validation
      * @param theBaseType the base class, if applicable
      */
-    DataContractType( String theName, JavaType theType, boolean validationSupport, DataContractType theBaseType ) {
-    	super( theName, theType );
-    	this.supportsValidation = validationSupport;
+    protected DataContractType( String theName, JavaType theType, Method theDeserializedHook, boolean validationSupport, DataContractType theBaseType ) {
+    	super( theName, theType, theDeserializedHook, validationSupport );
         this.baseType = theBaseType;        
     }
     
-    /**
-     * Indicates if the data contract type has validation supports.
-     * @return true if the data contract type has validation support, false otherwise
-     */
-    public boolean supportsValidation( ) {
-    	return this.supportsValidation;
-    }
 
     /**
      * The type info for the superclass.

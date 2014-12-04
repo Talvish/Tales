@@ -18,6 +18,7 @@ package com.talvish.tales.serialization;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
+import java.util.BitSet;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -27,11 +28,15 @@ import org.joda.time.DateTime;
 import com.google.common.base.Preconditions;
 import com.talvish.tales.businessobjects.ObjectId;
 import com.talvish.tales.parts.reflection.JavaType;
+import com.talvish.tales.parts.translators.BitSetToStringTranslator;
 import com.talvish.tales.parts.translators.BooleanToStringTranslator;
+import com.talvish.tales.parts.translators.ByteArrayToStringTranslator;
 import com.talvish.tales.parts.translators.EnumToStringTranslator;
 import com.talvish.tales.parts.translators.ObjectToStringTranslator;
 import com.talvish.tales.parts.translators.StringToBigDecimalTranslator;
+import com.talvish.tales.parts.translators.StringToBitSetTranslator;
 import com.talvish.tales.parts.translators.StringToBooleanTranslator;
+import com.talvish.tales.parts.translators.StringToByteArrayTranslator;
 import com.talvish.tales.parts.translators.StringToDateTimeTranslator;
 import com.talvish.tales.parts.translators.StringToDoubleTranslator;
 import com.talvish.tales.parts.translators.StringToEnumTranslator;
@@ -62,6 +67,8 @@ public final class StringTranslationFacility implements Facility {
 	 */
 	public StringTranslationFacility( ) {
 		// the from string translators . . .
+		
+		// TODO: why am I using empty string for the null value in the XXXtoStringTranslators?
 		
 		Translator toIntegerTranslator = new StringToIntegerTranslator( true, null, null );
 		Translator fromObjectTranslator = new ObjectToStringTranslator( "" );
@@ -103,10 +110,18 @@ public final class StringTranslationFacility implements Facility {
 		Translator fromStringTranslator = new StringToStringTranslator( true, "", null );
 		this.registerTranslators( new JavaType( String.class ), toStringTranslator, fromStringTranslator );
 		
-		Translator toUUIDTranslator = new StringToUuidTranslator(true, null, null);
+		Translator toUUIDTranslator = new StringToUuidTranslator(true, null, null); // TODO: empty should maybe be an empty UUID?
 		Translator fromUUIDTranslator = new UuidToStringTranslator( "" );
 		this.registerTranslators( new JavaType( UUID.class ), toUUIDTranslator, fromUUIDTranslator );
 		
+		Translator toBitSetTranslator = new StringToBitSetTranslator( true, null, null );
+		Translator fromBitSetTranslator = new BitSetToStringTranslator( "" );
+		this.registerTranslators( new JavaType( BitSet.class ), toBitSetTranslator, fromBitSetTranslator );
+
+		Translator toByteArrayTranslator = new StringToByteArrayTranslator( true, null, null ); // TODO: empty should maybe be an empty array? (though that isn't immutable, so maybe I do something in the class?)
+		Translator fromByteArrayTranslator = new ByteArrayToStringTranslator( "" );
+		this.registerTranslators( new JavaType( byte[].class ), toByteArrayTranslator, fromByteArrayTranslator );
+
 		Translator toObjectIdTranslator = new StringToObjectIdTranslator( true, null, null );
 		this.registerTranslators( new JavaType( ObjectId.class ), toObjectIdTranslator, fromObjectTranslator );		
 	}

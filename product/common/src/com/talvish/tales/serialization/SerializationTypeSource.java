@@ -17,9 +17,7 @@ package com.talvish.tales.serialization;
 
 import java.util.Collection;
 
-import com.talvish.tales.parts.reflection.FieldDescriptor;
 import com.talvish.tales.parts.reflection.JavaType;
-import com.talvish.tales.parts.reflection.TypeDescriptor;
 
 /**
  * This is a helper class to get type information and field information for classes that a 
@@ -27,7 +25,7 @@ import com.talvish.tales.parts.reflection.TypeDescriptor;
  * @author jmolnar
  *
  */
-public interface SerializationTypeSource<T extends TypeDescriptor<T, F>, F extends FieldDescriptor<T, F>> {
+public interface SerializationTypeSource<T extends SerializationType<T, F>, F extends SerializationField<T, F>> {
 	/**
 	 * Gets a reflected type from a given class. The returned
 	 * type represents a definition for serialization.

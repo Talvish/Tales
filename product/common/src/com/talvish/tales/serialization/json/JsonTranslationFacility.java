@@ -39,7 +39,6 @@ import com.talvish.tales.parts.naming.NameValidator;
 import com.talvish.tales.parts.naming.NopNameValidator;
 import com.talvish.tales.parts.reflection.FieldDescriptor;
 import com.talvish.tales.parts.reflection.JavaType;
-import com.talvish.tales.parts.reflection.TypeDescriptor;
 import com.talvish.tales.parts.reflection.TypeUtility;
 import com.talvish.tales.parts.reflection.ValueType;
 import com.talvish.tales.parts.sites.TranslatedDataSite;
@@ -47,6 +46,7 @@ import com.talvish.tales.parts.translators.StringToEnumTranslator;
 import com.talvish.tales.parts.translators.TranslationException;
 import com.talvish.tales.parts.translators.Translator;
 import com.talvish.tales.serialization.Readability;
+import com.talvish.tales.serialization.SerializationType;
 import com.talvish.tales.serialization.SerializationTypeSource;
 import com.talvish.tales.serialization.StringTranslationFacility;
 import com.talvish.tales.serialization.json.translators.ArrayToJsonArrayTranslator;
@@ -347,7 +347,7 @@ public final class JsonTranslationFacility implements Facility {
 			
 		} else {
 			// first we need to make sure we have contract for the type
-			TypeDescriptor<?, ?> reflectedType = this.typeSource.getSerializedType( theType );
+			SerializationType<?, ?> reflectedType = this.typeSource.getSerializedType( theType );
 			// validate the name
 			if( !typeNameValidator.isValid( reflectedType.getName( ) ) ) {
 				throw new IllegalStateException( String.format( "Type '%s' is using the name '%s' that does not conform to validator '%s'.", reflectedType.getType().getName(), reflectedType.getName( ), typeNameValidator.getClass().getSimpleName() ) );

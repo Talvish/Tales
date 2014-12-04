@@ -20,12 +20,13 @@ import java.util.List;
 import com.talvish.tales.parts.reflection.FieldDescriptor;
 import com.talvish.tales.parts.reflection.ValueType;
 import com.talvish.tales.parts.sites.MemberSite;
+import com.talvish.tales.serialization.SerializationField;
 
 /**
  * This class represents a field that is meant to be serialized.
  * @author jmolnar
  */
-public class DataContractField extends FieldDescriptor<DataContractType, DataContractField> {
+public class DataContractField extends SerializationField<DataContractType, DataContractField> {
     /**
      * Primary constructor used to create a field that isn't a collection, array or map.
      * @param theName the name to give the field
@@ -34,7 +35,7 @@ public class DataContractField extends FieldDescriptor<DataContractType, DataCon
      * @param theDeclaringType the contract type this field was declared in
      * @param theContainingType the class that currently contains the field, which, if not the same as theDeclaringType is a subclass
      */
-    DataContractField( 
+    protected DataContractField( 
     		String theName, 
     		FieldDescriptor.FieldValueType theFieldValueType,
     		List<ValueType<DataContractType, DataContractField>> theObjectTypes, 
@@ -54,7 +55,7 @@ public class DataContractField extends FieldDescriptor<DataContractType, DataCon
      * @param theDeclaringType the contract type this field was declared in
      * @param theContainingType the class that currently contains the field, which, if not the same as theDeclaringType is a subclass
      */
-    DataContractField( 
+    protected DataContractField( 
     		String theName, 
     		List<ValueType<DataContractType, DataContractField>> theKeyTypes, 
     		List<ValueType<DataContractType, DataContractField>> theValueTypes, 

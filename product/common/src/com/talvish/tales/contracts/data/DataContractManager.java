@@ -16,6 +16,7 @@
 package com.talvish.tales.contracts.data;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -91,12 +92,23 @@ public class DataContractManager implements Facility {
                 baseContractType = generateType( baseType ); // TODO: consider not having to have the parent have the annotation (but still look at the fields)
                 baseTypeFields = baseContractType.getFields( );
             }
+            
+            Method deserializedHook = null;
+            
+            // we need to see if the class supports serialization hooks
+            for( Method method : theType.getUnderlyingClass().getDeclaredMethods( ) ) {
+            	if( method.getAnnotation( OnDeserialized.class ) != null ) {
+            		Preconditions.checkState( deserializedHook == null, "'%s' already has a deserialized hook, '%s', defined.", theType.getName( ), method.getName( ) );
+            		deserializedHook = method;
+            	}
+            }
 
             // now create the data contract type
             DataContractType contractType = new DataContractType( 
             		typeName, 
             		theType,
-            		ValidationSupport.class.isAssignableFrom( theType.getUnderlyingClass() ),
+            		deserializedHook,
+            		ValidationSupport.class.isAssignableFrom( theType.getUnderlyingClass() ), // TODO: the validation pieces don't get called yet
             		baseContractType );
             DataContractField contractField = null;
             
