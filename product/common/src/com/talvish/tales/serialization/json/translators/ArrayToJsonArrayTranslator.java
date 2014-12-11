@@ -33,14 +33,28 @@ import com.talvish.tales.parts.translators.Translator;
  */
 public class ArrayToJsonArrayTranslator implements Translator {
 	private final Translator elementTranslator;
-	
+	private final boolean writeSingle;
+
 	/**
-	 * Empty default constructor.
+	 * Constructor taking the element translator.
+	 * There is no special handling of single element arrays.
+	 * @param theElementTranslator the translator to use on the elements
 	 */
 	public ArrayToJsonArrayTranslator( Translator theElementTranslator ) {
+		this( theElementTranslator, false );
+	}
+
+	/**
+	 * Constructor taking the element translator and indication of 
+	 * special handling of a single element array.
+	 * @param theElementTranslator the translator to use on the elements
+	 * @param writeSingle true means that if there is a single element it isn't written as an array but as the object
+	 */
+	public ArrayToJsonArrayTranslator( Translator theElementTranslator, boolean writeSingle ) {
 		Preconditions.checkNotNull( theElementTranslator );
 		
 		elementTranslator = theElementTranslator;
+		this.writeSingle = writeSingle; 
 	}
 
 	/**
@@ -56,12 +70,17 @@ public class ArrayToJsonArrayTranslator implements Translator {
 		} else {
 			try {
 				if( anObject.getClass( ).isArray() ) {
-					JsonArray jsonArray = new JsonArray( );
-					
-					for( int count = 0; count < Array.getLength( anObject ); count += 1 ) {
-						jsonArray.add( ( JsonElement )elementTranslator.translate( Array.get( anObject, count ) ) );
+					int arrayLength = Array.getLength( anObject ); 
+					if( arrayLength != 1 || !writeSingle) {
+						JsonArray jsonArray = new JsonArray( );
+						for( int count = 0; count < arrayLength; count += 1 ) {
+							jsonArray.add( ( JsonElement )elementTranslator.translate( Array.get( anObject, count ) ) );
+						}
+						returnValue = jsonArray;
+					} else {
+						// this happens we are allowing the single item arrays to be written out as a non-array
+						returnValue = ( JsonElement )elementTranslator.translate( Array.get( anObject, 0 ) );
 					}
-					returnValue = jsonArray;
 				} else {
 					throw new TranslationException( String.format( "Received a '%s' instead of an array, so unable to translate into a json array.", anObject.getClass( ).getName( ) ) );
 				}

@@ -29,7 +29,7 @@
 			"blocks" : [
 				{
 					"name" : "object_id_service",
-					"override" : true
+					"override" : true,
 					"settings" : [
 						{
 							; maybe could make it so only name, value,

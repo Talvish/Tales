@@ -98,6 +98,7 @@ Status
 - consider configuration on how much to track as well, per version or just contract
 - make it so status can be queried using variable/named paths 
 - make it so if the interface or service status is queried, the http status code is reflects status (running is 200, suspended is 503, stopped/etc is 5xx) 
+- consider changing the use of AtomicLong/Double to Long/DoubleAdder (http://minddotout.wordpress.com/2013/05/11/java-8-concurrency-longadder/)
 
 
 Config
@@ -137,7 +138,7 @@ Misc
 - guarantee the order of Json field member output (JsonTypeMap) and DataContract member output, which would require a list
   to be used along-side the map ... this allows items which may sign data re-interpret and send out again to be in the same
   order insted of whatever the maps do
-
+- consider swagger support? (http://swagger.io/) 
 - see if there is an easy way to take the output from a client and send back from a resource call, this allows for proxy calls
   
 
