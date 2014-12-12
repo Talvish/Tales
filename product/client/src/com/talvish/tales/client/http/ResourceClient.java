@@ -38,16 +38,12 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.gson.JsonParser;
+
 import com.talvish.tales.communication.HttpEndpoint;
 import com.talvish.tales.communication.HttpVerb;
 import com.talvish.tales.contracts.ContractVersion;
-import com.talvish.tales.contracts.data.DataContractManager;
 import com.talvish.tales.contracts.data.DataContractTypeSource;
-import com.talvish.tales.parts.naming.LowerCaseEntityNameValidator;
-import com.talvish.tales.parts.naming.NameValidator;
-import com.talvish.tales.parts.naming.SegmentedLowercaseEntityNameValidator;
 import com.talvish.tales.parts.reflection.JavaType;
-import com.talvish.tales.serialization.Readability;
 import com.talvish.tales.serialization.json.JsonTranslationFacility;
 import com.talvish.tales.serialization.json.JsonTypeMap;
 import com.talvish.tales.serialization.json.JsonTypeReference;
@@ -196,13 +192,7 @@ public class ResourceClient {
 		httpClient.setUserAgentField( new HttpField( HttpHeader.USER_AGENT, theUserAgent ) );
 
 		if( theJsonFacility == null ) {
-			NameValidator jsonHttpFieldNameValidator = new LowerCaseEntityNameValidator();
-			NameValidator jsonHttpClassNameValidator = new SegmentedLowercaseEntityNameValidator();
-			jsonFacility = new JsonTranslationFacility( 
-					new DataContractTypeSource( new DataContractManager( ) ),
-					Readability.MACHINE,
-					jsonHttpClassNameValidator, 
-					jsonHttpFieldNameValidator );
+		jsonFacility = new JsonTranslationFacility( new DataContractTypeSource( ) );
 		} else {
 			jsonFacility = theJsonFacility;
 		}

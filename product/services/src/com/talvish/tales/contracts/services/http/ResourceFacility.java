@@ -26,9 +26,9 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.gson.JsonObject;
+
 import com.talvish.tales.communication.Status;
 import com.talvish.tales.contracts.data.DataContractTypeSource;
-import com.talvish.tales.parts.naming.LowerCaseEntityNameValidator;
 import com.talvish.tales.parts.reflection.JavaType;
 import com.talvish.tales.parts.translators.Translator;
 import com.talvish.tales.serialization.Readability;
@@ -68,7 +68,7 @@ public final class ResourceFacility implements Facility {
 	 * Default constructor.
 	 */
 	public ResourceFacility( ) {
-		this( new JsonTranslationFacility( new DataContractTypeSource( ), Readability.MACHINE, new LowerCaseEntityNameValidator(), new LowerCaseEntityNameValidator() ) );
+		this( new JsonTranslationFacility( new DataContractTypeSource( ) ) );
 	}
 	
 	/**

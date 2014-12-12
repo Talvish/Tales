@@ -34,9 +34,8 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
+
 import com.talvish.tales.businessobjects.ObjectId;
-import com.talvish.tales.parts.naming.NameValidator;
-import com.talvish.tales.parts.naming.NopNameValidator;
 import com.talvish.tales.parts.reflection.FieldDescriptor;
 import com.talvish.tales.parts.reflection.JavaType;
 import com.talvish.tales.parts.reflection.TypeUtility;
@@ -77,7 +76,6 @@ import com.talvish.tales.system.Facility;
 public final class JsonTranslationFacility implements Facility {
 	private final Map<JavaType, JsonTypeReference> translators = new ConcurrentHashMap<>( 16, 0.75f, 1 );
 	
-	
 	// these are using concurrent hash maps for slight protection, but concurrency factor is low
 	// since we don't expect much concurrency and we don't want the memory overhead
     private final Map<JavaType, JsonTypeMap> typeMaps = new ConcurrentHashMap<>( 16, 0.75f, 1 );
@@ -96,19 +94,11 @@ public final class JsonTranslationFacility implements Facility {
 	private final Readability defaultReadability;
 	private final JsonParser parser = new JsonParser( );
 	
-	private NameValidator typeNameValidator;
-	private NameValidator memberNameValidator;
-		
-
 	public JsonTranslationFacility( SerializationTypeSource<?,?> theTypeSource ) {
-		this( theTypeSource, Readability.MACHINE, null, null );
+		this( theTypeSource, Readability.MACHINE );
 	}
 
 	public JsonTranslationFacility( SerializationTypeSource<?,?> theTypeSource, Readability theDefaultReadability ) {
-		this( theTypeSource, theDefaultReadability, null, null );
-	}
-
-	public JsonTranslationFacility( SerializationTypeSource<?,?> theTypeSource, Readability theDefaultReadability, NameValidator theTypeNameValidator, NameValidator theMemberNameValidator ) {
 		// TODO: change more than this, change translators
 		//       and update the string translation facility 
 		//       to do the same, and then using the 
@@ -121,9 +111,6 @@ public final class JsonTranslationFacility implements Facility {
 		
 		stringTranslators = new StringTranslationFacility( );
 		typeSource = theTypeSource;
-		
-		typeNameValidator = theTypeNameValidator == null ? new NopNameValidator( ) : theTypeNameValidator;
-		memberNameValidator = theMemberNameValidator == null ? new NopNameValidator( ) : theMemberNameValidator;
 		
 		Translator numberToJsonTranslator = new NumberToJsonPrimitiveTranslator( );
 		Translator booleanToJsonTranslator = new BooleanToJsonPrimitiveTranslator( );
@@ -348,10 +335,6 @@ public final class JsonTranslationFacility implements Facility {
 		} else {
 			// first we need to make sure we have contract for the type
 			SerializationType<?, ?> reflectedType = this.typeSource.getSerializedType( theType );
-			// validate the name
-			if( !typeNameValidator.isValid( reflectedType.getName( ) ) ) {
-				throw new IllegalStateException( String.format( "Type '%s' is using the name '%s' that does not conform to validator '%s'.", reflectedType.getType().getName(), reflectedType.getName( ), typeNameValidator.getClass().getSimpleName() ) );
-			}
 
 			JsonTypeReference jsonTypeReference;
 			List<JsonTypeReference> keyTypeReferences;
@@ -379,8 +362,6 @@ public final class JsonTranslationFacility implements Facility {
 						jsonTypeReference = getTypeReference( valueType.getType() );		
 		                if( jsonTypeReference == null ) {
 							throw new IllegalStateException( String.format( "Type '%s' on field '%s.%s' could not be analyzed because the type reference could not be found.", valueType.getType(), theType.getName( ), field.getSite().getName( ) ) );
-		                } else if( !memberNameValidator.isValid( field.getName( ) ) ) {
-		            		throw new IllegalStateException( String.format( "Field '%s.%s' is using the name '%s' that does not conform to validator '%s'.", reflectedType.getType().getName(), field.getSite().getName(), field.getName( ), memberNameValidator.getClass().getSimpleName() ) );
 		            	} else {
 		            		valueTypeReferences.add( jsonTypeReference );
 		            	}
@@ -399,8 +380,6 @@ public final class JsonTranslationFacility implements Facility {
 						jsonTypeReference = getTypeReference( valueType.getType() );		
 		                if( jsonTypeReference == null ) {
 							throw new IllegalStateException( String.format( "Element type '%s' on field '%s.%s' could not be analyzed because the type reference could not be found.", valueType.getType(), theType.getName( ), field.getSite().getName( ) ) );
-		                } else if( !memberNameValidator.isValid( field.getName( ) ) ) {
-		            		throw new IllegalStateException( String.format( "Field '%s.%s' is using the name '%s' that does not conform to validator '%s'.", reflectedType.getType().getName(), field.getSite().getName(), field.getName( ), memberNameValidator.getClass().getSimpleName() ) );
 		            	} else {
 		            		valueTypeReferences.add( jsonTypeReference );
 		            	}
@@ -440,8 +419,6 @@ public final class JsonTranslationFacility implements Facility {
 						jsonTypeReference = getTypeReference( valueType.getType() );		
 		                if( jsonTypeReference == null ) {
 							throw new IllegalStateException( String.format( "Value type '%s' on field '%s.%s' could not be analyzed because the type reference could not be found.", valueType.getType(), theType.getName( ), field.getSite().getName( ) ) );
-		                } else if( !memberNameValidator.isValid( field.getName( ) ) ) {
-		            		throw new IllegalStateException( String.format( "Field '%s.%s' is using the name '%s' that does not conform to validator '%s'.", reflectedType.getType().getName(), field.getSite().getName(), field.getName( ), memberNameValidator.getClass().getSimpleName() ) );
 		            	} else {
 		            		valueTypeReferences.add( jsonTypeReference );
 		            	}
@@ -455,8 +432,6 @@ public final class JsonTranslationFacility implements Facility {
 						jsonTypeReference = getTypeReference( keyType.getType() );		
 		                if( jsonTypeReference == null ) {
 							throw new IllegalStateException( String.format( "Key type '%s' on field '%s.%s' could not be analyzed because the type reference could not be found.", keyType.getType(), theType.getName( ), field.getSite().getName( ) ) );
-		                } else if( !memberNameValidator.isValid( field.getName( ) ) ) {
-		            		throw new IllegalStateException( String.format( "Field '%s.%s' is using the name '%s' that does not conform to validator '%s'.", reflectedType.getType().getName(), field.getSite().getName(), field.getName( ), memberNameValidator.getClass().getSimpleName() ) );
 		            	} else {
 		            		keyTypeReferences.add( jsonTypeReference );
 		            	}
@@ -474,8 +449,6 @@ public final class JsonTranslationFacility implements Facility {
 					jsonTypeReference = getTypeReference( field.getSite().getType() );
 	                if( jsonTypeReference == null ) {
 						throw new IllegalStateException( String.format( "Type '%s' on field '%s.%s' could not be analyzed because the type reference could not be found.", field.getSite().getType().getSimpleName( ), theType.getName( ), field.getSite().getName( ) ) );
-	                } else if( !memberNameValidator.isValid( field.getName( ) ) ) {
-	            		throw new IllegalStateException( String.format( "Field '%s.%s' is using the name '%s' that does not conform to validator '%s'.", reflectedType.getType().getName(), field.getSite().getName(), field.getName( ), memberNameValidator.getClass().getSimpleName() ) );
 	            	}
 	
 	                members.add( new JsonMemberMap( field, new TranslatedDataSite( field.getSite(), jsonTypeReference.getToJsonTranslator( ), jsonTypeReference.getFromJsonTranslator( ) ), typeMap ) );

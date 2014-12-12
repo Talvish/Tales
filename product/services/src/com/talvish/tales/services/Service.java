@@ -58,7 +58,6 @@ import com.talvish.tales.contracts.services.http.ResourceFacility;
 import com.talvish.tales.parts.naming.LowerCaseEntityNameValidator;
 import com.talvish.tales.parts.naming.NameManager;
 import com.talvish.tales.parts.naming.NameValidator;
-import com.talvish.tales.parts.naming.SegmentedLowercaseEntityNameValidator;
 import com.talvish.tales.serialization.Readability;
 import com.talvish.tales.serialization.json.JsonTranslationFacility;
 import com.talvish.tales.services.http.ConnectorConfiguration;
@@ -619,13 +618,7 @@ public abstract class Service implements Runnable {
 			onInitializeConfiguration();
 			
 			// now add the json facility (used by servlets, admin, etc)
-			NameValidator jsonHttpFieldNameValidator = new LowerCaseEntityNameValidator();
-			NameValidator jsonHttpClassNameValidator = new SegmentedLowercaseEntityNameValidator();
-			JsonTranslationFacility jsonFacility = new JsonTranslationFacility( 
-					new DataContractTypeSource( new DataContractManager( ) ),
-					Readability.MACHINE,
-					jsonHttpClassNameValidator, 
-					jsonHttpFieldNameValidator );
+			JsonTranslationFacility jsonFacility = new JsonTranslationFacility( new DataContractTypeSource( ) );
 			this.facilityManager.addFacility( JsonTranslationFacility.class, jsonFacility);
 			
 			// add the resource facility (used by our servlets/pieces for admin, but others can as well)

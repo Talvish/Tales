@@ -27,7 +27,12 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+
 import com.talvish.tales.parts.ValidationSupport;
+import com.talvish.tales.parts.naming.LowerCaseEntityNameValidator;
+import com.talvish.tales.parts.naming.NameManager;
+import com.talvish.tales.parts.naming.NameValidator;
+import com.talvish.tales.parts.naming.SegmentedLowercaseEntityNameValidator;
 import com.talvish.tales.parts.reflection.FieldDescriptor;
 import com.talvish.tales.parts.reflection.JavaType;
 import com.talvish.tales.parts.reflection.TypeUtility;
@@ -41,9 +46,35 @@ import com.talvish.tales.system.Facility;
  *
  */
 public class DataContractManager implements Facility {
-    private final Map<JavaType, DataContractType> dataContractTypes = new ConcurrentHashMap< JavaType, DataContractType>( 16, 0.75f, 1 );
+	public static final String CONTRACT_TYPE_NAME_VALIDATOR = "tales.contracts.contract_type_name";
+	public static final String CONTRACT_MEMBER_NAME_VALIDATOR = "tales.contracts.contract_member_name";
+	
+	static {
+		if( !NameManager.hasValidator( DataContractManager.CONTRACT_TYPE_NAME_VALIDATOR ) ) {
+			NameManager.setValidator( DataContractManager.CONTRACT_TYPE_NAME_VALIDATOR, new SegmentedLowercaseEntityNameValidator( ) );
+		}
+		if( !NameManager.hasValidator( DataContractManager.CONTRACT_MEMBER_NAME_VALIDATOR ) ) {
+			NameManager.setValidator( DataContractManager.CONTRACT_MEMBER_NAME_VALIDATOR, new LowerCaseEntityNameValidator( ) );
+		}
+	}
+
+	private final NameValidator typeNameValidator;
+	private final NameValidator memberNameValidator;
+
+	private final Map<JavaType, DataContractType> dataContractTypes = new ConcurrentHashMap< JavaType, DataContractType>( 16, 0.75f, 1 );
     private final Object lock = new Object( );
 
+    public DataContractManager( ) {
+    	this( null, null );
+    }
+    
+    public DataContractManager( NameValidator theTypeNameValidator, NameValidator theMemberNameValidator ) {
+		typeNameValidator = theTypeNameValidator == null ? NameManager.getValidator( DataContractManager.CONTRACT_TYPE_NAME_VALIDATOR ) : theTypeNameValidator;
+		memberNameValidator = theMemberNameValidator == null ? NameManager.getValidator( DataContractManager.CONTRACT_MEMBER_NAME_VALIDATOR ) : theMemberNameValidator;
+        
+		Preconditions.checkNotNull( typeNameValidator, "missing a type name validator" );
+        Preconditions.checkNotNull( memberNameValidator, "missing a member name validator" );
+    }
     /**
      * Analyzes the type and makes it available for serialization.
      * It analyzes the annotations on the class.
@@ -81,6 +112,10 @@ public class DataContractManager implements Facility {
             
         	// get the names we want
             String typeName =  Strings.isNullOrEmpty( dataTypeAnnotation.name( ) ) ? theType.getSimpleName( ) : dataTypeAnnotation.name( );
+
+			if( !typeNameValidator.isValid( typeName ) ) {
+				throw new IllegalStateException( String.format( "Type '%s' is using the name '%s' that does not conform to validator '%s'.", theType.getUnderlyingClass().getSimpleName(), typeName, typeNameValidator.getClass().getSimpleName() ) );
+			}
 
             // then let's get the base class
             JavaType baseType = theType.getSupertype( );
@@ -162,6 +197,10 @@ public class DataContractManager implements Facility {
 	        // get the proper names for the field
 	        String fieldName = Strings.isNullOrEmpty( dataMemberAnnotation.name( ) ) ? theField.getName( ) : dataMemberAnnotation.name( );
 	        
+	        if( !memberNameValidator.isValid( fieldName ) ) {
+	        	throw new IllegalStateException( String.format( "Field '%s.%s' is using the name '%s' that does not conform to validator '%s'.", theDeclaringType.getType().getName(), fieldSite.getName(), fieldName, memberNameValidator.getClass().getSimpleName() ) );
+	        }
+
 	        // TODO: BELOW we should probably track the types in question and then come back to it later after we have processed all field
 	        
 	        // TODO: should highly consider failing these if they are generic but have not generic parameters
