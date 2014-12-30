@@ -31,7 +31,6 @@ import com.talvish.tales.communication.Status;
 import com.talvish.tales.contracts.data.DataContractTypeSource;
 import com.talvish.tales.parts.reflection.JavaType;
 import com.talvish.tales.parts.translators.Translator;
-import com.talvish.tales.serialization.Readability;
 import com.talvish.tales.serialization.json.JsonTranslationFacility;
 import com.talvish.tales.serialization.json.JsonTypeReference;
 import com.talvish.tales.serialization.json.translators.ChainToJsonElementToStringTranslator;

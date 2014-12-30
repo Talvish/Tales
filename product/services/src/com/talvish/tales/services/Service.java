@@ -47,18 +47,18 @@ import org.joda.time.Period;
 import org.joda.time.PeriodType;
 import org.joda.time.format.PeriodFormatter;
 import org.joda.time.format.PeriodFormatterBuilder;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.talvish.tales.contracts.data.DataContractManager;
+
 import com.talvish.tales.contracts.data.DataContractTypeSource;
 import com.talvish.tales.contracts.services.http.ResourceFacility;
 import com.talvish.tales.parts.naming.LowerCaseEntityNameValidator;
 import com.talvish.tales.parts.naming.NameManager;
 import com.talvish.tales.parts.naming.NameValidator;
-import com.talvish.tales.serialization.Readability;
 import com.talvish.tales.serialization.json.JsonTranslationFacility;
 import com.talvish.tales.services.http.ConnectorConfiguration;
 import com.talvish.tales.services.http.ConnectorConfigurationManager;

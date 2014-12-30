@@ -137,4 +137,9 @@ public class Capabilities {
 	public BitSet getCapabilityBits( ) {
 		return ( BitSet )capabilityBits.clone( );
 	}
+	
+	@Override
+	public String toString( ) {
+		return getFamily( ) + "[" + getCapabilityString( ) + "]";
+	}
 }

@@ -41,13 +41,17 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 
+import com.talvish.tales.auth.capabilities.StringToTokenCapabilityTranslator;
+import com.talvish.tales.auth.capabilities.TokenCapabilityToStringTranslator;
 import com.talvish.tales.contracts.data.DataContractTypeSource;
 import com.talvish.tales.parts.reflection.JavaType;
 import com.talvish.tales.parts.translators.TranslationException;
 import com.talvish.tales.serialization.json.JsonTranslationFacility;
 import com.talvish.tales.serialization.json.JsonTypeReference;
 import com.talvish.tales.serialization.json.translators.ArrayToJsonArrayTranslator;
+import com.talvish.tales.serialization.json.translators.ChainToStringToJsonPrimitiveTranslator;
 import com.talvish.tales.serialization.json.translators.JsonArrayToArrayTranslator;
+import com.talvish.tales.serialization.json.translators.JsonElementToStringToChainTranslator;
 
 /**
  * The manager is essentially a factory for creating json web tokens, but
@@ -120,7 +124,7 @@ public class TokenManager {
 		JavaType elementType = new JavaType( String.class );
 		JsonTypeReference elementTypeReference = translationFacility.getTypeReference( elementType );
 
-		_registerClaimType( 
+		_registerClaim( 
 				"aud", 
 				new JsonTypeReference( 
 	        			new JavaType( String[].class ), 
@@ -136,47 +140,57 @@ public class TokenManager {
 	 * @param theClaimName the name of the claim to associate with a type
 	 * @param theType the type of the claim, which means the system will attempt to translate to and from that type
 	 */
-	public void registerClaimType( String theClaimName, Type theType) {
+	public void registerClaim( String theClaimName, Type theType ) {
 		Preconditions.checkArgument( !Strings.isNullOrEmpty( theClaimName ), "need a claim name" );
 		Preconditions.checkNotNull( theType, "need type for claim '%s'", theClaimName );
-		Preconditions.checkArgument( !claimHandlers.containsKey( theClaimName ), "a type/handler was already registered for claim '%s'", theClaimName );
+		Preconditions.checkArgument( !claimHandlers.containsKey( theClaimName ), "a type/capability was already registered for claim '%s'", theClaimName );
 
-		_registerClaimType(theClaimName, theType );
-	}
-
-	/**
-	 * Private registration mechanism used by the public version and the constructor. 
-	 * @param theClaimName the name of the claim to associate with a type
-	 * @param theType the type of the claim, which means the system will attempt to translate to and from that type
-	 */
-	private final void _registerClaimType( String theClaimName, Type theType ) {
-		// we register the handler and not type since it speeds up the runtime slightly 
-		// and does give us more options for if we want more custom handling of claims
-		claimHandlers.put( 
+		_registerClaim(
 				theClaimName, 
-				translationFacility.getTypeReference( new JavaType( theType ) ) ); 
+				translationFacility.getTypeReference( new JavaType( theType ) ) );
 	}
-	
+
 	/**
 	 * Registers a type for a particular claim (or header). This means that when this particular 
 	 * claim comes up it will use the translators associated with that type to convert to and from the json.
 	 * @param theClaimName the name of the claim to associate with a type
 	 * @param theTypeReference the type reference of the claim, which means the system will attempt to translate to and from 
 	 */
-	public void registerClaimType( String theClaimName, JsonTypeReference theTypeReference ) {
+	public void registerClaim( String theClaimName, JsonTypeReference theTypeReference ) {
 		Preconditions.checkArgument( !Strings.isNullOrEmpty( theClaimName ), "need a claim name" );
 		Preconditions.checkNotNull( theTypeReference, "need type reference for claim '%s'", theClaimName );
-		Preconditions.checkArgument( !claimHandlers.containsKey( theClaimName ), "a type/handler was already registered for claim '%s'", theClaimName );
+		Preconditions.checkArgument( !claimHandlers.containsKey( theClaimName ), "a type/capability was already registered for claim '%s'", theClaimName );
 
-		_registerClaimType( theClaimName, theTypeReference );
+		_registerClaim( 
+				theClaimName, 
+				theTypeReference );
 	}
 
+	/**
+	 * Registers a particular claim as a set of capability bits.
+	 * @param theClaimName the claim name to use
+	 * @param theCapabilityFamily the family of capability bits in the claim
+	 */
+	public void registerCapability( String theClaimName, String theCapabilityFamily ) {
+		Preconditions.checkArgument( !Strings.isNullOrEmpty( theClaimName ), "need a claim name" );
+		Preconditions.checkArgument( !Strings.isNullOrEmpty( theCapabilityFamily ), "need a capability family" );
+		Preconditions.checkArgument( !claimHandlers.containsKey( theClaimName ), "a type/capability was already registered for claim '%s'", theClaimName );
+
+		_registerClaim( 
+				theClaimName,
+				new JsonTypeReference( 
+						new JavaType( String.class ),
+						"capabilities:string",
+						new JsonElementToStringToChainTranslator( new StringToTokenCapabilityTranslator( theCapabilityFamily ) ),
+						new ChainToStringToJsonPrimitiveTranslator( new TokenCapabilityToStringTranslator( ) ) ) );						
+	}
+	
 	/**
 	 * Private registration mechanism used by the public version and the constructor. 
 	 * @param theClaimName the name of the claim to associate with a type
 	 * @param theTypeReference the type reference of the claim, which means the system will attempt to translate to and from 
 	 */
-	private final void _registerClaimType( String theClaimName, JsonTypeReference theTypeReference ) {
+	private final void _registerClaim( String theClaimName, JsonTypeReference theTypeReference ) {
 		// we register the handler and not type since it speeds up the runtime slightly 
 		// and does give us more options for if we want more custom handling of claims
 		claimHandlers.put( 
@@ -209,6 +223,12 @@ public class TokenManager {
 	public JsonWebToken generateToken( Map<String,Object> theClaims, String theSecret, GenerationConfiguration theConfiguration ) {
 		return this.generateToken( null, theClaims, theSecret, theConfiguration );
 	}
+	// TODO: need to figure out how to handle the secret side better
+	// 		 need to options, a secret may not be sufficient and
+	//		 a secret doesn't help with you need to do some form
+	//		 'key/secret' rotation, options include specify some
+	//		 form of key/secret id which would be used to lookup
+	// 		 what should be used
 
 	/**
 	 * Creates a json web token from a set of claims and a secret and a set of configuration. In addition
@@ -449,7 +469,7 @@ public class TokenManager {
 					throw new IllegalArgumentException( String.format( "Claim '%s' is a primitive json type with value '%s', which has no mechanism for translation.", entry.getKey(), primitiveJson.getAsString() ) );	
 				}
 			} else {
-				throw new IllegalArgumentException( String.format( "Claim '%s' is a primitive json type with value '%s', which has no mechanism for translation.", entry.getKey(), entry.getValue( ).getAsString() ) );
+				throw new IllegalArgumentException( String.format( "Claim '%s' is not a primitive json type with value '%s', which has no mechanism for translation.", entry.getKey(), entry.getValue( ).getAsString() ) );
 			}
 		}
 		return outputItems;
@@ -469,6 +489,8 @@ public class TokenManager {
 		try {
 			mac = Mac.getInstance( theSigningAlgorithm.getJavaName( ) );
 			mac.init( new SecretKeySpec( theSecret.getBytes( utf8 ), theSigningAlgorithm.getJavaName( ) ) );
+			
+			// TODO: consider how to handle secret rotation
 
 			return Arrays.equals( 
 					mac.doFinal( theCombinedString.getBytes( ) ), 
