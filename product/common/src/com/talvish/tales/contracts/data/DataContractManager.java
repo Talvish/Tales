@@ -245,7 +245,7 @@ public class DataContractManager implements Facility {
 	    		List<ValueType<DataContractType,DataContractField>> valueTypes = extractValueTypes(theField, declaredValueType, dataMemberAnnotation.valueTypes() );
 	    		// if there was nothing on the attribute, then we use the type's component type itself
 	            if( valueTypes.size() == 0 ) {
-	            	valueTypes.add( new ValueType<>( declaredValueType, generateType( declaredValueType ) ) );
+	            	valueTypes.add( new ValueType<>( declaredValueType, _generateType( declaredValueType ) ) );
 	            }
 	            // now create the field object we need
 	            dataContractField = new DataContractField( fieldName, FieldDescriptor.FieldValueType.COLLECTION, valueTypes, fieldSite, theDeclaringType, theDeclaringType ); 
