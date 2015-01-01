@@ -15,6 +15,8 @@
 // ***************************************************************************
 package com.talvish.tales.system;
 
+import com.talvish.tales.system.configuration.ConfigurationException;
+
 /**
  * A simple helper method class in a similar vein to Google's Preconditions class but
  * dealing with exceptions used for the services. 
@@ -115,6 +117,15 @@ public class Conditions {
 	public static void checkAuthorization( boolean theCondition, String theScheme, String theMessage, Object... theMessageParameters ) {
 		if( !theCondition ) {
 			throw new AuthorizationException( String.format( theMessage, theMessageParameters ), theScheme, null );
+		} 
+	}
+	
+	/**
+	 * Checks the condition and if false throws a ConfigurationException.
+	 */
+	public static void checkConfiguration( boolean theCondition, String theMessage, Object... theMessageParameters ) {
+		if( !theCondition ) {
+			throw new ConfigurationException( String.format( theMessage, theMessageParameters ) );
 		} 
 	}
 }

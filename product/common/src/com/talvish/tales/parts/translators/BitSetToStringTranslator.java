@@ -22,6 +22,7 @@ import javax.xml.bind.DatatypeConverter;
 
 /**
  * Translator that converts a BitSet into a string.
+ * The generated string is in little endian byte ordering.
  * @author jmolnar
  *
  */
@@ -61,4 +62,6 @@ public class BitSetToStringTranslator extends NullTranslatorBase implements Tran
 		}
 		return returnValue;	
 	}
+	
+	//http://www.exampledepot.8waytrips.com/egs/java.util/Bits2Array.html
 }
