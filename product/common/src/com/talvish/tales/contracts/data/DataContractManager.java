@@ -135,6 +135,8 @@ public class DataContractManager implements Facility {
             	if( method.getAnnotation( OnDeserialized.class ) != null ) {
             		Preconditions.checkState( deserializedHook == null, "'%s' already has a deserialized hook, '%s', defined.", theType.getName( ), method.getName( ) );
             		deserializedHook = method;
+            		deserializedHook.setAccessible( true ); // make sure we can access it
+            		// we keep looping in case more than one hook is defined
             	}
             }
 

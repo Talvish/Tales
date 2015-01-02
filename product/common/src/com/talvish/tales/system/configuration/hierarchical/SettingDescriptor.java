@@ -15,6 +15,7 @@
 // ***************************************************************************
 package com.talvish.tales.system.configuration.hierarchical;
 
+import com.google.common.base.Preconditions;
 import com.talvish.tales.contracts.data.DataContract;
 import com.talvish.tales.contracts.data.DataMember;
 
@@ -34,6 +35,9 @@ public class SettingDescriptor {
 	private Boolean override;
 	@DataMember( name="sensitive" )
 	private Boolean sensitive;
+	
+	// in-memory items
+	private BlockDescriptor blockDescriptor;
 
 	
 	public String getName( ) {
@@ -58,5 +62,21 @@ public class SettingDescriptor {
 	
 	public Boolean isSensitive( ) {
 		return sensitive;
+	}
+	
+	public BlockDescriptor getBlockDescriptor( ) {
+		return blockDescriptor;
+	}
+	
+	protected void cleanup( BlockDescriptor theBlockDescriptor ) {
+		Preconditions.checkArgument( theBlockDescriptor != null, "Setting descriptor '%s' is getting the block descriptor set to null.", name );
+		Preconditions.checkState( blockDescriptor == null, "Setting descriptor '%s' from '%s.%s' is block descriptor reset to '%s.%s'.", 
+				name, 
+				blockDescriptor == null ? "<empty>" : blockDescriptor.getProfileDescriptor().getName( ),
+				blockDescriptor == null ? "<empty>" : blockDescriptor.getName( ),
+				theBlockDescriptor.getProfileDescriptor().getName(), 
+				theBlockDescriptor.getName( ) );
+
+		blockDescriptor = theBlockDescriptor;
 	}
 }

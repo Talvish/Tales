@@ -18,6 +18,20 @@ package com.talvish.tales.system.configuration.hierarchical;
 import com.google.common.base.Strings;
 import com.talvish.tales.system.Conditions;
 
+/**
+ * For settings validation the fact I can insert a replacement block into the mix changes things and 
+ * means there are interesting side effects like the insert block CAN have members that are new
+ * so that other blocks that use it don't say they are overrides BUT they are overriding something
+ * and therefore we have a problem ... meaning you cannot add something that someone else already
+ * has.
+ * 
+ * The same block cannot be declared in the same profile, so these interesting issues are capped.
+ * 
+ * Also now curious if we have a block issue because of this.
+ * 
+ * @author josep_000
+ *
+ */
 
 public class Setting {
 	private final String name;
@@ -53,7 +67,7 @@ public class Setting {
 		declaredBlock = theDeclaredBlock;
 		declaredProfile = theDeclaredProfile;
 
-		Setting previousSetting = null; // TODO: declaredProfile.getSetting( theName );
+		Setting previousSetting = null; //declaredProfile.getSetting( theName );
 
 		if( previousSetting != null ) {
 			// check if this is an existing setting within the same profile
