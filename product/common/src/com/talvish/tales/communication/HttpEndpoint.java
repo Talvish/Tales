@@ -70,10 +70,10 @@ public class HttpEndpoint {
 		Matcher matcher;
 		if( isStrict ) {
 			matcher = HttpEndpoint.STRICT_ENDPOINT_PATTERN.matcher( theEndpoint );
-			Preconditions.checkArgument( matcher.matches( ), "the endpoint must be of the pattern: 'http(s)://host:port', where host can be an IP, a name" );
+			Preconditions.checkArgument( matcher.matches( ), "the endpoint, '%s', must be of the pattern: 'http(s)://host:port', where host can be an IP, a name", theEndpoint );
 		} else {
 			matcher = HttpEndpoint.LAX_ENDPOINT_PATTERN.matcher( theEndpoint );
-			Preconditions.checkArgument( matcher.matches( ), "the endpoint must be of the pattern: 'http(s)://host:port', where host can be an IP, a name or '*'" );
+			Preconditions.checkArgument( matcher.matches( ), "the endpoint, '%s', must be of the pattern: 'http(s)://host:port', where host can be an IP, a name or '*'", theEndpoint );
 		}
 
 		scheme = matcher.group( SCHEME_GROUP );

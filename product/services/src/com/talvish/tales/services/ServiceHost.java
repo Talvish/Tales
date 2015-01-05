@@ -26,8 +26,9 @@ import com.google.common.base.Strings;
 import com.talvish.tales.parts.ArgumentParser;
 import com.talvish.tales.system.configuration.ConfigurationException;
 import com.talvish.tales.system.configuration.ConfigurationManager;
+import com.talvish.tales.system.configuration.HierarchicalFileSource;
 import com.talvish.tales.system.configuration.MapSource;
-import com.talvish.tales.system.configuration.PropertySource;
+import com.talvish.tales.system.configuration.PropertyFileSource;
 
 /**
  * This is a simple helper class that is designed to minimize the 
@@ -60,7 +61,16 @@ public final class ServiceHost {
 		String filename = configurationManager.getStringValue( "settings.file", null ); 
 		// and if we do, we add a file handling source
 		if( !Strings.isNullOrEmpty( filename ) ) {
-			configurationManager.addSource( new PropertySource( filename ) );
+			String profile = configurationManager.getStringValue( "settings.profile", null );
+			String block = configurationManager.getStringValue( "settings.block", null );
+			
+			if( !Strings.isNullOrEmpty( profile ) && !Strings.isNullOrEmpty( block ) ) {
+				configurationManager.addSource( new HierarchicalFileSource( profile,  block, filename ) );
+			} else if( Strings.isNullOrEmpty( profile ) && Strings.isNullOrEmpty( block ) ) {
+				configurationManager.addSource( new PropertyFileSource( filename ) );
+			} else {
+				throw new ConfigurationException( String.format( "Only some configuration setup settings are available (profile:'%s', block: '%s', source: '%s').", profile, block, filename ) );
+			}
 		}
 		
 		return configurationManager;

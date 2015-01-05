@@ -1,5 +1,5 @@
 // ***************************************************************************
-// *  Copyright 2011 Joseph Molnar
+// *  Copyright 2014 Joseph Molnar
 // *
 // *  Licensed under the Apache License, Version 2.0 (the "License");
 // *  you may not use this file except in compliance with the License.
@@ -27,56 +27,88 @@ import com.talvish.tales.contracts.data.DataContract;
 import com.talvish.tales.contracts.data.DataMember;
 import com.talvish.tales.system.Conditions;
 
+// TODO: consider having a state on this that manages through creation, load and then clean-up
+// TODO: I don't like the name 
+
+
+/**
+ * The class represents the main source for a set of profiles, blocks and settings.
+ * @author jmolnar
+ *
+ */
 @DataContract( name="talvish.tales.configuration.hierarchical.config_descriptor")
 public class ConfigDescriptor {
 	@DataMember( name="includes" )
 	private String[] includeArray;	
 	@DataMember( name="profiles" )
-	private ProfileDescriptor[] profileDescriptorArray;
+	private ProfileDescriptor[] declaredProfileArray;
 	
 	// non-persisted data, mostly which is for aiding debugging, problem finding or easing data grabbing
-	private String source;
-	private final Map<String,ProfileDescriptor> profileDescriptorMap = new HashMap<>( );
+	private String sourcePath;
+	private final Map<String,ProfileDescriptor> declaredProfileMap = new HashMap<>( );
 	private final List<String> includeList = new ArrayList<>( );
 	
+	/**
+	 * The additional sources to include within this source.
+	 * @return returns the list of includes or an empty list if none
+	 */
 	public Collection<String >getIncludes( ) {
 		return includeList;		
 	}
 
-	public Collection<ProfileDescriptor> getProfileDescriptors( ) {
-		return profileDescriptorMap.values( );
+	/**
+	 * Returns the list of profiles declared within this source.
+	 * @return the list of profiles declared or an empty list if none
+	 */
+	public Collection<ProfileDescriptor> getDeclaredProfiles( ) {
+		return declaredProfileMap.values( );
 	}
 	
-	public ProfileDescriptor getProfileDescriptor( String theName ) {
-		Preconditions.checkArgument( !Strings.isNullOrEmpty( theName ), "Need a name to get a profile descriptor from config descriptor '%s'.", this.source );
-		return profileDescriptorMap.get( theName );
+	/**
+	 * Gets the profile declared within this source.
+	 * @param theName the name of the declared profile to get
+	 * @return returns the declared profile if found here, null otherwise
+	 */
+	public ProfileDescriptor getDeclaredProfile( String theName ) {
+		Preconditions.checkArgument( !Strings.isNullOrEmpty( theName ), "Need a name to get a profile from config source '%s'.", this.sourcePath );
+		return declaredProfileMap.get( theName );
 	}
 
-	public String getSource( ) {
-		return source;
+	/**
+	 * The source path.
+	 * @return the source path
+	 */
+	public String getSourcePath( ) {
+		return sourcePath;
 	}
 	
-	protected void cleanup( String theSource ) {
-		// TODO: if we have state, then we can make sure it is right here
-		Preconditions.checkArgument( !Strings.isNullOrEmpty( theSource ) );
-		Preconditions.checkState( source == null, "Config descriptor '%s' is getting the source reset to '%s'.", source, theSource );
-		source = theSource;
+	/**
+	 * Helper method called after the source loads. 
+	 * This is also how the source path is set on the source. 
+	 * It does some simple validation and sets up additional data to help 
+	 * with runtime support.
+	 * @param theSourcePath the path of the source
+	 */
+	protected void cleanup( String theSourcePath ) {
+		Preconditions.checkArgument( !Strings.isNullOrEmpty( theSourcePath ) );
+		Preconditions.checkState( sourcePath == null, "Config source '%s' is getting the source path reset to '%s'.", sourcePath, theSourcePath );
+		sourcePath = theSourcePath;
 
 		if( includeArray != null ) {
 			for( String include : includeArray ) {
-				Conditions.checkConfiguration( !Strings.isNullOrEmpty( include ), "Config descriptor '%s' is attempting to include a blank or missing source (check source for trailing commas, etc).", source );
-				Conditions.checkConfiguration( !source.equals( include ), "Config descriptor '%s' is attempting to include itself.", source );
-				Conditions.checkConfiguration( !includeList.contains( include ), "Config descriptor '%s' is attempting to include '%s' more than once.", source, include );
+				Conditions.checkConfiguration( !Strings.isNullOrEmpty( include ), "Config source '%s' is attempting to include a blank or missing source (check source for trailing commas, etc).", sourcePath );
+				Conditions.checkConfiguration( !sourcePath.equals( include ), "Config source '%s' is attempting to include itself.", sourcePath );
+				Conditions.checkConfiguration( !includeList.contains( include ), "Config source '%s' is attempting to include '%s' more than once.", sourcePath, include );
 				includeList.add( include );
 			}
 		}
 
-		if( profileDescriptorArray != null ) {
-			for( ProfileDescriptor profileDescriptor : profileDescriptorArray ) {
-				Conditions.checkConfiguration( profileDescriptor != null, "Config descriptor '%s' is attempting to include a missing profile descriptor (check source for trailing commas, etc).", source );
-				Conditions.checkConfiguration( !profileDescriptorMap.containsKey( profileDescriptor.getName( ) ), "Config descriptor '%s' is attempting to add profile descriptor '%s' more than once.", source, profileDescriptor.getName( ) );
-				profileDescriptorMap.put( profileDescriptor.getName( ), profileDescriptor );
-				profileDescriptor.cleanup( this );
+		if( declaredProfileArray != null ) {
+			for( ProfileDescriptor profile : declaredProfileArray ) {
+				Conditions.checkConfiguration( profile != null, "Config descriptor '%s' is attempting to include a missing profile descriptor (check source for trailing commas, etc).", sourcePath );
+				Conditions.checkConfiguration( !declaredProfileMap.containsKey( profile.getName( ) ), "Config descriptor '%s' is attempting to add profile descriptor '%s' more than once.", sourcePath, profile.getName( ) );
+				declaredProfileMap.put( profile.getName( ), profile );
+				profile.cleanup( this );
 			}
 		}
 	}
