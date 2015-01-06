@@ -22,7 +22,7 @@ import com.google.common.base.Strings;
 import com.talvish.tales.contracts.data.DataContractTypeSource;
 import com.talvish.tales.serialization.json.JsonTranslationFacility;
 import com.talvish.tales.system.Conditions;
-import com.talvish.tales.system.configuration.hierarchical.Manager;
+import com.talvish.tales.system.configuration.hierarchical.SourceManager;
 import com.talvish.tales.system.configuration.hierarchical.SettingDescriptor;
 
 /**
@@ -37,7 +37,7 @@ public class HierarchicalFileSource implements ConfigurationSource {
 	private final String profile;
 	private final String block;
 	
-	private final Manager manager;
+	private final SourceManager manager;
 	
 	private final Map<String,SettingDescriptor> settings;
 	
@@ -54,8 +54,8 @@ public class HierarchicalFileSource implements ConfigurationSource {
 		block = theBlock;
 		defaultSourceName = String.format( sourceNameFormat, theFilename, theProfile, theBlock );
 		
-		manager = new Manager( theFilename, new JsonTranslationFacility( new DataContractTypeSource( ) ) );
-		settings = manager.getSettings( profile, block );
+		manager = new SourceManager( theFilename, new JsonTranslationFacility( new DataContractTypeSource( ) ) );
+		settings = manager.extractSettings( profile, block );
 		Conditions.checkConfiguration( settings != null, "Could not find block '%s.%s' from source '%s'.", profile, block, theFilename );
 	}
 	
@@ -87,7 +87,7 @@ public class HierarchicalFileSource implements ConfigurationSource {
 					hierarchicalSetting.getValue( ), 
 					hierarchicalSetting.getDescription(), 
 					hierarchicalSetting.isSensitive(), 
-					String.format( this.sourceNameFormat, hierarchicalSetting.getBlock().getProfile().getConfig().getSourcePath(), hierarchicalSetting.getBlock().getProfile().getName(), hierarchicalSetting.getBlock().getName( ) ), 
+					String.format( this.sourceNameFormat, hierarchicalSetting.getBlock().getProfile().getSource().getSourcePath(), hierarchicalSetting.getBlock().getProfile().getName(), hierarchicalSetting.getBlock().getName( ) ), 
 					theType );
 		}
 		return setting;
@@ -112,7 +112,7 @@ public class HierarchicalFileSource implements ConfigurationSource {
 					hierarchicalSetting.getValue( ), 
 					hierarchicalSetting.getDescription(), 
 					hierarchicalSetting.isSensitive(), 
-					String.format( this.sourceNameFormat, hierarchicalSetting.getBlock().getProfile().getConfig().getSourcePath(), hierarchicalSetting.getBlock().getProfile().getName(), hierarchicalSetting.getBlock().getName( ) ), 
+					String.format( this.sourceNameFormat, hierarchicalSetting.getBlock().getProfile().getSource().getSourcePath(), hierarchicalSetting.getBlock().getProfile().getName(), hierarchicalSetting.getBlock().getName( ) ), 
 					theElementType );
 		}
 		return setting;
@@ -139,7 +139,7 @@ public class HierarchicalFileSource implements ConfigurationSource {
 					hierarchicalSetting.getValue( ), 
 					hierarchicalSetting.getDescription(), 
 					hierarchicalSetting.isSensitive(), 
-					String.format( this.sourceNameFormat, hierarchicalSetting.getBlock().getProfile().getConfig().getSourcePath(), hierarchicalSetting.getBlock().getProfile().getName(), hierarchicalSetting.getBlock().getName( ) ), 
+					String.format( this.sourceNameFormat, hierarchicalSetting.getBlock().getProfile().getSource().getSourcePath(), hierarchicalSetting.getBlock().getProfile().getName(), hierarchicalSetting.getBlock().getName( ) ), 
 					theKeyType, 
 					theValueType );
 		}

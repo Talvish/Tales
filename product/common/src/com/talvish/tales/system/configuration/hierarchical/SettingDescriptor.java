@@ -16,11 +16,13 @@
 package com.talvish.tales.system.configuration.hierarchical;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.talvish.tales.contracts.data.DataContract;
 import com.talvish.tales.contracts.data.DataMember;
+import com.talvish.tales.system.Conditions;
 
 // TODO: Need to figure out how to handle overrides getting description, verifying sensitive flag etc
-// TODO: consider if we want to add type to this
+// TODO: consider adding a 'must override' type field so that a value must be given by one of the subclasses
 
 /**
  * This class represents the setting structure as found in the configuration. 
@@ -105,8 +107,9 @@ public class SettingDescriptor {
 	 * with runtime support.
 	 * @param theBlock the block that this setting is declared within
 	 */
-	protected void cleanup( BlockDescriptor theBlock ) {
+	protected void onDeserialized( BlockDescriptor theBlock ) {
 		Preconditions.checkArgument( theBlock != null, "Setting '%s' is getting the block set to null.", name );
+		Conditions.checkConfiguration( !Strings.isNullOrEmpty( name ), "A setting without a name was loaded from block '%s.%s'.", theBlock.getProfile().getName(), theBlock.getName() );
 		Preconditions.checkState( block == null, "Setting '%s' from '%s.%s' is having the block reset to '%s.%s'.", 
 				name, 
 				block == null ? "<empty>" : block.getProfile().getName( ),

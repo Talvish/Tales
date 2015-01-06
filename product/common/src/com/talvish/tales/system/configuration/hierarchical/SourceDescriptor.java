@@ -37,7 +37,7 @@ import com.talvish.tales.system.Conditions;
  *
  */
 @DataContract( name="talvish.tales.configuration.hierarchical.config_descriptor")
-public class ConfigDescriptor {
+public class SourceDescriptor {
 	@DataMember( name="includes" )
 	private String[] includeArray;	
 	@DataMember( name="profiles" )
@@ -89,7 +89,7 @@ public class ConfigDescriptor {
 	 * with runtime support.
 	 * @param theSourcePath the path of the source
 	 */
-	protected void cleanup( String theSourcePath ) {
+	protected void onDeserialized( String theSourcePath ) {
 		Preconditions.checkArgument( !Strings.isNullOrEmpty( theSourcePath ) );
 		Preconditions.checkState( sourcePath == null, "Config source '%s' is getting the source path reset to '%s'.", sourcePath, theSourcePath );
 		sourcePath = theSourcePath;
@@ -108,7 +108,7 @@ public class ConfigDescriptor {
 				Conditions.checkConfiguration( profile != null, "Config descriptor '%s' is attempting to include a missing profile descriptor (check source for trailing commas, etc).", sourcePath );
 				Conditions.checkConfiguration( !declaredProfileMap.containsKey( profile.getName( ) ), "Config descriptor '%s' is attempting to add profile descriptor '%s' more than once.", sourcePath, profile.getName( ) );
 				declaredProfileMap.put( profile.getName( ), profile );
-				profile.cleanup( this );
+				profile.onDeserialized( this );
 			}
 		}
 	}

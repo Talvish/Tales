@@ -134,8 +134,9 @@ public class BlockDescriptor {
 	 * with runtime support.
 	 * @param theProfile the profile that is the parent for this block
 	 */
-	protected void cleanup( ProfileDescriptor theProfile ) {
+	protected void onDeserialized( ProfileDescriptor theProfile ) {
 		Preconditions.checkArgument( theProfile != null, "Block '%s' is getting the profile set to null.", name );
+		Conditions.checkConfiguration( !Strings.isNullOrEmpty( name ), "A block without a name was loaded from profile '%s'.", theProfile.getName( ) );
 		Preconditions.checkState( profile == null, "Block '%s.%s' is getting profile reset to '%s'.", profile == null ? "<empty>" : profile.getName( ), name, theProfile.getName() );
 		profile = theProfile;
 		
@@ -153,7 +154,7 @@ public class BlockDescriptor {
 				Conditions.checkConfiguration( setting != null, "Block '%s.%s' is attempting to include a missing setting (check source for trailing commas, etc).", profile.getName(), name );
 				Conditions.checkConfiguration( !declaredSettingMap.containsKey( setting.getName( ) ), "Block '%s.%s' is attempting to add setting '%s' more than once .", profile.getName(), name, setting.getName( ) );
 				declaredSettingMap.put( setting.getName( ), setting );
-				setting.cleanup( this );
+				setting.onDeserialized( this );
 			}
 		}
 	}

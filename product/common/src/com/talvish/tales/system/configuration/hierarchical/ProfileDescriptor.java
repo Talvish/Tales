@@ -22,9 +22,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.talvish.tales.contracts.data.DataContract;
@@ -32,7 +29,8 @@ import com.talvish.tales.contracts.data.DataMember;
 import com.talvish.tales.system.Conditions;
 
 // TODO: maybe put a state on this regarding what has been done to it
-//		 so we don't have to do the work again later (as we process other profiles)
+// TODO: if a sub-block includes the same items as super-block it complains, but we could check that they are same and therefore not complain
+// TODO: it would be nice to have a warning if a block includes something the parent block has already included
 
 /**
  * Represents the stored the version of the profile.
@@ -41,20 +39,18 @@ import com.talvish.tales.system.Conditions;
  */
 @DataContract( name="talvish.tales.configuration.hierarchical.profile_descriptor")
 public class ProfileDescriptor {
-	private static final Logger logger = LoggerFactory.getLogger( Manager.class );
-
-	@DataMember( name="name" )
+   	@DataMember( name="name" )
 	private String name;
 	@DataMember( name="description" )
 	private String description;
 	@DataMember( name="extends" )
-	private String parentName; // TODO: bad name
+	private String parentName; 
 	@DataMember( name="blocks" )
 	private BlockDescriptor[] declaredBlockArray;
 	
 	
 	// non-persisted data, mostly which is for aiding debugging, problem finding or easing data grabbing
-	private ConfigDescriptor configDescriptor = null;;
+	private SourceDescriptor source = null;;
 	private ProfileDescriptor parent = null;
 	private final Map<String,BlockDescriptor> declaredBlockMap = new HashMap<>( );
 	private final Map<String,BlockDescriptor> accessibleBlockMap = new HashMap<>( );
@@ -146,8 +142,8 @@ public class ProfileDescriptor {
 	 * Returns the source that the profile was defined within.
 	 * @return he source
 	 */
-	public ConfigDescriptor getConfig( ) {
-		return configDescriptor;
+	public SourceDescriptor getSource( ) {
+		return source;
 	}
 	
 	/**
@@ -155,7 +151,7 @@ public class ProfileDescriptor {
 	 * @param theManager the manager containing the other profiles that may be needed
 	 * @param theProfileStack the stack used to manage cycles in the profile includes
 	 */
-	protected void validatePhaseOne( Manager theManager, Deque<String> theProfileStack ) { // TODO: need a better name
+	protected void initialize( SourceManager theManager, Deque<String> theProfileStack ) {
 		// we check to see if we have already processed this, if so, then
 		// we don't need to do it again, there may be a better way to do this
 		// with state, but this certainly works too 
@@ -171,9 +167,9 @@ public class ProfileDescriptor {
 			// all base blocks that can be overridden, these blocks are stored locally
 			// and at the time of the call the accessible blocks will not yet be set
 			if( parentName != null ) {
-				this.parent = theManager.getProfileDescriptor( parentName );
+				this.parent = theManager.getProfile( parentName );
 				Conditions.checkConfiguration( parent != null, "Could not find parent '%s' for profile '%s'.", parentName, name );
-				parent.validatePhaseOne( theManager, theProfileStack );
+				parent.initialize( theManager, theProfileStack );
 				// if we ever support multiple parents then we would need to look at the
 				// parents blocks and decide how we are going to merge the block, 
 				// conflict would likely be okay as long as declared block existed 
@@ -184,16 +180,14 @@ public class ProfileDescriptor {
 			// situation at least since they should be in the list of blocks already
 			for( Entry<String,BlockDescriptor> blockEntry : declaredBlockMap.entrySet() ) {
 				boolean isOverride = blockEntry.getValue().isOverride();
-				BlockDescriptor previousBlock = accessibleBlockMap.get( blockEntry.getKey( ) );
-				String previousProfileName = previousBlock == null ? "<old>" : previousBlock.getProfile().getName(); // this is for exceptional conditions (and makes sure exceptions aren't thrown in other cases)
+				BlockDescriptor parentBlock = accessibleBlockMap.get( blockEntry.getKey( ) );
+				String previousProfileName = parentBlock == null ? "<old>" : parentBlock.getProfile().getName(); // this is for exceptional conditions (and makes sure exceptions aren't thrown in other cases)
 				
 				// if we have a block that says it doesn't override then a previous block must not exist but
 				// if we have a block that says it does override then a previous block must exist 
-				Conditions.checkConfiguration( !isOverride || previousBlock != null, "Declared block '%s.%s' is marked as an override but the block doesn't exist in parent profiles.", name, blockEntry.getKey( ) );  
-				Conditions.checkConfiguration( isOverride || previousBlock == null, "Declared block '%s.%s' isn't marked as an override but the block exists in profile '%s'.", name, blockEntry.getKey(), previousProfileName );  
+				Conditions.checkConfiguration( !isOverride || parentBlock != null, "Declared block '%s.%s' is marked as an override but the block doesn't exist in parent profiles.", name, blockEntry.getKey( ) );  
+				Conditions.checkConfiguration( isOverride || parentBlock == null, "Declared block '%s.%s' isn't marked as an override but the block exists in parent profile '%s'.", name, blockEntry.getKey(), previousProfileName );  
 
-				logger.info( "Making block '{}' accessible to profile '{}'.", blockEntry.getKey(), this.name );
-				
 				// we then put this block into the block list and it will overwrite what is there 
 				// to indicate it is the most relevant block of this name
 				this.accessibleBlockMap.put( blockEntry.getKey(), blockEntry.getValue( ) );
@@ -204,7 +198,7 @@ public class ProfileDescriptor {
 			// should now exist in the block map ... 
 			// this doesn't detect block cycles nor does it detect anything related to 
 			// settings such as overrides, settings existing in more than one block
-			// with or without an override .. that happens later
+			// with or without an override, etc. .. that happens later
 
 			// we do a bit of validation on the block entries
 			for( Entry<String,BlockDescriptor> blockEntry : declaredBlockMap.entrySet() ) {
@@ -219,114 +213,147 @@ public class ProfileDescriptor {
 		}
 	}
 
-	public void extractSettings( ProfileDescriptor theRoot, String theBlockName, Map<String, SettingDescriptor> theSettings ) {
-		extractSettings( theRoot, theRoot.accessibleBlockMap.get( theBlockName ), theSettings, new ArrayDeque<String>( ), false );
+	/**
+	 * Resolves all settings and any overrides using this profile as the root context for blocks.
+	 * @param theBlockName the name of the block acting as the entry point
+	 * @return the available settings or empty list if not are available
+	 */
+	public Map<String,SettingDescriptor> extractSettings( String theBlockName ) {
+		Preconditions.checkArgument( !Strings.isNullOrEmpty( theBlockName ), "Block name not sent when looking to extract settings from profile '%s'.", this.name );
+		Preconditions.checkArgument( hasAccessibleBlock( theBlockName ),  "Block '%s' is not an accessible block on profile '%s'.", theBlockName, this.name );
+		return extractSettings( this, this.accessibleBlockMap.get( theBlockName ), new ArrayDeque<String>( ), false );
 	}
 
-	// TODO: we don't have to take the map in, we can return it
-	private void extractSettings( ProfileDescriptor theRoot, BlockDescriptor theBlockDescriptor, Map<String,SettingDescriptor> theSettings, Deque<String> theBlockStack, boolean bypassCheck ) {
-		// first we make sure we haven't profile already, meaning we have a loop in the 
+	/**
+	 * A helper recursive method that retrieves the set of available settings for the given.
+	 * It is recursive since it needs to use parent profiles to find all available blocks
+	 * and their settings.
+	 * @param theRoot the root profile context for getting settings, this is what is used to resolve blocks
+	 * @param theBlock the block to be extracting settings for
+	 * @param theBlockStack the block stack to look for cycles in the blocks
+	 * @param bypassCheck indicates if cycle checks should be passed (which happens if dealing with a parent block)
+	 * @return the extracted settings or an empty list of none are available
+	 */
+	private Map<String,SettingDescriptor> extractSettings( ProfileDescriptor theRoot, BlockDescriptor theBlock, Deque<String> theBlockStack, boolean bypassCheck ) {
+		Map<String,SettingDescriptor> blockSettings = new HashMap<>( );
 		
+		// first we make sure we don't have a cycle in the blocks meaning we have a loop in the blocks and processed this block already 
+		// we by-pass this cycle check if we are currently processing a parent of a block (since it has the same name)
 		if( !bypassCheck ) {
-			Conditions.checkConfiguration( !theBlockStack.contains( theBlockDescriptor.getName( ) ), "Block '%s.%s' surfaced an includes cycle of '%s' while processing profile '%s' for root profile '%s'.", theBlockDescriptor.getProfile().getName( ), theBlockDescriptor.getName(), String.join( " -> ", theBlockStack ), name, theRoot.getName( ) );
-			theBlockStack.addLast( theBlockDescriptor.getName( ) );
+			Conditions.checkConfiguration( !theBlockStack.contains( theBlock.getName( ) ), "Block '%s.%s' surfaced an includes cycle of '%s' while processing profile '%s' for root profile '%s'.", theBlock.getProfile().getName( ), theBlock.getName(), String.join( " -> ", theBlockStack ), name, theRoot.getName( ) );
+			theBlockStack.addLast( theBlock.getName( ) );
 		}
 		
 		// first we will look at the overridden block (if this current block is marked as an override)
 		// to get the parent we need to find parent profile of the block and ask it to get 
 		// the block, which means it may need to traverse its own parents to get the block
-		if( theBlockDescriptor.getProfile().parent != null && theBlockDescriptor.isOverride() ) {
+		if( theBlock.getProfile().getParent( ) != null && theBlock.isOverride() ) {
 			// now we need to get the block descriptor that we are overriding
-			BlockDescriptor parentBlockDescriptor = theBlockDescriptor.getProfile().getParent( ).getAccessibleBlock( theBlockDescriptor.getName() );
+			BlockDescriptor parentBlock = theBlock.getProfile().getParent( ).getAccessibleBlock( theBlock.getName() );
 			// now, since these should be empty, we can send the settings right to the extract
-			extractSettings( theRoot, parentBlockDescriptor, theSettings, theBlockStack, true );
+			Map<String,SettingDescriptor> parentSettings  = extractSettings( theRoot, parentBlock, theBlockStack, true );
+			// for the purpose of the validation we put the parent settings into
+			// the included settings to make sure that we compare against them, in
+			// particular for any overrides and sometimes when people do a 're-include'
+			// of a block
+			blockSettings.putAll( parentSettings );
 		}
 		
-		// we now need to look at the includes
-		for( String includedBlockName : theBlockDescriptor.getIncludes( ) ) {
-			Map<String,SettingDescriptor> includedSettings = new HashMap<>( );
+		// right now we are looking to see if any settings from the
+		// includes conflict with other settings from other includes
+		// if so, then there must be a setting in the passed in 
+		// block to disambiguate
+		for( String includedBlockName : theBlock.getIncludes( ) ) {
+			// get the block in question (which resolves via the root, since different profiles may have different blocks for the same block name)
 			BlockDescriptor includedBlock =  theRoot.accessibleBlockMap.get( includedBlockName ); 
 			// this should have been previously validated, but we do this to be safe
-			Conditions.checkConfiguration( includedBlock != null, "Block '%s.%s' could not load included block '%s' while processing profile '%s' for root profile '%s'.", theBlockDescriptor.getProfile().getName( ), theBlockDescriptor.getName(), includedBlock, name, theRoot.getName( ) );
-		
-			// so we now extract the settings for the included block
-			extractSettings( theRoot, includedBlock, includedSettings, theBlockStack, false );
-			// but we make sure these settings make sense in context of previously extract settings
-			for( SettingDescriptor settingDescriptor : includedSettings.values( ) ) {
-				// so either the setting isn't in our current list of settings OR if it is
-				// then the current block MUST have it ... we dont' check other information
-				// like type consistency or if it has an override, that will happen later
-				SettingDescriptor existingSettingDescriptor = theSettings.get( settingDescriptor.getName( ) );
+			Conditions.checkConfiguration( includedBlock != null, "Block '%s.%s' could not load included block '%s' while processing profile '%s' for root profile '%s'.", theBlock.getProfile().getName( ), theBlock.getName(), includedBlock, name, theRoot.getName( ) );
+			
+			// we now extract the settings for the included block
+			Map<String,SettingDescriptor> includedBlockSettings = extractSettings( theRoot, includedBlock, theBlockStack, false );
+			// but we make sure these settings make sense in context of settings from other included blocks
+			for( SettingDescriptor setting : includedBlockSettings.values( ) ) {
+				// so either a) the setting isn't in our current list of included settings OR
+				// b) it is the same setting we already included/from parent (which is fine) OR 
+				// c) it is a setting that the current block has an override for (though we don't check 
+				// for the override flag right now, just that exists ... override check is later)
+				SettingDescriptor existingSetting = blockSettings.get( setting.getName( ) );
 				Conditions.checkConfiguration( 
-						existingSettingDescriptor == null || ( theBlockDescriptor.hasDeclaredSetting( settingDescriptor.getName() ) ), 
-						"Block '%s.%s' found setting '%s' on included block '%s.%s' but other include block '%s.%s' already has the setting but an override is not available to resolve the ambiguity. This was found while processing profile '%s' for root profile '%s'.", 
-						theBlockDescriptor.getProfile().getName( ), 
-						theBlockDescriptor.getName(), 
-						settingDescriptor.getName(),
+						existingSetting == null || existingSetting == setting || theBlock.hasDeclaredSetting( setting.getName() ), 
+						"Block '%s.%s' found setting '%s' on included block '%s.%s' but another include block '%s.%s' already has the setting and unfortunately an override is not available to resolve the ambiguity. This was found while processing profile '%s' for root profile '%s' with a block stack of '%s'.", 
+						theBlock.getProfile().getName( ), 
+						theBlock.getName(), 
+						setting.getName(),
 						includedBlock.getProfile().getName(),
 						includedBlock.getName(),
-						existingSettingDescriptor == null ? "<empty>" : existingSettingDescriptor.getBlock().getProfile().getName(),
-						existingSettingDescriptor == null ? "<empty>" : existingSettingDescriptor.getBlock().getName(),
+						existingSetting == null ? "<empty>" : existingSetting.getBlock().getProfile().getName(),
+						existingSetting == null ? "<empty>" : existingSetting.getBlock().getName(),
 						name, 
-						theRoot.getName( ) );
+						theRoot.getName( ),
+						String.join( " -> ", theBlockStack ) );
 				
-				// even though it is valid for there to be an existing setting, 
-				// we only added the setting from the included block to make 
-				// sure we take the first one, which, assuming we process the 
-				// parent first, will be the parent 
-				if( existingSettingDescriptor == null ) {
-					theSettings.put( settingDescriptor.getName( ), settingDescriptor );
+				// if there is a conflict we keep the first that was entered
+				if( existingSetting == null ) {
+					blockSettings.put( setting.getName( ), setting );
 				}
 			}
 		}
 		
 		// now that we have dealt with the included blocks, we now look at the settings
 		// on the passed in block
-		for( SettingDescriptor settingDescriptor : theBlockDescriptor.getDeclaredSetting( ) ) {
+		for( SettingDescriptor setting : theBlock.getDeclaredSetting( ) ) {
 			// so now we look at the settings we have here and make sure that if a setting says it is
 			// overriding that it is in fact overriding something and if it doesn't think it is
 			// then there isn't an existing name
 			
-			SettingDescriptor existingSettingDescriptor = theSettings.get( settingDescriptor.getName( ) );
-			boolean isOverride = settingDescriptor.isOverride();
+			SettingDescriptor existingSetting = blockSettings.get( setting.getName( ) );
+			boolean isOverride = setting.isOverride();
 
-			Conditions.checkConfiguration( !isOverride || existingSettingDescriptor != null, "Setting '%s' from block '%s.%s' is marked as an override but the setting doesn't exist in parent or included blocks. This was found while processing profile '%s' for root profile '%s'.",
-					settingDescriptor.getName(),
-					settingDescriptor.getBlock().getProfile().getName(),
-					settingDescriptor.getBlock().getName(),
+			Conditions.checkConfiguration( !isOverride || existingSetting != null, "Setting '%s' from block '%s.%s' is marked as an override but the setting doesn't exist in parent or included blocks. This was found while processing profile '%s' for root profile '%s'.",
+					setting.getName(),
+					setting.getBlock().getProfile().getName(),
+					setting.getBlock().getName(),
 					name,
 					theRoot.getName( ) );
-			Conditions.checkConfiguration( isOverride || existingSettingDescriptor == null, "Setting '%s' from block '%s.%s' isn't marked as an override but the setting was found on block '%s.%s'. This was found while processing profile '%s' for root profile '%s'.",
-					settingDescriptor.getName(),
-					settingDescriptor.getBlock().getProfile().getName(),
-					settingDescriptor.getBlock().getName(),
-					existingSettingDescriptor == null ? "<empty>" : existingSettingDescriptor.getBlock().getProfile().getName(),
-					existingSettingDescriptor == null ? "<empty>" : existingSettingDescriptor.getBlock().getName(),
+			Conditions.checkConfiguration( isOverride || existingSetting == null, "Setting '%s' from block '%s.%s' isn't marked as an override but the setting was found on block '%s.%s'. This was found while processing profile '%s' for root profile '%s'.",
+					setting.getName(),
+					setting.getBlock().getProfile().getName(),
+					setting.getBlock().getName(),
+					existingSetting == null ? "<empty>" : existingSetting.getBlock().getProfile().getName(),
+					existingSetting == null ? "<empty>" : existingSetting.getBlock().getName(),
 					name,
 					theRoot.getName( ) );
 		
-			theSettings.put( settingDescriptor.getName( ), settingDescriptor );
+			blockSettings.put( setting.getName( ), setting );
 		}
 		
 		if( !bypassCheck ) {
 			theBlockStack.removeLast( );
 		}
+		return blockSettings;
 	}
 	
-	protected void cleanup( ConfigDescriptor theConfig ) {
-		Preconditions.checkArgument( theConfig != null, "Profile descriptor '%s' is getting config descriptor set to null.", name );
-		Preconditions.checkState( configDescriptor == null, "Profile descriptor '%s' from config descriptor '%s' is getting config descriptor reset to '%s'.", name, configDescriptor == null ? "<empty>" : configDescriptor.getSourcePath( ), theConfig.getSourcePath() );
-
-		Conditions.checkConfiguration( !name.equals( this.parentName ), "Profile descriptor '%s' is attempting to use itself as a parent.", name );
+	/**
+	 * Method called when this descriptor is deserialized. It occurs
+	 * after all descriptors from a given source have been loaded
+	 * but before all included sources are loaded.
+	 * @param theSource the source that profile comes from
+	 */
+	protected void onDeserialized( SourceDescriptor theSource ) {
+		Preconditions.checkArgument( theSource != null, "Profile '%s' is getting source set to null.", name ); // if name is blank, this will be null
+		Conditions.checkConfiguration( !Strings.isNullOrEmpty( name ), "A profile without a name was loaded from source '%s'.", theSource.getSourcePath() );
+		Preconditions.checkState( source == null, "Profile '%s' from source '%s' is getting source reset to '%s'.", name, source == null ? "<empty>" : source.getSourcePath( ), theSource.getSourcePath() );
 		
-		configDescriptor = theConfig;
+		Conditions.checkConfiguration( !name.equals( this.parentName ), "Profile '%s' is attempting to use itself as a parent.", name );
+		
+		source = theSource;
 		
 		if( declaredBlockArray != null ) {
-			for( BlockDescriptor blockDescriptor : declaredBlockArray ) {
-				Conditions.checkConfiguration( blockDescriptor != null, "Profile descriptor '%s' from config descriptor '%s' is attempting to include a missing block descriptor (check source for trailing commas, etc).", name, configDescriptor.getSourcePath( ) );
-				Conditions.checkConfiguration( !declaredBlockMap.containsKey( blockDescriptor.getName( ) ), "Profile descriptor '%s' from config descriptor '%s' is attempting to add block descriptor '%s' more than once.", name, configDescriptor.getSourcePath(), blockDescriptor.getName( ) );
-				declaredBlockMap.put( blockDescriptor.getName( ), blockDescriptor );
-				blockDescriptor.cleanup( this );
+			for( BlockDescriptor block : declaredBlockArray ) {
+				Conditions.checkConfiguration( block != null, "Profile '%s' from config '%s' is attempting to include a missing block (check source for trailing commas, etc).", name, source.getSourcePath( ) );
+				Conditions.checkConfiguration( !declaredBlockMap.containsKey( block.getName( ) ), "Profile '%s' from config '%s' is attempting to add block '%s' more than once.", name, source.getSourcePath(), block.getName( ) );
+				declaredBlockMap.put( block.getName( ), block );
+				block.onDeserialized( this );
 			}
 		}
 	}
