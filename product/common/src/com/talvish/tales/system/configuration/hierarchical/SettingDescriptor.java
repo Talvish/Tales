@@ -1,5 +1,5 @@
 // ***************************************************************************
-// *  Copyright 2014 Joseph Molnar
+// *  Copyright 2015 Joseph Molnar
 // *
 // *  Licensed under the Apache License, Version 2.0 (the "License");
 // *  you may not use this file except in compliance with the License.
@@ -19,10 +19,10 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.talvish.tales.contracts.data.DataContract;
 import com.talvish.tales.contracts.data.DataMember;
+import com.talvish.tales.parts.naming.NameManager;
+import com.talvish.tales.parts.naming.NameValidator;
+import com.talvish.tales.parts.naming.SegmentedLowercaseEntityNameValidator;
 import com.talvish.tales.system.Conditions;
-
-// TODO: Need to figure out how to handle overrides getting description, verifying sensitive flag etc
-// TODO: consider adding a 'must override' type field so that a value must be given by one of the subclasses
 
 /**
  * This class represents the setting structure as found in the configuration. 
@@ -30,7 +30,15 @@ import com.talvish.tales.system.Conditions;
  *
  */
 @DataContract( name="talvish.tales.configuration.hierarchical.setting_descriptor")
-public class SettingDescriptor {
+class SettingDescriptor {
+	public static final String NAME_VALIDATOR = "tales.configuration.hierarchical.setting_name";
+	
+	static {
+		if( !NameManager.hasValidator( NAME_VALIDATOR ) ) {
+			NameManager.setValidator( NAME_VALIDATOR, new SegmentedLowercaseEntityNameValidator( ) );
+		}
+	}
+
 	@DataMember( name="name" )
 	private String name;
 	@DataMember( name="description" )
@@ -41,11 +49,14 @@ public class SettingDescriptor {
 	
 	@DataMember( name="override" )
 	private Boolean override;
+	@DataMember( name="deferred" )
+	private Boolean deferred;
+
 	@DataMember( name="sensitive" )
 	private Boolean sensitive;
 	
 	// in-memory items
-	private BlockDescriptor block;
+	private BlockDescriptor declaringBlock;
 
 	/**
 	 * The name given to the setting.
@@ -83,21 +94,30 @@ public class SettingDescriptor {
 	}
 	
 	/**
+	 * Indicates if this setting must be overridden. If it is not
+	 * overridden a configuration failure will occur.
+	 * @return true if it must be overridden, false otherwise
+	 */
+	public boolean isDeferred( ) {
+		return deferred == null ? false : deferred.booleanValue();
+	}
+	
+	/**
 	 * Indicates if this setting is consider sensitive. If sensitive the intention is for the setting value to
 	 * not be dumped into log files or be made generally visible.
-	 * This value may not be set in the config source which means this method will return false.
+	 * If this is not set, then it should take the value on of something it is overriding or false.
 	 * @return true means  
 	 */
-	public boolean isSensitive( ) {
-		return sensitive == null ? false : sensitive.booleanValue();
+	public Boolean isSensitive( ) {
+		return sensitive;
 	}
 
 	/**
 	 * The block that this setting is declared within.
 	 * @return the block that the setting is declared within
 	 */
-	public BlockDescriptor getBlock( ) {
-		return block;
+	public BlockDescriptor getDeclaringBlock( ) {
+		return declaringBlock;
 	}
 	
 	/**
@@ -105,18 +125,32 @@ public class SettingDescriptor {
 	 * This is also how the block is set on the setting. 
 	 * It does some simple validation and sets up additional data to help 
 	 * with runtime support.
-	 * @param theBlock the block that this setting is declared within
+	 * @param theDeclaringBlock the block that this setting is declared within
 	 */
-	protected void onDeserialized( BlockDescriptor theBlock ) {
-		Preconditions.checkArgument( theBlock != null, "Setting '%s' is getting the block set to null.", name );
-		Conditions.checkConfiguration( !Strings.isNullOrEmpty( name ), "A setting without a name was loaded from block '%s.%s'.", theBlock.getProfile().getName(), theBlock.getName() );
-		Preconditions.checkState( block == null, "Setting '%s' from '%s.%s' is having the block reset to '%s.%s'.", 
+	protected void onDeserialized( BlockDescriptor theDeclaringBlock ) {
+		Preconditions.checkArgument( theDeclaringBlock != null, "Setting '%s' is getting the block set to null.", name );
+		Conditions.checkConfiguration( !Strings.isNullOrEmpty( name ), "A setting without a name was loaded from block '%s.%s'.", theDeclaringBlock.getDeclaringProfile().getName(), theDeclaringBlock.getName() );
+		Preconditions.checkState( declaringBlock == null, "Setting '%s' from '%s.%s' is having the block reset to '%s.%s'.", 
 				name, 
-				block == null ? "<empty>" : block.getProfile().getName( ),
-				block == null ? "<empty>" : block.getName( ),
-				theBlock.getProfile().getName(), 
-				theBlock.getName( ) );
+				declaringBlock == null ? "<empty>" : declaringBlock.getDeclaringProfile().getName( ),
+				declaringBlock == null ? "<empty>" : declaringBlock.getName( ),
+				theDeclaringBlock.getDeclaringProfile().getName(), 
+				theDeclaringBlock.getName( ) );
+		NameValidator nameValidator = NameManager.getValidator( NAME_VALIDATOR );
+		Conditions.checkConfiguration( nameValidator.isValid( name ), String.format( "Setting name '%s' on block '%s.%s' does not conform to validator '%s'.", 
+				name, 
+				theDeclaringBlock.getDeclaringProfile().getName(), 
+				theDeclaringBlock.getName( ),
+				nameValidator.getClass().getSimpleName() ) );
+		Conditions.checkConfiguration( !isDeferred( ) || value == null , String.format( "Setting name '%s' on block '%s.%s' indicates it is deferred (an overridden value must be provided later) however a value was provided now.", 
+				name, 
+				theDeclaringBlock.getDeclaringProfile().getName(), 
+				theDeclaringBlock.getName( ) ) );
+		Conditions.checkConfiguration( !isDeferred( ) || theDeclaringBlock.isDeferred(), String.format( "Setting name '%s' on block '%s.%s' indicates it is deferred however the block is not marked deferred.", 
+				name, 
+				theDeclaringBlock.getDeclaringProfile().getName(), 
+				theDeclaringBlock.getName( ) ) );
 
-		block = theBlock;
+		declaringBlock = theDeclaringBlock;
 	}
 }

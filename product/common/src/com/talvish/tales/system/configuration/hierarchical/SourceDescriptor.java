@@ -1,5 +1,5 @@
 // ***************************************************************************
-// *  Copyright 2014 Joseph Molnar
+// *  Copyright 2015 Joseph Molnar
 // *
 // *  Licensed under the Apache License, Version 2.0 (the "License");
 // *  you may not use this file except in compliance with the License.
@@ -27,17 +27,13 @@ import com.talvish.tales.contracts.data.DataContract;
 import com.talvish.tales.contracts.data.DataMember;
 import com.talvish.tales.system.Conditions;
 
-// TODO: consider having a state on this that manages through creation, load and then clean-up
-// TODO: I don't like the name 
-
-
 /**
  * The class represents the main source for a set of profiles, blocks and settings.
  * @author jmolnar
  *
  */
 @DataContract( name="talvish.tales.configuration.hierarchical.config_descriptor")
-public class SourceDescriptor {
+class SourceDescriptor {
 	@DataMember( name="includes" )
 	private String[] includeArray;	
 	@DataMember( name="profiles" )

@@ -1,5 +1,5 @@
 // ***************************************************************************
-// *  Copyright 2014 Joseph Molnar
+// *  Copyright 2015 Joseph Molnar
 // *
 // *  Licensed under the Apache License, Version 2.0 (the "License");
 // *  you may not use this file except in compliance with the License.
@@ -22,24 +22,23 @@ import com.google.common.base.Strings;
 import com.talvish.tales.contracts.data.DataContractTypeSource;
 import com.talvish.tales.serialization.json.JsonTranslationFacility;
 import com.talvish.tales.system.Conditions;
+import com.talvish.tales.system.configuration.hierarchical.Setting;
 import com.talvish.tales.system.configuration.hierarchical.SourceManager;
-import com.talvish.tales.system.configuration.hierarchical.SettingDescriptor;
 
 /**
  * This class represents a config source where data is sourced from 
- * a json-based, hiearchical config file. 
+ * a json-based, hierarchical config file. 
  * @author jmolnar
  *
  */
 public class HierarchicalFileSource implements ConfigurationSource {
 	private final String defaultSourceName;
-	private final String sourceNameFormat = "[%s].[%s].[%s]";
 	private final String profile;
 	private final String block;
 	
 	private final SourceManager manager;
 	
-	private final Map<String,SettingDescriptor> settings;
+	private final Map<String,Setting> settings;
 	
 	/**
 	 * Constructor taking the filename of the json-based file and the property and block to use.
@@ -52,7 +51,7 @@ public class HierarchicalFileSource implements ConfigurationSource {
 
 		profile = theProfile;
 		block = theBlock;
-		defaultSourceName = String.format( sourceNameFormat, theFilename, theProfile, theBlock );
+		defaultSourceName = String.format( Setting.SOURCE_NAME_FORMAT, theFilename, theProfile, theBlock );
 		
 		manager = new SourceManager( theFilename, new JsonTranslationFacility( new DataContractTypeSource( ) ) );
 		settings = manager.extractSettings( profile, block );
@@ -81,13 +80,13 @@ public class HierarchicalFileSource implements ConfigurationSource {
 
 		LoadedSetting setting = null;
 		if( settings.containsKey( theName ) ) {
-			SettingDescriptor hierarchicalSetting = settings.get( theName );
+			Setting hierarchicalSetting = settings.get( theName );
 			setting = SettingValueHelper.generateValue( 
 					theName, 
 					hierarchicalSetting.getValue( ), 
 					hierarchicalSetting.getDescription(), 
-					hierarchicalSetting.isSensitive(), 
-					String.format( this.sourceNameFormat, hierarchicalSetting.getBlock().getProfile().getSource().getSourcePath(), hierarchicalSetting.getBlock().getProfile().getName(), hierarchicalSetting.getBlock().getName( ) ), 
+					hierarchicalSetting.isSensitive(),
+					hierarchicalSetting.getSourceName(),
 					theType );
 		}
 		return setting;
@@ -106,13 +105,13 @@ public class HierarchicalFileSource implements ConfigurationSource {
 
 		LoadedSetting setting = null;
 		if( settings.containsKey( theName ) ) {
-			SettingDescriptor hierarchicalSetting = settings.get( theName );
+			Setting hierarchicalSetting = settings.get( theName );
 			setting = SettingValueHelper.generateList( 
 					theName, 
 					hierarchicalSetting.getValue( ), 
 					hierarchicalSetting.getDescription(), 
 					hierarchicalSetting.isSensitive(), 
-					String.format( this.sourceNameFormat, hierarchicalSetting.getBlock().getProfile().getSource().getSourcePath(), hierarchicalSetting.getBlock().getProfile().getName(), hierarchicalSetting.getBlock().getName( ) ), 
+					hierarchicalSetting.getSourceName(),
 					theElementType );
 		}
 		return setting;
@@ -133,13 +132,13 @@ public class HierarchicalFileSource implements ConfigurationSource {
 
 		LoadedSetting setting = null;
 		if( settings.containsKey( theName ) ) {
-			SettingDescriptor hierarchicalSetting = settings.get( theName );
+			Setting hierarchicalSetting = settings.get( theName );
 			setting = SettingValueHelper.generateMap( 
 					theName, 
 					hierarchicalSetting.getValue( ), 
 					hierarchicalSetting.getDescription(), 
 					hierarchicalSetting.isSensitive(), 
-					String.format( this.sourceNameFormat, hierarchicalSetting.getBlock().getProfile().getSource().getSourcePath(), hierarchicalSetting.getBlock().getProfile().getName(), hierarchicalSetting.getBlock().getName( ) ), 
+					hierarchicalSetting.getSourceName(),
 					theKeyType, 
 					theValueType );
 		}

@@ -1,5 +1,5 @@
 // ***************************************************************************
-// *  Copyright 2014 Joseph Molnar
+// *  Copyright 2015 Joseph Molnar
 // *
 // *  Licensed under the Apache License, Version 2.0 (the "License");
 // *  you may not use this file except in compliance with the License.
@@ -29,7 +29,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-
 import com.talvish.tales.parts.reflection.JavaType;
 import com.talvish.tales.serialization.json.JsonTranslationFacility;
 import com.talvish.tales.system.Conditions;
@@ -130,7 +129,7 @@ public class SourceManager {
 				Conditions.checkConfiguration( profile != null, "Configuration source '%s' refers to an empty or missing profile source. Check for trailing commas.", theSource );
 				
 				ProfileDescriptor existingProfile = profiles.get( profile.getName( ) );
-				String existingSource = existingProfile == null ? "<existing>" : existingProfile.getSource().getSourcePath(); // this is done this way to aid debugging, exceptional conditions
+				String existingSource = existingProfile == null ? "<existing>" : existingProfile.getDeclaringSource().getSourcePath(); // this is done this way to aid debugging, exceptional conditions
 				Conditions.checkConfiguration( !profiles.containsKey( profile.getName( ) ), "Profile '%s' from '%s' has the same name as an existing profile from '%s'.", profile.getName(), theSource, existingSource );
 				
 				profiles.put( profile.getName(), profile );
@@ -212,15 +211,61 @@ public class SourceManager {
 	 * @param theBlock the block the getting the settings from
 	 * @return the settings or an empty map if there aren't any
 	 */
-	public Map<String,SettingDescriptor> extractSettings( String theProfile, String theBlock ) {
+	public Map<String,Setting> extractSettings( String theProfile, String theBlock ) {
 		Preconditions.checkArgument( !Strings.isNullOrEmpty( theProfile ), "Cannot extract settings using a null/empty profile." );
 		Preconditions.checkArgument( !Strings.isNullOrEmpty( theBlock ), "Cannot extract settings on profile '%s' using a null/empty block.", theProfile );
 		
 		ProfileDescriptor profile = this.profiles.get( theProfile );
 		Preconditions.checkArgument( profile != null, "Could not find profile '%s'.", theProfile );
 		
-		Map<String, SettingDescriptor> settings = profile.extractSettings( theBlock );
+		Map<String, Setting> settings = profile.extractSettings( theBlock );
+
+		// now we make sure things are fully validated
+		for( Setting setting : settings.values( ) ) {
+			setting.validate();
+		}
 		
 		return settings;
+	}
+	
+	/**
+	 * This is a debugging/logging method that logs the blocks that declared a setting.
+	 * @param theSetting the setting to log
+	 */
+	@SuppressWarnings("unused")
+	private void logSetting( Setting theSetting ) {
+		logger.info( "Logging setting '{}' ...", theSetting.getName( ) );
+		
+		logSetting( theSetting.getHistory( ), 1 );
+	}
+	
+	/**
+	 * This is a recursive debugging/logging method that logs the blocks that declared a setting.
+	 * @param theNode the node of the tree to log
+	 * @param theDepth the depth in the tree so we can visually show where we are
+	 */
+	private void logSetting( SimpleTreeNode<SettingDescriptor> theNode, int theDepth ) {
+		
+		if( theNode.getValue() != null ) {
+			StringBuffer buffer = new StringBuffer( );
+			for( int count = 0; count < theDepth; count += 1) {
+				buffer.append( "---- " );
+			}
+			buffer.append( theNode.getValue().getDeclaringBlock().getDeclaringProfile().getName( ) );
+			buffer.append( "." );
+			buffer.append( theNode.getValue().getDeclaringBlock().getName( ) );
+			buffer.append( " (" );
+			buffer.append( theNode.getChildren().size( ) );
+			buffer.append( ")" );
+			logger.info( buffer.toString( ) );
+			
+			for( SimpleTreeNode<SettingDescriptor> child : theNode.getChildren() ) {
+				logSetting( child, theDepth + 1 );
+			}
+		} else {
+			for( SimpleTreeNode<SettingDescriptor> child : theNode.getChildren() ) {
+				logSetting( child, theDepth ); // since is same depth
+			}
+		}
 	}
 }

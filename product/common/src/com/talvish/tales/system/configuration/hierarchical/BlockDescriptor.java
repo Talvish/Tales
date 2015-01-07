@@ -1,5 +1,5 @@
 // ***************************************************************************
-// *  Copyright 2014 Joseph Molnar
+// *  Copyright 2015 Joseph Molnar
 // *
 // *  Licensed under the Apache License, Version 2.0 (the "License");
 // *  you may not use this file except in compliance with the License.
@@ -25,9 +25,10 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.talvish.tales.contracts.data.DataContract;
 import com.talvish.tales.contracts.data.DataMember;
+import com.talvish.tales.parts.naming.LowerCaseEntityNameValidator;
+import com.talvish.tales.parts.naming.NameManager;
+import com.talvish.tales.parts.naming.NameValidator;
 import com.talvish.tales.system.Conditions;
-
-// TODO: consider an 'abstract' marker on the blocks which means they cannot be used directly, but included
 
 /**
  * This class represents the block structure as found in the configuration. 
@@ -35,7 +36,15 @@ import com.talvish.tales.system.Conditions;
  *
  */
 @DataContract( name="talvish.tales.configuration.hierarchical.block_descriptor")
-public class BlockDescriptor {
+class BlockDescriptor {
+	public static final String NAME_VALIDATOR = "tales.configuration.hierarchical.block_name";
+	
+	static {
+		if( !NameManager.hasValidator( NAME_VALIDATOR ) ) {
+			NameManager.setValidator( NAME_VALIDATOR, new LowerCaseEntityNameValidator( ) );
+		}
+	}
+	
 	@DataMember( name="name" )
 	private String name;
 	@DataMember( name="description" )
@@ -43,6 +52,8 @@ public class BlockDescriptor {
 	
 	@DataMember( name="override" )
 	private Boolean override;
+	@DataMember( name="deferred" )
+	private Boolean deferred;
 
 	@DataMember( name="includes" )
 	private String[] includeArray;
@@ -51,7 +62,7 @@ public class BlockDescriptor {
 	private SettingDescriptor[] declaredSettingArray;
 
 	// non-persisted data, mostly which is for aiding debugging, problem finding or easing data grabbing
-	private ProfileDescriptor profile;
+	private ProfileDescriptor declaringProfile;
 	private final Map<String,SettingDescriptor> declaredSettingMap = new HashMap<>( );
 	private final List<String> includeList = new ArrayList<>( );
 
@@ -81,6 +92,15 @@ public class BlockDescriptor {
 	 */
 	public boolean isOverride( ) {
 		return override == null ? false : override.booleanValue();
+	}
+	
+	/**
+	 * Indicates this block is not to be used immediately but
+	 * must be overridden.
+	 * @return true if it must be overridden, false otherwise
+	 */
+	public boolean isDeferred( ) {
+		return deferred == null ? false : deferred.booleanValue();
 	}
 	
 	/**
@@ -115,7 +135,7 @@ public class BlockDescriptor {
 	 * Returns the list of all settings directly declared in this block.
 	 * @return the collection of declared settings or empty list of none
 	 */
-	public Collection<SettingDescriptor> getDeclaredSetting( ) {
+	public Collection<SettingDescriptor> getDeclaredSettings( ) {
 		return declaredSettingMap.values();
 	}
 	
@@ -123,8 +143,8 @@ public class BlockDescriptor {
 	 * Returns the profile that this block was declared within.
 	 * @return the profile this block was declared within.
 	 */
-	public ProfileDescriptor getProfile( ) {
-		return profile;
+	public ProfileDescriptor getDeclaringProfile( ) {
+		return declaringProfile;
 	}
 	
 	/**
@@ -132,27 +152,30 @@ public class BlockDescriptor {
 	 * This is also how the profile is set on the block. 
 	 * It does some simple validation and sets up additional data to help 
 	 * with runtime support.
-	 * @param theProfile the profile that is the parent for this block
+	 * @param theDeclaringProfile the profile that this block was declared within
 	 */
-	protected void onDeserialized( ProfileDescriptor theProfile ) {
-		Preconditions.checkArgument( theProfile != null, "Block '%s' is getting the profile set to null.", name );
-		Conditions.checkConfiguration( !Strings.isNullOrEmpty( name ), "A block without a name was loaded from profile '%s'.", theProfile.getName( ) );
-		Preconditions.checkState( profile == null, "Block '%s.%s' is getting profile reset to '%s'.", profile == null ? "<empty>" : profile.getName( ), name, theProfile.getName() );
-		profile = theProfile;
+	protected void onDeserialized( ProfileDescriptor theDeclaringProfile ) {
+		Preconditions.checkArgument( theDeclaringProfile != null, "Block '%s' is getting the profile set to null.", name );
+		Conditions.checkConfiguration( !Strings.isNullOrEmpty( name ), "A block without a name was loaded from profile '%s'.", theDeclaringProfile.getName( ) );
+		Preconditions.checkState( declaringProfile == null, "Block '%s.%s' is getting profile reset to '%s'.", declaringProfile == null ? "<empty>" : declaringProfile.getName( ), name, theDeclaringProfile.getName() );
+		NameValidator nameValidator = NameManager.getValidator( NAME_VALIDATOR );
+		Conditions.checkConfiguration( nameValidator.isValid( name ), String.format( "Block name '%s' on profile '%s' does not conform to validator '%s'.", name, theDeclaringProfile.getName( ), nameValidator.getClass().getSimpleName() ) );
+
+		declaringProfile = theDeclaringProfile;
 		
 		if( includeArray != null ) {
 			for( String include : includeArray ) {
-				Conditions.checkConfiguration( !Strings.isNullOrEmpty( include ), "Block '%s.%s' is attempting to include a blank or missing block (check source for trailing commas, etc).", profile.getName(), name );
-				Conditions.checkConfiguration( !name.equals( include ), "Block '%s.%s' is attempting to include itself.", profile.getName(), name );
-				Conditions.checkConfiguration( !includeList.contains( include ), "Block '%s.%s' is attempting to include block '%s' more than once.", profile.getName(), name, include );
+				Conditions.checkConfiguration( !Strings.isNullOrEmpty( include ), "Block '%s.%s' is attempting to include a blank or missing block (check source for trailing commas, etc).", declaringProfile.getName(), name );
+				Conditions.checkConfiguration( !name.equals( include ), "Block '%s.%s' is attempting to include itself.", declaringProfile.getName(), name );
+				Conditions.checkConfiguration( !includeList.contains( include ), "Block '%s.%s' is attempting to include block '%s' more than once.", declaringProfile.getName(), name, include );
 				includeList.add( include );
 			}
 		}
 
 		if( declaredSettingArray != null ) {
 			for( SettingDescriptor setting : declaredSettingArray ) {
-				Conditions.checkConfiguration( setting != null, "Block '%s.%s' is attempting to include a missing setting (check source for trailing commas, etc).", profile.getName(), name );
-				Conditions.checkConfiguration( !declaredSettingMap.containsKey( setting.getName( ) ), "Block '%s.%s' is attempting to add setting '%s' more than once .", profile.getName(), name, setting.getName( ) );
+				Conditions.checkConfiguration( setting != null, "Block '%s.%s' is attempting to include a missing setting (check source for trailing commas, etc).", declaringProfile.getName(), name );
+				Conditions.checkConfiguration( !declaredSettingMap.containsKey( setting.getName( ) ), "Block '%s.%s' is attempting to add setting '%s' more than once .", declaringProfile.getName(), name, setting.getName( ) );
 				declaredSettingMap.put( setting.getName( ), setting );
 				setting.onDeserialized( this );
 			}
