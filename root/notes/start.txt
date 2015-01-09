@@ -1,7 +1,8 @@
-# cut and paste start
-java -jar tales.simpleservice.jar -settings.file=settings.properties
-java -jar tales.userservice.jar -settings.file=settings.properties
+# cut and paste start when using property-based configuration files
+java -jar file.jar -settings.file=config\settings.properties
 
+# cut and paste start when using json-base configuration files
+java -jar file.jar -settings.file=config\settings.json -settings.profile=production -settings.block=service_name
 
 # locations to remember
 http://localhost:8081/service/contracts?version=20121221&override.response.readability=HUMAN

@@ -1,0 +1,120 @@
+{
+	"profiles" : [
+		{
+			"name" : "base",
+			"description" : "The base profile which is expected to be extended; it is common to create staging, production and development profiles (and sometimes developers have their own individual profiles that extend the development profile).",
+			"blocks" : [
+				{
+					"name" : "networking_interfaces",
+					"description" : "Settings related to the network interfaces used in the system.",
+					"deferred" : true,
+					"settings" : [
+						{
+							"name" : "service.interfaces",
+							"value" : "public, internal, management",
+							"description" : "It is not uncommon to have public (for public facing contracts), internal (in the path of public calls but not directly public) and management (for low-volume highly data consistent contracts like management portals)."
+						},
+						
+						{
+							"name" : "service.interfaces.public.type",
+							"value" : "com.talvish.tales.services.http.HttpInterface",
+							"description" : "The java class of the interface."
+						},{
+							"name" : "service.interfaces.public.endpoints",
+							"value" : "http://*:8000, https://*.8443",
+							"description" : "The endpoint location(s) for this interface."
+						},{
+							"name" : "service.interfaces.public.connector",
+							"value" : "standard",
+							"description" : "The connector configuration to use for the interface."
+						},{
+							"name" : "service.interfaces.public.ssl.key_store",
+							"value" : "primary",
+							"description" : "The key store definition to use for SSL. This is needed if SSL is used on the interface directly (instead of being handled by something in front of the service)."
+						},{
+							"name" : "service.interfaces.public.ssl.cert_alias",
+							"value" : "frontdoor",
+							"description" : "The alias for the SSL cert within the key store. This is needed if SSL is used on the interface directly (instead of being handled by something in front of the service)."
+						},
+
+						{
+							"name" : "service.interfaces.internal.type",
+							"value" : "com.talvish.tales.services.http.HttpInterface",
+							"description" : "The java class of the interface."
+						},{
+							"name" : "service.interfaces.internal.endpoints",
+							"value" : "http://*:7000",
+							"description" : "The endpoint location(s) for this interface."
+						},{
+							"name" : "service.interfaces.internal.connector",
+							"value" : "standard",
+							"description" : "The connector configuration to use for the interface."
+						},
+
+						{
+							"name" : "service.interfaces.management.type",
+							"value" : "com.talvish.tales.services.http.HttpInterface",
+							"description" : "The java class of the interface."
+						},{
+							"name" : "service.interfaces.management.endpoints",
+							"value" : "http://*:6000",
+							"description" : "The endpoint location(s) for this interface."
+						},{
+							"name" : "service.interfaces.management.connector",
+							"value" : "standard",
+							"description" : "The connector configuration to use for the interface."
+						},
+
+						{
+							"name" : "service.interfaces.admin.endpoints",
+							"value" : "http://*:5000",
+							"description" : "Admin interface is included by default and the same settings can be set like any HTTP interface, but endpoint is required."
+						}
+					]
+				},
+				{
+					"name" : "networking_connectors",
+					"description" : "Group of settings related to the connectors used by HTTP interfaces.",
+					"deferred" : true,
+					"settings" : [
+						{
+							"name" : "service.http_connectors",
+							"value" : "standard",
+							"description" : "The names of the connector configurations available to the system."
+						},{
+							"name" : "service.http_connectors.standard.idle_timeout",
+							"value" : "200",
+							"description" : "Amount of time to wait, in milliseconds, before a connection is considered idle."
+						},{
+							"name" : "service.http_connectors.standard.max_form_content_size",
+							"value" : "4194304",
+							"description" : "The maximum number of bytes that a single request is allowed to send to the service."
+						}
+					]
+				},	
+				{
+					"name" : "key_stores",
+					"description" : "Settings related to key stores used for ssl, encryption, hashing, etc.",
+					"deferred" : true,
+					"settings" : [
+						{
+							"name" : "service.security.key_stores",
+							"value" : "sample_key_store",
+							"description" : "The names of the key store configurations available to the system."
+						},{
+							"name" : "service.security.key_stores.sample_key_store.location",
+							"value" : "config\\sample.keystore",
+							"description" : "The relative location, to the service of the key store file."
+						},{
+							"name" : "service.security.key_stores.sample_key_store.password",
+							"value" : "password",
+							"sensitive" : true,
+							"description" : "The password needed to use the key store."
+						}
+					]
+				}
+			]
+		}
+	]
+}
+

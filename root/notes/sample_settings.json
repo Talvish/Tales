@@ -1,0 +1,164 @@
+{
+	"profiles" : [
+		{
+			"name" : "sample",
+			"description" : "This is a sample profile showing the settings that are available for services across different groups of settings.",
+			"blocks" : [
+				{
+					"name" : "networking_interfaces",
+					"description" : "Settings related to the network interfaces used in the system.",
+					"settings" : [
+						{
+							"name" : "service.interfaces",
+							"value" : "sample_interface",
+							"description" : "The names of the network interfaces used in the system. An interface called admin is always available and manages talking to admin contracts like status, configuration, etc."
+						},{
+							"name" : "service.interfaces.sample_interface.type",
+							"value" : "com.talvish.tales.services.http.HttpInterface",
+							"description" : "The java class of the interface."
+						},{
+							"name" : "service.interfaces.sample_interface.endpoints",
+							"value" : "http://*:8000, https://*.8443",
+							"description" : "The endpoint location for this interface."
+						},{
+							"name" : "service.interfaces.sample_interface.connector",
+							"value" : "sample_connector",
+							"description" : "The connector configuration to use for the interface."
+						},{
+							"name" : "service.interfaces.sample_interface.ssl.key_store",
+							"value" : "sample_key_store",
+							"description" : "The key store definition to use for SSL. This is needed if SSL is used on the interface directly (instead of being handled by something in front of the service)."
+						},{
+							"name" : "service.interfaces.sample_interface.ssl.cert_alias",
+							"value" : "cert",
+							"description" : "The alias for the SSL cert within the key store. This is needed if SSL is used on the interface directly (instead of being handled by something in front of the service)."
+						},
+
+						{
+							"name" : "service.interfaces.admin.endpoints",
+							"value" : "http://*:5002",
+							"description" : "Admin interface is included by default and the same settings can be set like any HTTP interface, but endpoint is required."
+						}
+					]
+				},
+				{
+					"name" : "networking_connectors",
+					"description" : "Group of settings related to the connectors used by HTTP interfaces. Most of these settings represent Jetty connector configuration settings.",
+					"settings" : [
+						{
+							"name" : "service.http_connectors",
+							"value" : "sample_connector",
+							"description" : "The names of the connector configurations available to the system."
+						},{
+							"name" : "service.http_connectors.sample_connector.selectors",
+							"value" : "2",
+							"description" : "The number of selectors to use when managing handling of active connections."
+						},{
+							"name" : "service.http_connectors.sample_connector.acceptors",
+							"value" : "2",
+							"description" : "The number of threads assigned to accept connections."
+						},{
+							"name" : "service.http_connectors.sample_connector.accept_queue_size",
+							"value" : "20",
+							"description" : "The number of connection requests that can sit in the accept queue before rejections are sent."
+						},{
+							"name" : "service.http_connectors.sample_connector.idle_timeout",
+							"value" : "200",
+							"description" : "Amount of time to wait, in milliseconds, before a connection is considered idle."
+						},{
+							"name" : "service.http_connectors.sample_connector.header_cache_size",
+							"value" : "8192",
+							"description" : "The size, in bytes, of the header cache."
+						},{
+							"name" : "service.http_connectors.sample_connector.request_header_size",
+							"value" : "8192",
+							"description" : "The size of buffers, in bytes, to use for request headers."
+						},{
+							"name" : "service.http_connectors.sample_connector.response_header_size",
+							"value" : "8192",
+							"description" : "The size of the buffer, in bytes, to use for the response headers."
+						},{
+							"name" : "service.http_connectors.sample_connector.request_buffer_size",
+							"value" : "8192",
+							"description" : "The buffer size, in bytes, to use for requests."
+						},{
+							"name" : "service.http_connectors.sample_connector.output_buffer_size",
+							"value" : "32768",
+							"description" : "The full output buffer size, in bytes."
+						},{
+							"name" : "service.http_connectors.sample_connector.max_form_content_size",
+							"value" : "4194304",
+							"description" : "The maximum number of bytes that a single request is allowed to send to the service."
+						}
+					]
+				},	
+				{
+					"name" : "key_stores",
+					"description" : "Settings related to key stores used for ssl, encryption, hashing, etc.",
+					"settings" : [
+						{
+							"name" : "service.security.key_stores",
+							"value" : "sample_key_store",
+							"description" : "The names of the key store configurations available to the system."
+						},{
+							"name" : "service.security.key_stores.sample_key_store.location",
+							"value" : "config\\sample.keystore",
+							"description" : "The relative location, to the service of the key store file."
+						},{
+							"name" : "service.security.key_stores.sample_key_store.password",
+							"value" : "password",
+							"sensitive" : true,
+							"description" : "The password needed to use the key store."
+						},{
+							"name" : "service.security.key_stores.sample_key_store.type",
+							"description" : "The type of key store."
+						},{
+							"name" : "service.security.key_stores.sample_key_store.format",
+							"description" : "The format of the key store."
+						}
+					]
+				},	
+				{
+					"name" : "thread_pools",
+					"description" : "The thread pools available to the services. These can be used for a variety of things include how to manage non-blocking request.",
+					"settings" : [
+						{
+							"name" : "service.thread_pools",
+							"value" : "sample_thread_pool",
+							"description" : "The names of the thread pool configurations available to the service. A thread pool called default is always available."
+						},{
+							"name" : "service.thread_pools.sample_thread_pool.thread_name_prefix",
+							"value" : "samp",
+							"description" : "The text to place on thread pool threads (to help identify the threads)."
+						},{
+							"name" : "service.thread_pools.sample_thread_pool.thread_priority",
+							"value" : 5,
+							"description" : "The priority to give the threads."
+						},{
+							"name" : "service.thread_pools.sample_thread_pool.is_daemon",
+							"value" : false,
+							"description" : "Indicates if the created threads act as daemons."
+						},{
+							"name" : "service.thread_pools.sample_thread_pool.core_size",
+							"value" : 10,
+							"description" : "The main number of threads to keep around."
+						},{
+							"name" : "service.thread_pools.sample_thread_pool.max_size",
+							"value" : 20,
+							"description" : "The maximum number of threads the thread pool will keep active in the pool."
+						},{
+							"name" : "service.thread_pools.sample_thread_pool.keep_alive_time",
+							"value" : 60000,
+							"description" : "The amount of time, in milliseconds, to keep idle threads alive for (if they are not part of the core number of threads)."
+						},{
+							"name" : "service.thread_pools.sample_thread_pool.prestart_core",
+							"value" : false,
+							"description" : "Indicates if the core threads should be spun up immediately upon thread pool creation."
+						}
+					]
+				}
+			]
+		}
+	]
+}
+
