@@ -11,6 +11,8 @@ This framework is one of the underpinnings of the services created at Getjar (ht
 
 Tales started its life on Jetty 7.x/JDK 1.6 and now requires Jetty 9.x/JDK 1.8. While Jetty is used it isn't directly exposed in the framework and developers, when creating services, generally do not deal with servlets or other J2EE-like classes and configuration.
 
+For more details please view the [wiki pages](https://github.com/Talvish/Tales/wiki).
+
 Latest Changes
 --------------------
 January 7, 2015 - Major updates in Tales 1.6.5 include:
