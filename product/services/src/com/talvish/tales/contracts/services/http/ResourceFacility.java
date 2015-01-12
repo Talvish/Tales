@@ -283,6 +283,7 @@ public final class ResourceFacility implements Facility {
 							operationAnnotation.path( ), 
 							method, 
 							operationAnnotation.mode( ), 
+							operationAnnotation.status( ),
 							resourceType, 
 							this ) );
 				}

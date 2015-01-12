@@ -116,6 +116,7 @@ public class ResourceMethod extends Subcontract {
 
 	private final List<String> verbs;
 	private final ResourceOperation.Mode mode;
+	private final Status defaultStatus;
 	private final String specifiedPath; // need more here to interpret due to data inside of it
 	private final String orderingPath; // a helper path to determining order of match
 	private final String parameterPath; // a path, mainly for external use, that has just parameter names (no regex's)
@@ -145,6 +146,7 @@ public class ResourceMethod extends Subcontract {
 			String theMethodPath,
 			Method theMethod, 
 			ResourceOperation.Mode theMode, 
+			Status theDefaultStatus,
 			ResourceType theResourceType, 
 			ResourceFacility theResourceFacility ) {
 		super( theName, theDescription, theVersions, theResourceType );
@@ -153,6 +155,7 @@ public class ResourceMethod extends Subcontract {
 
 		Preconditions.checkArgument( nameValidator.isValid( theName ), String.format( "Resource method '%s' does not conform to validator '%s'.", theName, nameValidator.getClass().getSimpleName() ) );
 		Preconditions.checkNotNull( theMethod, "need a reflected method" );
+		Preconditions.checkNotNull( theDefaultStatus, "need a default status" );
 		Preconditions.checkNotNull( theMode, "need a mode" );
 		Preconditions.checkNotNull( theResourceType, "need a resource type" );
 		Matcher pathMatcher = METHODS_PATH_PATTERN.matcher( theMethodPath );
@@ -167,6 +170,7 @@ public class ResourceMethod extends Subcontract {
 			verbsList.add( new String( verb ) );
 		}
 		verbs = Collections.unmodifiableList( verbsList );
+		defaultStatus = theDefaultStatus;
 		mode = theMode;
 		
 		specifiedPath = pathMatcher.group( PATH_GROUP );
@@ -870,10 +874,10 @@ public class ResourceMethod extends Subcontract {
 					}
 				} else if( this.methodReturn.isVoid() ) {
 					// the void return type case is just an unknown empty object
-					result = new ResourceMethodResult( new JsonObject( ) );
+					result = new ResourceMethodResult( new JsonObject( ), defaultStatus );
 				} else {
 					// the non-void return type case will translate the result
-					result = new ResourceMethodResult( ( JsonElement )this.methodReturn.translate( typeLessResult ) );
+					result = new ResourceMethodResult( ( JsonElement )this.methodReturn.translate( typeLessResult ), defaultStatus );
 				}
 			}
 

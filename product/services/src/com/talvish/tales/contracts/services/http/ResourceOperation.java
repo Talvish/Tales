@@ -20,6 +20,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import com.talvish.tales.communication.Status;
+
 /**
  * This signifies that a particular method is 
  * available for the world to access over http(s).
@@ -73,7 +75,7 @@ public @interface ResourceOperation {
      * @return
      */
     String description( ) default "";
-
+    
     /**
      * The optional set of support versions which the following format:
      * (YYMMDD)?(-YYMMDD)?. If this is not set the operation is considered to be
@@ -89,4 +91,13 @@ public @interface ResourceOperation {
      * @return the mode to run the operation
      */
     Mode mode( ) default Mode.DEFAULT;
+
+    /**
+     * An optional parameter that sets the default status to return if it 
+     * is not explicitly set.
+     * @return the default status
+     */
+    Status status( ) default Status.OPERATION_COMPLETED;
+
+
 }

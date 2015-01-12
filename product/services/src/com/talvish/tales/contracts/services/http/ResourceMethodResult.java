@@ -43,17 +43,17 @@ public class ResourceMethodResult extends HttpResult<JsonElement> {
 	}
 
 
-	ResourceMethodResult( JsonElement theValue ) {
+	ResourceMethodResult( JsonElement theValue, Status theStatus ) {
 		Preconditions.checkNotNull( theValue, "need a value" );
 		this.value = theValue;
-		this.code = Status.OPERATION_COMPLETED;
+		this.code = theStatus;
 		this.subcode = null;
 		this.message = null;
 		this.exception = null;
 	}
 
 	/**
-	 * Constructor typically for the failure case.
+	 * Constructor typically for the common failure case.
 	 * @param theFailure the reason for the failure
 	 * @param theSubcode a code, handler specific, outlining the problem
 	 * @param theMessage the failure message to display
