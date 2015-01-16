@@ -28,12 +28,12 @@ import com.google.common.base.Strings;
  * @author jmolnar
  *
  */
-public class RegExNameValidator implements NameValidator {
+public class RegExValidator implements NameValidator {
 	private final String expression;
 	private final Pattern pattern;
 
 	
-	public RegExNameValidator( String theExpression ) {
+	public RegExValidator( String theExpression ) {
 		Preconditions.checkArgument( !Strings.isNullOrEmpty( theExpression ), "need an expression" );
 		
 		try {

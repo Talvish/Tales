@@ -1,5 +1,5 @@
 // ***************************************************************************
-// *  Copyright 2011 Joseph Molnar
+// *  Copyright 2015 Joseph Molnar
 // *
 // *  Licensed under the Apache License, Version 2.0 (the "License");
 // *  you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
 // *  See the License for the specific language governing permissions and
 // *  limitations under the License.
 // ***************************************************************************
-package com.talvish.tales.contracts.data;
+package com.talvish.tales.system.configuration.annotated;
 
 import java.lang.reflect.Method;
 
@@ -21,10 +21,10 @@ import com.talvish.tales.parts.reflection.JavaType;
 import com.talvish.tales.serialization.SerializationType;
 
 /**
- * This class represents a class which is to be serialized.
+ * This class represents a class which contains setting fields for configuration.
  * @author jmolnar
  */
-public class DataContractType extends SerializationType< DataContractType, DataContractField > {
+public class SettingType extends SerializationType< SettingType, SettingField > {
     /**
      * Constructor taking the name to use and the underlying type represented.
      * This implementation does not construct the fields since it would rely
@@ -36,7 +36,7 @@ public class DataContractType extends SerializationType< DataContractType, DataC
      * @param validationSupport indicates if the contract supports validation
      * @param theBaseType the base class, if applicable
      */
-    protected DataContractType( String theName, JavaType theType, Method theDeserializedHook, boolean validationSupport, DataContractType theBaseType ) {
-    	super( theName, theType, theDeserializedHook, validationSupport, theBaseType  );
+    protected SettingType( String theName, JavaType theType, Method theDeserializedHook, boolean validationSupport, SettingType theBaseType ) {
+    	super( theName, theType, theDeserializedHook, validationSupport, theBaseType );
     }
 }

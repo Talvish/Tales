@@ -15,6 +15,7 @@
 // ***************************************************************************
 package com.talvish.tales.system.configuration;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -29,7 +30,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
+import com.talvish.tales.parts.reflection.JavaType;
 import com.talvish.tales.system.Facility;
+import com.talvish.tales.system.configuration.annotated.RegisteredCollection;
+import com.talvish.tales.system.configuration.annotated.SettingField;
+import com.talvish.tales.system.configuration.annotated.SettingType;
+import com.talvish.tales.system.configuration.annotated.SettingTypeManager;
 
 /**
  * A configuration system that allows managing more than one source
@@ -39,6 +46,9 @@ import com.talvish.tales.system.Facility;
  */
 public class ConfigurationManager implements Facility {
 	private static final Logger logger = LoggerFactory.getLogger( ConfigurationManager.class );
+
+	// the setting type manager is used to help map the class onto settings
+	private final SettingTypeManager settingTypeManager = new SettingTypeManager( );
 
 	private final ReentrantReadWriteLock settingsLock = new ReentrantReadWriteLock( );
 	private final Lock settingsReadLock = settingsLock.readLock();
@@ -205,6 +215,37 @@ public class ConfigurationManager implements Facility {
 	}
 	
 	/**
+	 * Gets a float value from configuration.
+	 * This will except if the name isn't found or value cannot be converted.
+	 * @param theName the name of the configuration value to get
+	 * @return the Double value
+	 */
+	public Float getFloatValue( String theName ) {
+		LoadedSetting setting = getValue( theName, null, Float.class, false ); // does validation, will except if value not there
+		try {
+			return ( Float )setting.getValue( );
+		} catch( ClassCastException e ) {
+			throw new ConfigurationException( String.format( "The value for setting '%1$s' is not the requested type.", theName ), e );
+		}
+	}
+
+	/**
+	 * Gets an Double value from configuration.
+	 * This will return if name isn't value, but except if the value cannot be converted.
+	 * @param theName the name of the configuration value to get
+	 * @param theDefault the default value to use if not found
+	 * @return the Double value
+	 */
+	public Float getFloatValue( String theName, Float theDefault ) {
+		LoadedSetting setting = getValue( theName, theDefault, Float.class, true ); // does validation, will not except if value not there
+		try {
+			return ( Float )setting.getValue( );
+		} catch( ClassCastException e ) {
+			throw new ConfigurationException( String.format( "The value for setting '%1$s' is not the requested type.", theName ), e );
+		}
+	}
+	
+	/**
 	 * Gets an Double value from configuration.
 	 * This will except if the name isn't found or value cannot be converted.
 	 * @param theName the name of the configuration value to get
@@ -349,7 +390,7 @@ public class ConfigurationManager implements Facility {
 			throw new ConfigurationException( String.format( "The value for setting '%1$s' is not the requested type.", theName ), e );
 		}
 	}
-
+ 	
  	/**
 	 * Gets a Map of the specified types.
 	 * This will use the default if the map is not available
@@ -368,7 +409,128 @@ public class ConfigurationManager implements Facility {
 			throw new ConfigurationException( String.format( "The value for setting '%1$s' is not the requested type.", theName ), e );
 		}
 	}
+ 	
+	/**
+	 * This is convenience mechanism that will load all settings
+	 * as identified by the annotations on field members in a 
+	 * class.
+	 * @param theClass the class that has annotations outlining the settings desired
+	 * @return an instance of the class with the settings loaded and set 
+	 */
+	public <T> T getValues( Class<T> theClass ) {
+		return getValues( theClass, null );
+	}
+	/**
+	 * This is an internal version of the convenience mechanism that will load all settings
+	 * as identified by the annotations on field members in a class. This version takes
+	 * an optional parameterized name, which is sent if a SettingCollection annotation
+	 * was placed on a collection indicating there is a group of types to load.  
+	 * @param theClass the class that has annotations outlining the settings desired
+	 * @param theCollectionName the name for the collection of settings, used for generating the string Setting name
+	 * @return an instance of the class with the settings loaded and set 
+	 */
+	@SuppressWarnings( { "unchecked", "rawtypes"} )
+	private <T> T getValues( Class<T> theClass, String theCollectionName ) {
+		SettingType typeDescriptor = settingTypeManager.generateType( new JavaType( theClass ) );
 
+		T instance = ( T )typeDescriptor.newInstance();
+		Object value;
+		
+		// we iterate through all fields that were annotated
+		// to get the methods needed to load the setting from
+		// the configuration source (calls the one of the 
+		// above getXXXValue methods)
+		for( SettingField field : typeDescriptor.getFields( ) ) {
+			
+			// we warn if we have a collection name BUT the field doesn't have a 
+			// parameterized name since it could be the person putting together
+			// the setting collection forgot to put a parameter in the setting name
+			if( !field.hasParameterizedName() && !Strings.isNullOrEmpty( theCollectionName ) ) {
+				logger.warn( "Field '{}.{}' doesn't have a parameterized name even though it is contained inside a collection named '{}'.", typeDescriptor.getType().getName(), field.getSite().getName( ), theCollectionName );
+			}
+			
+			// the generate name call will throw an exception if the field has
+			// a parameterized name, but a collection name wasnt' given for the
+			// parameter
+			String fieldName = field.generateName( theCollectionName );
+			if( !settingTypeManager.isValidFieldName( fieldName ) ) {
+				throw new ConfigurationException( String.format( "The field name '%s' on '%s.%s' did not conform the field name validator.", fieldName, typeDescriptor.getType().getName(), field.getSite().getName( ) ) );
+			}
+			try {
+				// depending on the type (object, collection, map) we do different things
+				if( field.isSettingCollection( ) ) {
+					// so we can assume it is a list of strings and that we can use those
+					// strings to get to particular object types, which we will then load
+					// and place into a registered collection
+
+					// we declare this as an object type, though it is clearly not, but we don't know the 
+					// type at this time, and now reflection is done on this so should be safe
+					RegisteredCollection<Object> registeredCollection = new RegisteredCollection(); 
+					List<String> collectionNames;
+					
+					if( field.isRequired( ) ) {
+						collectionNames = getListValue( fieldName, String.class );
+					} else {
+						collectionNames = getListValue( fieldName, String.class, ( List<String> )field.getDefaultValue( ) );
+					}
+					// okay so now we have list of collection names, which will be used, most likely, as parameter names
+					if( collectionNames != null ) {
+						for( String collectionName : collectionNames ) {
+							if( registeredCollection.contains( collectionName ) ) {
+								throw new ConfigurationException( String.format( "Field '%s.%s' via setting name '%s' is attempting to add the collection '%s' more than once.", typeDescriptor.getType().getName(), fieldName, field.getSite().getName( ), collectionName ) );
+							} else {
+								registeredCollection.register( 
+										collectionName, 
+										// so we get the values (from ourselves, the configuration manager, for the type that 
+										// was created for the registered collection), but we send in the name of collection 
+										getValues( field.getValueTypes( ).get( 0 ).getType().getUnderlyingClass(), collectionName ) );
+							}
+						}
+					}
+					value = registeredCollection;
+					
+				} else if( field.isObject( ) ) {
+					// we have a simple standard object
+					if( field.isRequired( ) ) {
+						value = field.getSettingMethod().invoke( this, fieldName );
+					} else {
+						value = field.getSettingMethod().invoke( this, fieldName, field.getDefaultValue( ) );
+					}
+
+				} else if( field.isCollection( ) ) {
+					// we have a simple list/collection
+					if( field.isRequired( ) ) {
+						value = field.getSettingMethod().invoke( this, fieldName, field.getValueTypes().get( 0 ).getType().getUnderlyingClass() );
+					} else {
+						value = field.getSettingMethod().invoke( this, fieldName, field.getValueTypes().get( 0 ).getType().getUnderlyingClass(), field.getDefaultValue( ) );
+					}
+
+				} else if( field.isMap( ) ) {
+					// we have a map of some kind
+					if( field.isRequired( ) ) {
+						value = field.getSettingMethod().invoke( this, fieldName, field.getKeyTypes().get( 0 ).getType().getUnderlyingClass(), field.getValueTypes().get( 0 ).getType().getUnderlyingClass() );
+					} else {
+						value = field.getSettingMethod().invoke( this, fieldName, field.getKeyTypes().get( 0 ).getType().getUnderlyingClass(), field.getValueTypes().get( 0 ).getType().getUnderlyingClass(), field.getDefaultValue( ) );				
+					}
+				
+				} else {
+					throw new ConfigurationException( String.format( "Setting '%s' from '%s.%s' is not marked as an object, collection or map.", fieldName, typeDescriptor.getType().getName(), field.getSite().getName( ) ) );
+				}
+			} catch( IllegalAccessException | IllegalArgumentException | InvocationTargetException e ) {
+				throw new ConfigurationException( String.format( "Unable to set data from '%s' onto '%s.%s'.", fieldName, typeDescriptor.getType().getName(), field.getSite().getName( ) ), e );
+			}
+			// the field data is now loaded, so we c
+			// we set the data on the class instance
+			field.setData( instance, value );
+		}
+		
+		// if the class has a deserialization hook we call it
+		if( typeDescriptor.supportsDeserializedHook( ) ) {
+			typeDescriptor.callDeserializedHook( instance );
+		}
+		
+		return instance;
+	}
  	
 	/**
 	 * Gets configuration setting information for a particular name.

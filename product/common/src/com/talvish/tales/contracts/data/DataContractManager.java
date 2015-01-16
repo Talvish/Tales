@@ -23,169 +23,74 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-
-import com.talvish.tales.parts.ValidationSupport;
-import com.talvish.tales.parts.naming.LowerCaseEntityNameValidator;
+import com.talvish.tales.parts.naming.LowerCaseValidator;
 import com.talvish.tales.parts.naming.NameManager;
 import com.talvish.tales.parts.naming.NameValidator;
-import com.talvish.tales.parts.naming.SegmentedLowercaseEntityNameValidator;
+import com.talvish.tales.parts.naming.SegmentedLowercaseValidator;
 import com.talvish.tales.parts.reflection.FieldDescriptor;
 import com.talvish.tales.parts.reflection.JavaType;
 import com.talvish.tales.parts.reflection.TypeUtility;
 import com.talvish.tales.parts.reflection.ValueType;
 import com.talvish.tales.parts.sites.FieldSite;
-import com.talvish.tales.system.Facility;
+import com.talvish.tales.serialization.SerializationTypeManager;
 
 /**
  * Manager class that creates detailed objects for types that represent data contracts.
  * @author jmolnar
  *
  */
-public class DataContractManager implements Facility {
+public class DataContractManager extends SerializationTypeManager< DataContractType, DataContractField> {
 	public static final String CONTRACT_TYPE_NAME_VALIDATOR = "tales.contracts.contract_type_name";
 	public static final String CONTRACT_MEMBER_NAME_VALIDATOR = "tales.contracts.contract_member_name";
 	
 	static {
 		if( !NameManager.hasValidator( DataContractManager.CONTRACT_TYPE_NAME_VALIDATOR ) ) {
-			NameManager.setValidator( DataContractManager.CONTRACT_TYPE_NAME_VALIDATOR, new SegmentedLowercaseEntityNameValidator( ) );
+			NameManager.setValidator( DataContractManager.CONTRACT_TYPE_NAME_VALIDATOR, new SegmentedLowercaseValidator( ) );
 		}
 		if( !NameManager.hasValidator( DataContractManager.CONTRACT_MEMBER_NAME_VALIDATOR ) ) {
-			NameManager.setValidator( DataContractManager.CONTRACT_MEMBER_NAME_VALIDATOR, new LowerCaseEntityNameValidator( ) );
+			NameManager.setValidator( DataContractManager.CONTRACT_MEMBER_NAME_VALIDATOR, new LowerCaseValidator( ) );
 		}
 	}
-
-	private final NameValidator typeNameValidator;
-	private final NameValidator memberNameValidator;
-
-	private final Map<JavaType, DataContractType> dataContractTypes = new ConcurrentHashMap< JavaType, DataContractType>( 16, 0.75f, 1 );
-    private final Object lock = new Object( );
 
     public DataContractManager( ) {
     	this( null, null );
     }
     
     public DataContractManager( NameValidator theTypeNameValidator, NameValidator theMemberNameValidator ) {
-		typeNameValidator = theTypeNameValidator == null ? NameManager.getValidator( DataContractManager.CONTRACT_TYPE_NAME_VALIDATOR ) : theTypeNameValidator;
-		memberNameValidator = theMemberNameValidator == null ? NameManager.getValidator( DataContractManager.CONTRACT_MEMBER_NAME_VALIDATOR ) : theMemberNameValidator;
-        
-		Preconditions.checkNotNull( typeNameValidator, "missing a type name validator" );
-        Preconditions.checkNotNull( memberNameValidator, "missing a member name validator" );
+    	super(
+    			DataContract.class,
+    			theTypeNameValidator == null ? NameManager.getValidator( DataContractManager.CONTRACT_TYPE_NAME_VALIDATOR ) : theTypeNameValidator,
+    			DataMember.class,
+    			theMemberNameValidator == null ? NameManager.getValidator( DataContractManager.CONTRACT_MEMBER_NAME_VALIDATOR ) : theMemberNameValidator );
     }
-    /**
-     * Analyzes the type and makes it available for serialization.
-     * It analyzes the annotations on the class.
-     * @param theType the type 
-     */
-	public DataContractType generateType( JavaType theType ) {
-        Preconditions.checkNotNull( theType, "theType" );
-        synchronized( lock ) { // TODO: need to support the symbol table mechanism instead
-	        DataContract dataTypeAnnotation = theType.getUnderlyingClass().getAnnotation( DataContract.class );
-	        if( dataTypeAnnotation == null ) {
-	            throw new IllegalArgumentException( String.format( "Data type '%s' does not have the DataContract annotation.", theType.getName( ) ) );
-	        } else {
-	        	return _generateType( theType );
-	        }
-        }
+
+	@Override
+	protected DataContractType instantiateTypeDescriptor(
+			String theTypeName,
+			JavaType theType, 
+			Method theDeserializationHook,
+			boolean supportsValid, 
+			DataContractType theBaseTypeDescriptor) {
+		return new DataContractType( 
+				theTypeName, 
+				theType, 
+				theDeserializationHook, 
+				supportsValid, 
+				theBaseTypeDescriptor );
 	}
 	
-    /**
-     * Analyzes the type and makes it available for serialization.
-     * It analyzes the annotations on the class.
-     * @param theType the type 
-     */
-	private DataContractType _generateType( JavaType theType ) {
-        DataContract dataTypeAnnotation = theType.getUnderlyingClass().getAnnotation( DataContract.class );
-        if( dataTypeAnnotation == null ) {
-        	// if no annotation, then not a contract data type, so return null
-        	// and the caller can decide what to do
-        	return null;
-        } else if( dataContractTypes.containsKey( theType ) ) {
-        	// if there is an annotation, we check to see if we have seen it and return it if so
-            return dataContractTypes.get( theType );
-        } else {
-        	// otherwise, we have an annotation BUT we haven't seen it before so must build it up
-        	// which may result in recursive calls when it gets down to the fields
-            
-        	// get the names we want
-            String typeName =  Strings.isNullOrEmpty( dataTypeAnnotation.name( ) ) ? theType.getSimpleName( ) : dataTypeAnnotation.name( );
-
-			if( !typeNameValidator.isValid( typeName ) ) {
-				throw new IllegalStateException( String.format( "Type '%s' is using the name '%s' that does not conform to validator '%s'.", theType.getUnderlyingClass().getSimpleName(), typeName, typeNameValidator.getClass().getSimpleName() ) );
-			}
-
-            // then let's get the base class
-            JavaType baseType = theType.getSupertype( );
-            DataContractType baseContractType = null;
-            Collection<DataContractField> baseTypeFields = null;
-            
-            // if we have a base class, we analyze it
-            if( baseType != null && !baseType.getUnderlyingClass().equals( Object.class ) ) {
-                baseContractType = generateType( baseType ); // TODO: consider not having to have the parent have the annotation (but still look at the fields)
-                baseTypeFields = baseContractType.getFields( );
-            }
-            
-            Method deserializedHook = null;
-            
-            // we need to see if the class supports serialization hooks
-            for( Method method : theType.getUnderlyingClass().getDeclaredMethods( ) ) {
-            	if( method.getAnnotation( OnDeserialized.class ) != null ) {
-            		Preconditions.checkState( deserializedHook == null, "'%s' already has a deserialized hook, '%s', defined.", theType.getName( ), method.getName( ) );
-            		deserializedHook = method;
-            		deserializedHook.setAccessible( true ); // make sure we can access it
-            		// we keep looping in case more than one hook is defined
-            	}
-            }
-
-            // now create the data contract type
-            DataContractType contractType = new DataContractType( 
-            		typeName, 
-            		theType,
-            		deserializedHook,
-            		ValidationSupport.class.isAssignableFrom( theType.getUnderlyingClass() ), // TODO: the validation pieces don't get called yet
-            		baseContractType );
-            DataContractField contractField = null;
-            
-            // we now store this early since the children types (as we recurse) may need it
-            dataContractTypes.put( theType, contractType );
-
-            // we now prepare to get all the fields
-            ArrayList<DataContractField> fields = new ArrayList<DataContractField>( );
-
-            // first put the base type fields into what will be our field collection
-            if( baseTypeFields != null ) {
-                for( DataContractField baseContractField : baseTypeFields ) {
-                    DataContractField fieldClone = ( DataContractField )baseContractField.cloneForSubclass( contractType );
-                    fields.add( fieldClone ); // now we add a copy to the new type (even if the base has it)
-                }
-            }
-
-            // now grab the directly declared fields
-            for( Field field : theType.getUnderlyingClass().getDeclaredFields( ) ) {
-            	contractField = generateField( contractType, field );
-            	if( contractField != null ) {
-            		fields.add( contractField );
-            	}
-            }
-            // now save the list of fields on the type
-            contractType.setFields( fields );
-            
-            return contractType;
-        }
-    }
-
     /**
      * Analyzes the field to recursively go through the field type
      * looking at element types if a collection, key/value types
      * if a map and the fields if a complex type.
-     * @param theDeclaringType the type the field is a member of
      * @param theField the field we are to look at 
+     * @param theDeclaringType the type the field is a member of
      * @return returns the generated data contract field, or null if the field isn't suitable
      */
-	private DataContractField generateField( DataContractType theDeclaringType, Field theField ) {
+	@Override
+	protected DataContractField generateField( Field theField, DataContractType theDeclaringType, Object aDeclaringInstance ) {
 		DataContractField dataContractField = null;
         DataMember dataMemberAnnotation = theField.getAnnotation( DataMember.class );
         // if we have serialization declaration we will save it
@@ -212,18 +117,18 @@ public class DataContractManager implements Facility {
 
 				// first we deal with the keys
 				JavaType declaredKeyType = new JavaType( ( ( ParameterizedType ) fieldGenericType ).getActualTypeArguments( )[ 0 ] );
-	    		List<ValueType<DataContractType,DataContractField>> keyTypes = extractValueTypes(theField, declaredKeyType, dataMemberAnnotation.keyTypes() );
+	    		List<ValueType<DataContractType,DataContractField>> keyTypes = extractValueTypes(theField, declaredKeyType, dataMemberAnnotation.keyTypes(), aDeclaringInstance );
 	    		// if there was nothing on the attribute, then we use the type's key type itself
 	            if( keyTypes.size() == 0 ) {
-	            	keyTypes.add( new ValueType<>( declaredKeyType, _generateType( declaredKeyType ) ) );
+	            	keyTypes.add( new ValueType<>( declaredKeyType, generateType( declaredKeyType, aDeclaringInstance ) ) );
 	            }
 	            
 	            // next we deal with the values
 	    		JavaType declaredValueType = new JavaType( ( ( ParameterizedType ) fieldGenericType ).getActualTypeArguments( )[ 1 ] );
-	    		List<ValueType<DataContractType,DataContractField>> valueTypes = extractValueTypes(theField, declaredValueType, dataMemberAnnotation.valueTypes() );
+	    		List<ValueType<DataContractType,DataContractField>> valueTypes = extractValueTypes(theField, declaredValueType, dataMemberAnnotation.valueTypes(), aDeclaringInstance );
 	    		// if there was nothing on the attribute, then we use the type's value type itself
 	            if( valueTypes.size() == 0 ) {
-	            	valueTypes.add( new ValueType<>( declaredValueType, _generateType( declaredValueType ) ) );
+	            	valueTypes.add( new ValueType<>( declaredValueType, generateType( declaredValueType, aDeclaringInstance ) ) );
 	            }
 	            
 	            dataContractField = new DataContractField( fieldName, keyTypes, valueTypes, fieldSite, theDeclaringType, theDeclaringType ); 
@@ -232,10 +137,10 @@ public class DataContractManager implements Facility {
 				// if we have a collection (e.g list, set, collection itself, etc)
 				// we need to get the type information for the collection element
 	    		JavaType declaredValueType = new JavaType( ( ( ParameterizedType ) fieldGenericType ).getActualTypeArguments( )[ 0 ] );
-	    		List<ValueType<DataContractType,DataContractField>> valueTypes = extractValueTypes(theField, declaredValueType, dataMemberAnnotation.valueTypes() );
+	    		List<ValueType<DataContractType,DataContractField>> valueTypes = extractValueTypes(theField, declaredValueType, dataMemberAnnotation.valueTypes(), aDeclaringInstance );
 	    		// if there was nothing on the attribute, then we use the type's value type itself
 	            if( valueTypes.size() == 0 ) {
-	            	valueTypes.add( new ValueType<>( declaredValueType, _generateType( declaredValueType ) ) );
+	            	valueTypes.add( new ValueType<>( declaredValueType, generateType( declaredValueType, aDeclaringInstance ) ) );
 	            }
 	            // now create the field object we need
 	            dataContractField = new DataContractField( fieldName, FieldDescriptor.FieldValueType.COLLECTION, valueTypes, fieldSite, theDeclaringType, theDeclaringType ); 
@@ -244,20 +149,20 @@ public class DataContractManager implements Facility {
 	    		// if we have an array we basically do the same thing as a collection which means
 	    		// we need to get the type information for the array element
 	    		JavaType declaredValueType = new JavaType( TypeUtility.extractComponentType( fieldGenericType ) );
-	    		List<ValueType<DataContractType,DataContractField>> valueTypes = extractValueTypes(theField, declaredValueType, dataMemberAnnotation.valueTypes() );
+	    		List<ValueType<DataContractType,DataContractField>> valueTypes = extractValueTypes(theField, declaredValueType, dataMemberAnnotation.valueTypes(), aDeclaringInstance );
 	    		// if there was nothing on the attribute, then we use the type's component type itself
 	            if( valueTypes.size() == 0 ) {
-	            	valueTypes.add( new ValueType<>( declaredValueType, _generateType( declaredValueType ) ) );
+	            	valueTypes.add( new ValueType<>( declaredValueType, generateType( declaredValueType, aDeclaringInstance ) ) );
 	            }
 	            // now create the field object we need
 	            dataContractField = new DataContractField( fieldName, FieldDescriptor.FieldValueType.COLLECTION, valueTypes, fieldSite, theDeclaringType, theDeclaringType ); 
 
 	    	} else {
 	    		// we have either a simple type, primitive type, enum or non-collection complex type
-	    		List<ValueType<DataContractType,DataContractField>> valueTypes = extractValueTypes(theField, fieldSite.getType(), dataMemberAnnotation.valueTypes() );
+	    		List<ValueType<DataContractType,DataContractField>> valueTypes = extractValueTypes(theField, fieldSite.getType(), dataMemberAnnotation.valueTypes(), aDeclaringInstance );
 	    		// if there was nothing on the attribute, then we use the type of field itself
 	            if( valueTypes.size() == 0 ) {
-	            	valueTypes.add( new ValueType<>( fieldSite.getType(), _generateType( fieldSite.getType() ) ) );
+	            	valueTypes.add( new ValueType<>( fieldSite.getType(), generateType( fieldSite.getType(), aDeclaringInstance ) ) );
 	            }
 	            // now create the field object we need
 	            dataContractField = new DataContractField( fieldName, FieldDescriptor.FieldValueType.OBJECT, valueTypes, fieldSite, theDeclaringType, theDeclaringType ); 
@@ -274,7 +179,7 @@ public class DataContractManager implements Facility {
 	 * @param theDesiredTypes the set of types request by the developer for use as polymorphic data
 	 * @return the list of value types that can be used on the field
 	 */
-	private List<ValueType<DataContractType,DataContractField>> extractValueTypes( Field theField, JavaType theDeclaredType, Class<?>[] theDesiredTypes ) {
+	private List<ValueType<DataContractType,DataContractField>> extractValueTypes( Field theField, JavaType theDeclaredType, Class<?>[] theDesiredTypes, Object aDeclaringInstance ) {
         // we grab the value types field from the annotation,
         // for each type it lists, we confirm that it can be held
         // by the type on the object itself (no type mis-matches)
@@ -299,7 +204,7 @@ public class DataContractManager implements Facility {
         				theDeclaredType.getName( ) ) );
         	} else {
         		desiredType = new JavaType( desiredClass );
-        		valueTypes.add( new ValueType<>( desiredType, _generateType( desiredType ) ) );
+        		valueTypes.add( new ValueType<>( desiredType, generateType( desiredType, aDeclaringInstance ) ) );
         	}
         }
 

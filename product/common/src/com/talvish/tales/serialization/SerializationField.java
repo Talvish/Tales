@@ -6,7 +6,7 @@ import com.talvish.tales.parts.reflection.FieldDescriptor;
 import com.talvish.tales.parts.reflection.ValueType;
 import com.talvish.tales.parts.sites.MemberSite;
 
-public class SerializationField <T extends SerializationType<T, F>, F extends SerializationField<T, F>> extends FieldDescriptor<T,F> {
+abstract public class SerializationField <T extends SerializationType<T, F>, F extends SerializationField<T, F>> extends FieldDescriptor<T,F> {
 
     /**
      * Primary constructor used to create a field that isn't a collection, array or map.
@@ -45,4 +45,11 @@ public class SerializationField <T extends SerializationType<T, F>, F extends Se
     		T theContainingType ) {
     	super( theName, theKeyTypes, theValueTypes, theFieldSite, theDeclaringType, theContainingType );
     }
+
+    /**
+     * Clones the existing object but specifying a different current type, which will
+     * be a subclass of the original declaring type.
+     */
+    protected abstract F cloneForSubclass( T theContainingType );
+
 }

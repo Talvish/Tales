@@ -29,7 +29,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.talvish.tales.contracts.services.ContractManager;
 import com.talvish.tales.contracts.services.ServiceContract;
-import com.talvish.tales.parts.naming.LowerCaseEntityNameValidator;
+import com.talvish.tales.parts.naming.LowerCaseValidator;
 import com.talvish.tales.parts.naming.NameManager;
 import com.talvish.tales.parts.naming.NameValidator;
 import com.talvish.tales.services.Interface;
@@ -52,7 +52,7 @@ public abstract class InterfaceBase implements Interface {
 	
 	static {
 		if( !NameManager.hasValidator( InterfaceBase.INTERFACE_NAME_VALIDATOR ) ) {
-			NameManager.setValidator( InterfaceBase.INTERFACE_NAME_VALIDATOR, new LowerCaseEntityNameValidator() );
+			NameManager.setValidator( InterfaceBase.INTERFACE_NAME_VALIDATOR, new LowerCaseValidator() );
 		}
 	}
 	

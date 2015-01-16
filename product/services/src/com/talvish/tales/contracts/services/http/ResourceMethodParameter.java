@@ -21,7 +21,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.talvish.tales.parts.naming.LowerCaseEntityNameValidator;
+import com.talvish.tales.parts.naming.LowerCaseValidator;
 import com.talvish.tales.parts.naming.NameManager;
 import com.talvish.tales.parts.naming.NameValidator;
 import com.talvish.tales.parts.reflection.JavaType;
@@ -111,7 +111,7 @@ public class ResourceMethodParameter {
 	
 	static {
 		if( !NameManager.hasValidator( ResourceMethodParameter.RESOURCE_METHOD_PARAMETER_NAME_VALIDATOR ) ) {
-			NameManager.setValidator( ResourceMethodParameter.RESOURCE_METHOD_PARAMETER_NAME_VALIDATOR, new LowerCaseEntityNameValidator( ) );
+			NameManager.setValidator( ResourceMethodParameter.RESOURCE_METHOD_PARAMETER_NAME_VALIDATOR, new LowerCaseValidator( ) );
 		}
 	}
 	

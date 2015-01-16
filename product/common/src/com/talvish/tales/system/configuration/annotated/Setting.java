@@ -1,5 +1,5 @@
 // ***************************************************************************
-// *  Copyright 2014 Joseph Molnar
+// *  Copyright 2015 Joseph Molnar
 // *
 // *  Licensed under the Apache License, Version 2.0 (the "License");
 // *  you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
 // *  See the License for the specific language governing permissions and
 // *  limitations under the License.
 // ***************************************************************************
-package com.talvish.tales.contracts.data;
+package com.talvish.tales.system.configuration.annotated;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -21,11 +21,24 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * This annotation indicates a method is meant to be used for aiding deserialization.
+ * This annotation is meant for fields to indicate they represent a setting value.
  * @author jmolnar
  */
 @Retention( RetentionPolicy.RUNTIME)
-@Target( ElementType.METHOD )
-public @interface OnDeserialized {
+@Target( ElementType.FIELD )
+public @interface Setting {
+	/**
+     * This represents the setting name from the configuration source.
+     * If none is given, it defaults to the name of the member.
+     * @return the name of the setting
+     */
+    String name( ) default "";
 
+    /**
+     * Indicates if this member is considered required, meaning that 
+     * when settings are loaded that the setting must appear in the
+     * source and the default value is not to be used.
+     * @return true if required, false otherwise
+     */
+    boolean required( ) default false;
 }

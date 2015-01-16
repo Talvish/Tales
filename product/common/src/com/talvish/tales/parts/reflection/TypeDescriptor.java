@@ -28,23 +28,23 @@ import com.google.common.base.Strings;
 public abstract class TypeDescriptor<T extends TypeDescriptor<T, F>, F extends FieldDescriptor<T, F>> {
     protected final String name;
     protected final JavaType type;
+    private final T baseType;
     private final Constructor<?> defaultConstructor;
     
     protected Map<String,F> fields = Collections.unmodifiableMap( new HashMap<String, F>( 0 ) );
     
-    public TypeDescriptor( String theName, JavaType theType ) {
+    public TypeDescriptor( String theName, JavaType theType, T theBaseType ) {
         Preconditions.checkArgument( !Strings.isNullOrEmpty( theName ), "theName must be specified" );
         Preconditions.checkNotNull( theType, "the type must not be null" );
         
         name = theName;
         type = theType;
+        baseType = theBaseType;
 
         try {
 			defaultConstructor = type.getUnderlyingClass().getDeclaredConstructor( );
 			defaultConstructor.setAccessible( true );
-		} catch (SecurityException e) {
-			throw new IllegalArgumentException( String.format( "Type '%s' does not have an accessible constructor.", type.getSimpleName() ) );
-		} catch (NoSuchMethodException e) {
+		} catch (SecurityException | NoSuchMethodException e) {
 			throw new IllegalArgumentException( String.format( "Type '%s' does not have an accessible constructor.", type.getSimpleName() ) );
 		}
     }
@@ -63,6 +63,14 @@ public abstract class TypeDescriptor<T extends TypeDescriptor<T, F>, F extends F
      */
     public JavaType getType( ) {
     	return this.type;
+    }
+    
+    /**
+     * The base class TypeDescriptor.
+     * @return the base class TypeDescriptor.
+     */
+    public T getBaseType( ) {
+    	return this.baseType;
     }
     
     /**

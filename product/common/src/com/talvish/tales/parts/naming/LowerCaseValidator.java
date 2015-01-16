@@ -16,16 +16,16 @@
 package com.talvish.tales.parts.naming;
 
 /**
- * A name validator that ensures the name starts with lower case or underscore, but can then 
- * have lower/uppers case letters, underscores and numbers. 
+ * A name validator that ensures the name contains lowercase letters, underscores
+ * and numbers, but cannot start with a number. 
  * @author jmolnar
  *
  */
-public class CamelCaseEntityNameValidator extends RegExNameValidator {
-	private static final String PART_REGEX = "[\\p{javaLowerCase}_][\\p{javaLowerCase}\\p{javaUpperCase}_0-9]*";
+public class LowerCaseValidator extends RegExValidator {
+	private static final String PART_REGEX = "[\\p{javaLowerCase}_][\\p{javaLowerCase}_0-9]*";
 	private static final String FULL_REGEX = String.format( "^%1$s$", PART_REGEX );
 
-	public CamelCaseEntityNameValidator( ) {
+	public LowerCaseValidator( ) {
 		super( FULL_REGEX );
 	}
 }

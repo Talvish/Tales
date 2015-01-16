@@ -1,5 +1,5 @@
 // ***************************************************************************
-// *  Copyright 2011 Joseph Molnar
+// *  Copyright 2014 Joseph Molnar
 // *
 // *  Licensed under the Apache License, Version 2.0 (the "License");
 // *  you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
 // *  See the License for the specific language governing permissions and
 // *  limitations under the License.
 // ***************************************************************************
-package com.talvish.tales.contracts.data;
+package com.talvish.tales.system.configuration.annotated;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -21,17 +21,19 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * This annotation marks this class as a type definition for a data contract.
+ * This annotation marks this class as a holder of a set of configuration settings.
  * @author jmolnar
  */
 @Retention( RetentionPolicy.RUNTIME)
 @Target( ElementType.TYPE )
-public @interface DataContract {
+public @interface Settings {
     /**
-     * The name to give to the serialized class.
+     * This is used to identify the different classes that
+     * may have settings. It currently doesn't serve a strong 
+     * purpose.
      * If none is given, it defaults to the simple
      * name of the class.
-     * @return the serialized name of the class
+     * @return an identifying more for this class of settings
      */
     String name( ) default "";
 }

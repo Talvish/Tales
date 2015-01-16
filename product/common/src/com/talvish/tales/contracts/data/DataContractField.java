@@ -69,7 +69,8 @@ public class DataContractField extends SerializationField<DataContractType, Data
      * Clones the existing object but specifying a different current type, which will
      * be a subclass of the original declaring type.
      */
-    DataContractField cloneForSubclass( DataContractType theContainingType ) {
+    @Override
+    protected DataContractField cloneForSubclass( DataContractType theContainingType ) {
     	if( this.isMap() ) {
 	        return new DataContractField( 
 	        		this.name,

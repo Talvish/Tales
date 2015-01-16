@@ -56,7 +56,7 @@ import com.google.common.base.Strings;
 
 import com.talvish.tales.contracts.data.DataContractTypeSource;
 import com.talvish.tales.contracts.services.http.ResourceFacility;
-import com.talvish.tales.parts.naming.LowerCaseEntityNameValidator;
+import com.talvish.tales.parts.naming.LowerCaseValidator;
 import com.talvish.tales.parts.naming.NameManager;
 import com.talvish.tales.parts.naming.NameValidator;
 import com.talvish.tales.serialization.json.JsonTranslationFacility;
@@ -192,7 +192,7 @@ public abstract class Service implements Runnable {
 	
 	static {
 		if( !NameManager.hasValidator( Service.SERVICE_NAME_VALIDATOR ) ) {
-			NameManager.setValidator( Service.SERVICE_NAME_VALIDATOR, new LowerCaseEntityNameValidator( ) );
+			NameManager.setValidator( Service.SERVICE_NAME_VALIDATOR, new LowerCaseValidator( ) );
 		}
 	}
 	

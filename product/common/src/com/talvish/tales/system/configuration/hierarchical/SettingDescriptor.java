@@ -21,7 +21,7 @@ import com.talvish.tales.contracts.data.DataContract;
 import com.talvish.tales.contracts.data.DataMember;
 import com.talvish.tales.parts.naming.NameManager;
 import com.talvish.tales.parts.naming.NameValidator;
-import com.talvish.tales.parts.naming.SegmentedLowercaseEntityNameValidator;
+import com.talvish.tales.parts.naming.SegmentedLowercaseValidator;
 import com.talvish.tales.system.Conditions;
 
 /**
@@ -35,7 +35,7 @@ class SettingDescriptor {
 	
 	static {
 		if( !NameManager.hasValidator( NAME_VALIDATOR ) ) {
-			NameManager.setValidator( NAME_VALIDATOR, new SegmentedLowercaseEntityNameValidator( ) );
+			NameManager.setValidator( NAME_VALIDATOR, new SegmentedLowercaseValidator( ) );
 		}
 	}
 

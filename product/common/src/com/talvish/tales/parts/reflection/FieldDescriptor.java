@@ -21,6 +21,7 @@ import java.util.List;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+
 import com.talvish.tales.parts.sites.MemberSite;
 
 public abstract class FieldDescriptor<T extends TypeDescriptor<T, F>, F extends FieldDescriptor<T, F>> {

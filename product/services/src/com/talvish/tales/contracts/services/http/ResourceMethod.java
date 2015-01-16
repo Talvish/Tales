@@ -48,7 +48,7 @@ import com.talvish.tales.contracts.services.http.ResourceMethodParameter.CookieV
 import com.talvish.tales.contracts.services.http.ResourceMethodParameter.ParameterSource;
 import com.talvish.tales.contracts.services.http.ResourceOperation.Mode;
 import com.talvish.tales.parts.RegularExpressionHelper;
-import com.talvish.tales.parts.naming.LowerCaseEntityNameValidator;
+import com.talvish.tales.parts.naming.LowerCaseValidator;
 import com.talvish.tales.parts.naming.NameManager;
 import com.talvish.tales.parts.naming.NameValidator;
 import com.talvish.tales.parts.reflection.JavaType;
@@ -74,7 +74,7 @@ public class ResourceMethod extends Subcontract {
 	
 	static {
 		if( !NameManager.hasValidator( ResourceMethod.RESOURCE_METHOD_NAME_VALIDATOR ) ) {
-			NameManager.setValidator( ResourceMethod.RESOURCE_METHOD_NAME_VALIDATOR, new LowerCaseEntityNameValidator( ) );
+			NameManager.setValidator( ResourceMethod.RESOURCE_METHOD_NAME_VALIDATOR, new LowerCaseValidator( ) );
 		}
 	}
 	

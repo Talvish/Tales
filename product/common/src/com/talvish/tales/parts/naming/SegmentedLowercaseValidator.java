@@ -1,5 +1,5 @@
 // ***************************************************************************
-// *  Copyright 2011 Joseph Molnar
+// *  Copyright 2012 Joseph Molnar
 // *
 // *  Licensed under the Apache License, Version 2.0 (the "License");
 // *  you may not use this file except in compliance with the License.
@@ -13,25 +13,20 @@
 // *  See the License for the specific language governing permissions and
 // *  limitations under the License.
 // ***************************************************************************
-package com.talvish.tales.contracts.data;
-
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+package com.talvish.tales.parts.naming;
 
 /**
- * This annotation marks this class as a type definition for a data contract.
+ * A name validator that ensures the name contains parts segmented by period, where the
+ * parts contain lowercase letters, underscores and numbers, but cannot start with a number.
+ * e.g. "name._name" 
  * @author jmolnar
+ *
  */
-@Retention( RetentionPolicy.RUNTIME)
-@Target( ElementType.TYPE )
-public @interface DataContract {
-    /**
-     * The name to give to the serialized class.
-     * If none is given, it defaults to the simple
-     * name of the class.
-     * @return the serialized name of the class
-     */
-    String name( ) default "";
+public class SegmentedLowercaseValidator extends RegExValidator {
+	private static final String PART_REGEX = "[\\p{javaLowerCase}_][\\p{javaLowerCase}_0-9]*";
+	private static final String FULL_REGEX = String.format( "^(%1$s)(\\.(%1$s))*$", PART_REGEX );
+
+	public SegmentedLowercaseValidator( ) {
+		super( FULL_REGEX );
+	}
 }

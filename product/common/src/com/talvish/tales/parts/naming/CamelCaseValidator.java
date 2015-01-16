@@ -16,17 +16,16 @@
 package com.talvish.tales.parts.naming;
 
 /**
- * A name validator that ensures the name contains parts segmented by period, where the
- * parts contain lowercase letters, underscores and numbers, but cannot start with a number.
- * e.g. "name._name" 
+ * A name validator that ensures the name starts with lower case or underscore, but can then 
+ * have lower/uppers case letters, underscores and numbers. 
  * @author jmolnar
  *
  */
-public class SegmentedLowercaseEntityNameValidator extends RegExNameValidator {
-	private static final String PART_REGEX = "[\\p{javaLowerCase}_][\\p{javaLowerCase}_0-9]*";
-	private static final String FULL_REGEX = String.format( "^(%1$s)(\\.(%1$s))*$", PART_REGEX );
+public class CamelCaseValidator extends RegExValidator {
+	private static final String PART_REGEX = "[\\p{javaLowerCase}_][\\p{javaLowerCase}\\p{javaUpperCase}_0-9]*";
+	private static final String FULL_REGEX = String.format( "^%1$s$", PART_REGEX );
 
-	public SegmentedLowercaseEntityNameValidator( ) {
+	public CamelCaseValidator( ) {
 		super( FULL_REGEX );
 	}
 }

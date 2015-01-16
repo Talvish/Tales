@@ -1,5 +1,5 @@
 // ***************************************************************************
-// *  Copyright 2012 Joseph Molnar
+// *  Copyright 2014 Joseph Molnar
 // *
 // *  Licensed under the Apache License, Version 2.0 (the "License");
 // *  you may not use this file except in compliance with the License.
@@ -13,18 +13,19 @@
 // *  See the License for the specific language governing permissions and
 // *  limitations under the License.
 // ***************************************************************************
-package com.talvish.tales.parts.naming;
+package com.talvish.tales.serialization;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * This is a simple name validator that always assume the name is valid.
+ * This annotation indicates a method is meant to be used for aiding deserialization.
  * @author jmolnar
- *
  */
-public class NopNameValidator implements NameValidator {
-	/**
-	 * This validator always returns true.
-	 */
-	public boolean isValid(String theName) {
-		return true;
-	}
+@Retention( RetentionPolicy.RUNTIME)
+@Target( ElementType.METHOD )
+public @interface OnDeserialized {
+
 }

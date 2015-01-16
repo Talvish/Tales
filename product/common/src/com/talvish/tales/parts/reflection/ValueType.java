@@ -17,7 +17,13 @@ package com.talvish.tales.parts.reflection;
 
 import com.google.common.base.Preconditions;
 
-
+/**
+ * This is a helper class that maps a TypeDescriptor to a particular JavaType.
+ * @author jmolnar
+ *
+ * @param <T> the TypeDescriptor associated with the JavaType
+ * @param <F> the FieldDescriptor associatec with the JavaType
+ */
 public class ValueType <T extends TypeDescriptor<T, F>, F extends FieldDescriptor<T, F>> {
     protected final JavaType type;
     protected final T reflectedType;

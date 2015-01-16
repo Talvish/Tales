@@ -11,8 +11,8 @@ public class SerializationType <T extends SerializationType<T, F>, F extends Ser
 	private final boolean supportsValidation;
 	private final Method deserializedHook;
 	
-	protected SerializationType( String theName, JavaType theType, Method theDeserializedHook, boolean validationSupport ) {
-    	super( theName, theType );
+	protected SerializationType( String theName, JavaType theType, Method theDeserializedHook, boolean validationSupport, T theBaseType ) {
+    	super( theName, theType, theBaseType );
     	
     	Preconditions.checkArgument( theDeserializedHook == null || theDeserializedHook.getParameters().length == 0, "'%s.%s' cannot have method parameters.", theType.getName(), theDeserializedHook == null ? "" : theDeserializedHook.getName( ) );
 

@@ -22,7 +22,7 @@ import java.util.Comparator;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.talvish.tales.parts.naming.LowerCaseEntityNameValidator;
+import com.talvish.tales.parts.naming.LowerCaseValidator;
 import com.talvish.tales.parts.naming.NameManager;
 import com.talvish.tales.parts.naming.NameValidator;
 
@@ -39,7 +39,7 @@ public class StatusBlock {
 
 	static {
 		if( !NameManager.hasValidator( StatusBlock.STATUS_BLOCK_NAME_VALIDATOR ) ) {
-			NameManager.setValidator( StatusBlock.STATUS_BLOCK_NAME_VALIDATOR, new LowerCaseEntityNameValidator() );
+			NameManager.setValidator( StatusBlock.STATUS_BLOCK_NAME_VALIDATOR, new LowerCaseValidator() );
 		}
 	}
 	

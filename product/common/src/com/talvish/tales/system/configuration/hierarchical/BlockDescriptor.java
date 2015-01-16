@@ -25,7 +25,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.talvish.tales.contracts.data.DataContract;
 import com.talvish.tales.contracts.data.DataMember;
-import com.talvish.tales.parts.naming.LowerCaseEntityNameValidator;
+import com.talvish.tales.parts.naming.LowerCaseValidator;
 import com.talvish.tales.parts.naming.NameManager;
 import com.talvish.tales.parts.naming.NameValidator;
 import com.talvish.tales.system.Conditions;
@@ -41,7 +41,7 @@ class BlockDescriptor {
 	
 	static {
 		if( !NameManager.hasValidator( NAME_VALIDATOR ) ) {
-			NameManager.setValidator( NAME_VALIDATOR, new LowerCaseEntityNameValidator( ) );
+			NameManager.setValidator( NAME_VALIDATOR, new LowerCaseValidator( ) );
 		}
 	}
 	

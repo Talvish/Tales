@@ -22,7 +22,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.talvish.tales.parts.naming.NameManager;
 import com.talvish.tales.parts.naming.NameValidator;
-import com.talvish.tales.parts.naming.SegmentedLowercaseEntityNameValidator;
+import com.talvish.tales.parts.naming.SegmentedLowercaseValidator;
 
 
 /**
@@ -35,7 +35,7 @@ public class LoadedSetting {
 	
 	static {
 		if( !NameManager.hasValidator( LoadedSetting.SETTING_NAME_VALIDATOR ) ) {
-			NameManager.setValidator( LoadedSetting.SETTING_NAME_VALIDATOR, new SegmentedLowercaseEntityNameValidator( ) );
+			NameManager.setValidator( LoadedSetting.SETTING_NAME_VALIDATOR, new SegmentedLowercaseValidator( ) );
 		}
 	}
 	

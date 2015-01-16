@@ -26,7 +26,7 @@ import com.google.common.base.Strings;
 import com.talvish.tales.contracts.ContractVersion;
 import com.talvish.tales.parts.naming.NameManager;
 import com.talvish.tales.parts.naming.NameValidator;
-import com.talvish.tales.parts.naming.SegmentedLowercaseEntityNameValidator;
+import com.talvish.tales.parts.naming.SegmentedLowercaseValidator;
 
 /**
  * This base class that represents a contract bound to an interface in a service.
@@ -41,7 +41,7 @@ public abstract class Contract {
 	
 	static {
 		if( !NameManager.hasValidator( Contract.CONTRACT_NAME_VALIDATOR ) ) {
-			NameManager.setValidator( Contract.CONTRACT_NAME_VALIDATOR, new SegmentedLowercaseEntityNameValidator( ) );
+			NameManager.setValidator( Contract.CONTRACT_NAME_VALIDATOR, new SegmentedLowercaseValidator( ) );
 		}
 	}
 	

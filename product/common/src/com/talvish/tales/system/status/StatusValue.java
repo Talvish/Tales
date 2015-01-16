@@ -21,7 +21,7 @@ import java.util.Comparator;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.talvish.tales.parts.naming.LowerCaseEntityNameValidator;
+import com.talvish.tales.parts.naming.LowerCaseValidator;
 import com.talvish.tales.parts.naming.NameManager;
 import com.talvish.tales.parts.naming.NameValidator;
 
@@ -40,7 +40,7 @@ public class StatusValue {
 	
 	static {
 		if( !NameManager.hasValidator( StatusValue.STATUS_VALUE_NAME_VALIDATOR ) ) {
-			NameManager.setValidator( StatusValue.STATUS_VALUE_NAME_VALIDATOR, new LowerCaseEntityNameValidator() );
+			NameManager.setValidator( StatusValue.STATUS_VALUE_NAME_VALIDATOR, new LowerCaseValidator() );
 		}
 	}
 	
