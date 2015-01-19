@@ -51,6 +51,7 @@ public class BodyContentProvider extends StringContentProvider {
 	 */
 	public static String encode( Map<String,String> theParameters ) {
         StringBuilder content = new StringBuilder( theParameters.size( ) * 20 * 2 );
+        String value;
         
         for( Map.Entry<String,String> parameter : theParameters.entrySet() ) {
             if( content.length() > 0 ) {
@@ -58,7 +59,8 @@ public class BodyContentProvider extends StringContentProvider {
             }
             content.append( UrlEncoding.encode( parameter.getKey( ) ) );
             content.append( '=' );
-            content.append( UrlEncoding.encode( parameter.getValue( ) ) );
+            value = parameter.getValue( );
+            content.append( UrlEncoding.encode( value == null ? "" : value ) );
         }
         return content.toString();
 	}

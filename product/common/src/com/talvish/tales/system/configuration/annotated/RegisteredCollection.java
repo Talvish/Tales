@@ -45,8 +45,9 @@ public class RegisteredCollection<T> {
 	 * underlying collections to at the new one. 
 	 * @param theName the name of the item being added
 	 * @param theItem the item to add
+	 * @return returns this class so registrations can be daisy chained
 	 */
-	public void register( String theName, T theItem ) {
+	public RegisteredCollection<T> register( String theName, T theItem ) {
 		Preconditions.checkNotNull( theItem );
 		Preconditions.checkArgument( !Strings.isNullOrEmpty( theName ), "The item being registered needs a name." );
 		synchronized( this.lock ) {
@@ -60,6 +61,7 @@ public class RegisteredCollection<T> {
 			newList.add( theItem );
 			list = Collections.unmodifiableList( newList );
 		}
+		return this;
 	}
 	
 	/**
