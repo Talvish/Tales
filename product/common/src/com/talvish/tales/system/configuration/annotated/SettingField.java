@@ -41,10 +41,12 @@ public class SettingField extends SerializationField<SettingType, SettingField> 
 	
 	private final String nameFormat;
 	private final boolean parameterizedName;
-	private final boolean settingCollection;
+	
+	private final boolean settingsCollection;	// TODO: consider putting an enum for these settings related guys
+	private final boolean settingsName;
 	
     /**
-     * Primary constructor used to create a field that isn't a collection, array or map.
+     * Primary constructor used to create a field that is most things BUT a map.
      * @param theName the name to give the field
      * @param theFieldType the type information regarding the field
      * @param theFieldSite the site information for modifying the field
@@ -81,7 +83,9 @@ public class SettingField extends SerializationField<SettingType, SettingField> 
     	// a parameter and if so mark we have one
     	nameFormat = generateNameFormat( name );
     	parameterizedName = nameFormat != name; // we can use reference check since it is the same string we return if none are found
-    	settingCollection = this.site.getType().getUnderlyingClass().equals( RegisteredCollection.class );
+    	
+    	settingsCollection = this.site.getType().getUnderlyingClass().equals( RegisteredCollection.class );
+    	settingsName = false;
     }
 
     /**
@@ -123,7 +127,46 @@ public class SettingField extends SerializationField<SettingType, SettingField> 
     	// a parameter and if so mark we have one
     	nameFormat = generateNameFormat( name );
     	parameterizedName = nameFormat != name; // we can use reference check since it is the same string we return if none are found
-    	settingCollection = this.site.getType().getUnderlyingClass().equals( RegisteredCollection.class );
+    	
+    	settingsCollection = this.site.getType().getUnderlyingClass().equals( RegisteredCollection.class );
+    	settingsName = false;
+    }
+
+    /**
+     * This constructor is for making a settings name base field. Meaning a field that represents
+     * the name for a group of settings.
+     * @param theName the name to give the field
+     * @param theFieldType the type information regarding the field
+     * @param theFieldSite the site information for modifying the field
+     * @param theDeclaringType the contract type this field was declared in
+     * @param theContainingType the class that currently contains the field, which, if not the same as theDeclaringType is a subclass
+     */
+    protected SettingField( 
+    		String theName, 
+    		FieldDescriptor.FieldValueType theFieldValueType,
+    		ValueType<SettingType, SettingField> theObjectType, 
+    		MemberSite theFieldSite, 
+    		SettingType theDeclaringType, 
+    		SettingType theContainingType ) {
+    	super( 
+    			theName, 
+    			theFieldValueType, 
+    			Arrays.asList( theObjectType ), 
+    			theFieldSite, 
+    			theDeclaringType, 
+    			theContainingType );
+
+    	required = false; // this is not meaningful for this type
+    	defaultValue = null;
+    	settingMethod = null;
+    	
+    	// now we want to verify the name in question for 
+    	// a parameter and if so mark we have one
+    	nameFormat = generateNameFormat( name ); // we do this BUT not much point, since there isn't a parameter, the name is hard-coded
+    	parameterizedName = nameFormat != name; // we can use reference check since it is the same string we return if none are found
+    	
+    	settingsCollection = false;
+    	settingsName = true;
     }
     
     /**
@@ -176,20 +219,27 @@ public class SettingField extends SerializationField<SettingType, SettingField> 
     public boolean isRequired( ) {
     	return required;
     }
-    
 
     /**
-     * Indicates if this setting field represents setting collections.
-     * @return true if this field represents some setting collections, false otherwise
+     * Indicates if this setting field represents settings collection.
+     * @return true if this field represents some settings collection, false otherwise
      */
-    public boolean isSettingCollection( ) {
-    	return settingCollection;
+    public boolean isSettingsCollection( ) {
+    	return settingsCollection;
     }
     
+    /**
+     * Indicates if this setting field represents the name given to a single
+     * group of settings.
+     * @return true indicates it is the field that represents the name for a group of settings, false otherwise
+     */
+    public boolean isSettingsName( ) {
+    	return settingsName;
+    } 
     
     /**
-     * Gets the default value for the method.
-     * @return
+     * Gets the default value for the setting.
+     * @return the default value
      */
     public Object getDefaultValue( ) {
     	return defaultValue;

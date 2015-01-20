@@ -21,11 +21,11 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * This annotation marks this class as a holder of a set of configuration settings.
+ * This is a marker annotation that can be used to indicate a field, which
+ * must be a string, represents a name given to a group of settings.
  * @author jmolnar
  */
 @Retention( RetentionPolicy.RUNTIME)
-@Target( ElementType.TYPE )
-public @interface Settings {
-
+@Target( ElementType.FIELD )
+public @interface SettingsName {
 }

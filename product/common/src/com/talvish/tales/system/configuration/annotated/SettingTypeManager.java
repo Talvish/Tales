@@ -28,10 +28,11 @@ import java.util.Map;
 
 import org.joda.time.DateTime;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+
 import com.talvish.tales.parts.naming.NameManager;
 import com.talvish.tales.parts.naming.NameValidator;
-import com.talvish.tales.parts.naming.NopValidator;
 import com.talvish.tales.parts.naming.SegmentedLowercaseValidator;
 import com.talvish.tales.parts.reflection.FieldDescriptor;
 import com.talvish.tales.parts.reflection.JavaType;
@@ -48,21 +49,20 @@ import com.talvish.tales.system.configuration.ConfigurationManager;
  *
  */
 public class SettingTypeManager extends SerializationTypeManager< SettingType, SettingField> {
-	public static final String CONTRACT_TYPE_NAME_VALIDATOR = "tales.contracts.config_type_name";
-	public static final String CONTRACT_MEMBER_PARAMETERIZED_NAME_VALIDATOR = "tales.contracts.config_member_parameterized_name";
-	public static final String CONTRACT_MEMBER_NAME_VALIDATOR = "tales.contracts.config_member_name";
+	public static final String SETTING_PARAMETERIZED_NAME_VALIDATOR = "tales.contracts.setting_parameterized_name";
+	public static final String SETTING_NAME_VALIDATOR = "tales.contracts.setting_name";
 	
 	static {
-		if( !NameManager.hasValidator( SettingTypeManager.CONTRACT_TYPE_NAME_VALIDATOR ) ) {
-			NameManager.setValidator( SettingTypeManager.CONTRACT_TYPE_NAME_VALIDATOR, new NopValidator( ) ); // we don't care about validation for this
+		if( !NameManager.hasValidator( SettingTypeManager.SETTING_NAME_VALIDATOR ) ) {
+			NameManager.setValidator( SettingTypeManager.SETTING_NAME_VALIDATOR, new SegmentedLowercaseValidator( ) );
 		}
-		if( !NameManager.hasValidator( SettingTypeManager.CONTRACT_MEMBER_PARAMETERIZED_NAME_VALIDATOR ) ) {
-			NameManager.setValidator( SettingTypeManager.CONTRACT_MEMBER_PARAMETERIZED_NAME_VALIDATOR, new SegmentedLowercaseParameterizedValidator( ) );
-		}
-		if( !NameManager.hasValidator( SettingTypeManager.CONTRACT_MEMBER_NAME_VALIDATOR ) ) {
-			NameManager.setValidator( SettingTypeManager.CONTRACT_MEMBER_NAME_VALIDATOR, new SegmentedLowercaseValidator( ) );
+		if( !NameManager.hasValidator( SettingTypeManager.SETTING_PARAMETERIZED_NAME_VALIDATOR ) ) {
+			NameManager.setValidator( SettingTypeManager.SETTING_PARAMETERIZED_NAME_VALIDATOR, new SegmentedLowercaseParameterizedValidator( ) );
 		}
 	}
+	
+	private final NameValidator settingNameValidator;
+	private final NameValidator settingParameterizedNameValidator;
 	
 	private Map<Class<?>,Method> managerRequiredMethods = new HashMap<>( );
 	private Map<Class<?>,Method> managerNotRequiredMethods = new HashMap<>( );
@@ -75,28 +75,39 @@ public class SettingTypeManager extends SerializationTypeManager< SettingType, S
 
 
     public SettingTypeManager( ) {
-    	this( null, null, null );
+    	this( null, null );
     }
     
-    // TODO: consider not sending field related items to parent
-    public SettingTypeManager( NameValidator theTypeNameValidator, NameValidator theMemberNameValidator, NameValidator theMemberParameterizedNameValidator ) {
-    	super(
-    			Settings.class,
-    			theTypeNameValidator == null ? NameManager.getValidator( SettingTypeManager.CONTRACT_TYPE_NAME_VALIDATOR ) : theTypeNameValidator,
-    			Setting.class,
-    			theMemberNameValidator == null ? NameManager.getValidator( SettingTypeManager.CONTRACT_MEMBER_PARAMETERIZED_NAME_VALIDATOR ) : theMemberNameValidator );
+    public SettingTypeManager( NameValidator theMemberNameValidator, NameValidator theMemberParameterizedNameValidator ) {
+    	settingNameValidator = theMemberNameValidator == null ? NameManager.getValidator( SettingTypeManager.SETTING_NAME_VALIDATOR ) : theMemberNameValidator;
+    	settingParameterizedNameValidator = theMemberParameterizedNameValidator == null ? NameManager.getValidator( SettingTypeManager.SETTING_PARAMETERIZED_NAME_VALIDATOR ) : theMemberParameterizedNameValidator;
+    			
+        Preconditions.checkNotNull( settingNameValidator, "missing a member name validator" );
+		Preconditions.checkNotNull( settingParameterizedNameValidator, "missing a parameterized member ame validator" );
+
     	setupConfigurationMethods( );
     }
+    
+    /**
+     * We can only generate a type descriptor for something that has had the
+     * proper annotation on it.
+     */
+    @Override
+    protected boolean canGenerateTypeDescriptor( JavaType theType ) {
+    	return theType.getUnderlyingClass().isAnnotationPresent( Settings.class );
+    }
 
+    /**
+     * Generates the setting-based type descriptor.
+     */
 	@Override
-	protected SettingType instantiateTypeDescriptor(
-			String theTypeName,
+	protected SettingType generateTypeDescriptor(
 			JavaType theType, 
 			Method theDeserializationHook,
 			boolean supportsValid, 
 			SettingType theBaseTypeDescriptor) {
 		return new SettingType ( 
-				theTypeName, 
+				theType.getSimpleName(), 
 				theType, 
 				theDeserializationHook, 
 				supportsValid, 
@@ -108,8 +119,8 @@ public class SettingTypeManager extends SerializationTypeManager< SettingType, S
 	 * @param theName the full proper name to verify
 	 * @return true if it is valid, false otherwise
 	 */
-	public boolean isValidFieldName( String theName ) {
-		return NameManager.getValidator( SettingTypeManager.CONTRACT_MEMBER_NAME_VALIDATOR ).isValid( theName );
+	public boolean isValidSettingName( String theName ) {
+		return settingNameValidator.isValid( theName );
 	}
 
     /**
@@ -121,7 +132,7 @@ public class SettingTypeManager extends SerializationTypeManager< SettingType, S
      * @return returns the generated data contract field, or null if the field isn't suitable
      */
 	@Override
-	protected SettingField generateField( Field theField, SettingType theDeclaringType, Object aDeclaringInstance ) {
+	protected SettingField generateFieldDescriptor( Field theField, SettingType theDeclaringType, Object aDeclaringInstance ) {
 		SettingField fieldDescriptor = null;
         // if we have serialization declaration we will save it
         if( theField.isAnnotationPresent( Setting.class ) ) {
@@ -141,8 +152,8 @@ public class SettingTypeManager extends SerializationTypeManager< SettingType, S
 	        String fieldName = Strings.isNullOrEmpty( fieldAnnotation.name( ) ) ? theField.getName( ) : fieldAnnotation.name( );
 	        
 	        // and verify the name of the field is valid
-	        if( !memberNameValidator.isValid( fieldName ) ) {
-        		throw new IllegalStateException( String.format( "Field '%s.%s' is using the name '%s' that does not conform to validator '%s'.", theDeclaringType.getType().getName(), fieldSite.getName(), fieldName, memberNameValidator.getClass().getSimpleName() ) );
+	        if( !settingParameterizedNameValidator.isValid( fieldName ) ) {
+        		throw new IllegalStateException( String.format( "Field '%s.%s' is using the name '%s' that does not conform to validator '%s'.", theDeclaringType.getType().getName(), fieldSite.getName(), fieldName, settingParameterizedNameValidator.getClass().getSimpleName() ) );
 	        }
 
 			if( Map.class.isAssignableFrom( fieldClass ) && ( fieldGenericType instanceof ParameterizedType ) ) {
@@ -234,10 +245,34 @@ public class SettingTypeManager extends SerializationTypeManager< SettingType, S
 	            		fieldDefaultValue,
 	            		configMethod); 
 	    	}
+        } else if( theField.isAnnotationPresent( SettingsName.class ) ) {
+            Class<?> fieldClass = theField.getType();
+			FieldSite fieldSite = new FieldSite( theDeclaringType.getType( ).getType(), theField ); // we use this constructor to ensure we get fields that use type parameters			
+
+			// make sure the field is accessible
+	        theField.setAccessible( true ); 
+	        // get the proper names for the field
+	        String fieldName = theField.getName( );
+
+			// check the type
+			if( !String.class.equals( fieldClass ) ) {
+				throw new ConfigurationException( String.format( "Field '%s.%s' is of type '%s', but it needs to be a String to be the settings name.", theDeclaringType.getType( ).getUnderlyingClass().getSimpleName(), theField.getName(), fieldClass.getSimpleName( ) ) );
+			} else {
+				// now we pull out the class parameter 
+				JavaType declaredSettingType = new JavaType( String.class );
+				
+	    		fieldDescriptor = new SettingField( 
+	            		fieldName, 
+	            		FieldDescriptor.FieldValueType.OBJECT, 
+	            		new ValueType<>( declaredSettingType, null ), 
+	            		fieldSite, 
+	            		theDeclaringType, 
+	            		theDeclaringType );
+			}
 			
-    	} else if( theField.isAnnotationPresent( SettingCollection.class ) ) {
+    	} else if( theField.isAnnotationPresent( SettingsCollection.class ) ) {
         	// now we see if have the collection annotation on the field
-    		SettingCollection fieldAnnotation = theField.getAnnotation( SettingCollection.class );
+    		SettingsCollection fieldAnnotation = theField.getAnnotation( SettingsCollection.class );
 
             Class<?> fieldClass = theField.getType();
 			Type fieldGenericType = theField.getGenericType();
@@ -250,13 +285,13 @@ public class SettingTypeManager extends SerializationTypeManager< SettingType, S
 	        String fieldName = Strings.isNullOrEmpty( fieldAnnotation.name( ) ) ? theField.getName( ) : fieldAnnotation.name( );
 
 	        // and verify the name of the field is valid
-	        if( !memberNameValidator.isValid( fieldName ) ) {
-        		throw new IllegalStateException( String.format( "Field '%s.%s' is using the name '%s' that does not conform to validator '%s'.", theDeclaringType.getType().getName(), fieldSite.getName(), fieldName, memberNameValidator.getClass().getSimpleName() ) );
+	        if( !settingParameterizedNameValidator.isValid( fieldName ) ) {
+        		throw new IllegalStateException( String.format( "Field '%s.%s' is using the name '%s' that does not conform to validator '%s'.", theDeclaringType.getType().getName(), fieldSite.getName(), fieldName, settingParameterizedNameValidator.getClass().getSimpleName() ) );
 	        }
 			
 			// check the type
 			if( !RegisteredCollection.class.equals( fieldClass ) ) {
-				throw new ConfigurationException( String.format( "Field '%s.%s' is of type '%s', which is not supported as a SettingCollection.", theDeclaringType.getType( ).getUnderlyingClass().getSimpleName(), theField.getName(), fieldClass.getSimpleName( ) ) );
+				throw new ConfigurationException( String.format( "Field '%s.%s' is of type '%s', which is not supported as a settings collection.", theDeclaringType.getType( ).getUnderlyingClass().getSimpleName(), theField.getName(), fieldClass.getSimpleName( ) ) );
 			} else {
 				// now we pull out the class parameter 
 				JavaType declaredSettingType = new JavaType( ( ( ParameterizedType ) fieldGenericType ).getActualTypeArguments( )[ 0 ] );
@@ -264,7 +299,7 @@ public class SettingTypeManager extends SerializationTypeManager< SettingType, S
 				
 				List<String> defaults = fieldAnnotation.defaults() == null ? new ArrayList<>( ) : Arrays.asList( fieldAnnotation.defaults( ) );
 
-	    		Method configMethod;
+	    		Method configMethod; // we collect the list method here BUT we don't necessarily need to when loading the values since we know it is a list 
 	    		
 	    		if( fieldRequired ) {
 	    			configMethod = listRequiredMethod;

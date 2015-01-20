@@ -15,7 +15,6 @@
 // ***************************************************************************
 package com.talvish.tales.serialization;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -26,9 +25,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 import com.talvish.tales.parts.ValidationSupport;
-import com.talvish.tales.parts.naming.NameValidator;
 import com.talvish.tales.parts.reflection.JavaType;
 import com.talvish.tales.system.Facility;
 
@@ -39,31 +36,12 @@ import com.talvish.tales.system.Facility;
  *
  */
 public abstract class SerializationTypeManager <T extends SerializationType<T, F>, F extends SerializationField<T, F>> implements Facility {
-
-	protected final NameValidator typeNameValidator;
-	protected final NameValidator memberNameValidator;
-
 	protected final Map<JavaType, T> typeDescriptors = new ConcurrentHashMap< JavaType, T>( 16, 0.75f, 1 );
     private final Object lock = new Object( );
     
-    protected final Class<? extends Annotation> typeAnnotationClass;
-    protected final Class<? extends Annotation> memberAnnotationClass;
-
-    
-    public SerializationTypeManager( 
-    		Class<? extends Annotation> theTypeAnnotationClass, 
-    		NameValidator theTypeNameValidator, 
-    		Class<? extends Annotation> theMemberAnnotationClass, 
-    		NameValidator theMemberNameValidator ) {
-		Preconditions.checkNotNull( theTypeNameValidator, "missing a type name validator" );
-        Preconditions.checkNotNull( theMemberNameValidator, "missing a member name validator" );
-        
-        typeAnnotationClass = theTypeAnnotationClass;
-        typeNameValidator = theTypeNameValidator;
-
-        memberNameValidator = theMemberNameValidator;
-        memberAnnotationClass = theMemberAnnotationClass;
+    public SerializationTypeManager( ) { 
     }
+
     /**
      * Analyzes the type and makes it available for serialization.
      * It analyzes the annotations on the class.
@@ -72,12 +50,7 @@ public abstract class SerializationTypeManager <T extends SerializationType<T, F
 	public T generateType( JavaType theType ) {
         Preconditions.checkNotNull( theType, "theType" );
         synchronized( lock ) { // TODO: need to support the symbol table mechanism instead
-	        Annotation typeAnnotation = theType.getUnderlyingClass().getAnnotation( typeAnnotationClass );
-	        if( typeAnnotation == null ) {
-	            throw new IllegalArgumentException( String.format( "Manager '%s' was given type '%s' to analyze, but the type doesn't have the '%s' annotation.", this.getClass().getSimpleName( ), theType.getSimpleName( ), typeAnnotationClass.getSimpleName( ) ) );
-	        } else {
-	        	return generateType( theType, null );
-	        }
+        	return generateType( theType, null );
         }
 	}
 	
@@ -87,42 +60,36 @@ public abstract class SerializationTypeManager <T extends SerializationType<T, F
      * @param theType the type 
      */
 	protected T generateType( JavaType theType, Object anInstance ) {
-		Annotation typeAnnotation = theType.getUnderlyingClass().getAnnotation( typeAnnotationClass );
-		
-        if( typeAnnotation == null ) {
-        	// if no annotation, then not a contract data type, so return null
-        	// and the caller can decide what to do
+		/**
+		 * TODO
+		 * For data contracts:
+		 * - root must have annotation, abstract/base classes do not need annotation?
+		 *   - maybe this can all be handled by the base class
+		 * - needed since they show up in contracts contract as a reference
+		 * 
+		 * For settings
+		 * - do not need type item, as long as the fields have them, we are okay
+		 */
+
+        if( !canGenerateTypeDescriptor( theType ) ) {
+        	// we check if we can generate type descriptors for the given type
+        	// if not (e.g. simple types like String, Integer, etc) then we
+        	// return a null
         	return null;
+        
         } else if( typeDescriptors.containsKey( theType ) ) {
-        	// if there is an annotation, we check to see if we have seen it and return it if so
-            return typeDescriptors.get( theType );
+        	// if we can generate, we see if we have already generated and if so
+        	// we return a previously generated version
+            return typeDescriptors.get( theType ); 
+
         } else {
-        	// otherwise, we have an annotation BUT we haven't seen it before so must build it up
-        	// which may result in recursive calls when it gets down to the fields
+        	// otherwise we can generate the type BUT we haven't done so, so we generate now ...
             
-        	// get the names we want
-        	// since we cannot do inheritance of types, we look for the method
-        	String typeName = null;
-        	try {
-	        	Method nameMethod = typeAnnotation.annotationType().getMethod( "name" );
-	        	typeName = ( String )nameMethod.invoke( typeAnnotation );
-	        	
-	        	if( Strings.isNullOrEmpty( typeName ) ) {
-	        		typeName = theType.getSimpleName();
-	        	}
-	
-				if( !typeNameValidator.isValid( typeName ) ) {
-					throw new IllegalStateException( String.format( "Type '%s' is using the name '%s' that does not conform to validator '%s'.", theType.getUnderlyingClass().getSimpleName(), typeName, typeNameValidator.getClass().getSimpleName() ) );
-				}
-        	} catch( NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e ) {
-				throw new IllegalStateException( String.format( "Type '%s' has annotation of type '%s' but a 'name' method could not be found or could not be retrieved.", theType.getUnderlyingClass().getSimpleName(), typeAnnotationClass.getSimpleName( ) ), e );
-        	}
-        	
         	// we need to grab a default constructor here so we can create a instance that has default values
         	// this is need here since it will be sent to base classes that cannot be instantiated but may
         	// have default values
             if( anInstance == null ) {
-            	anInstance = this.generateInstance( theType.getUnderlyingClass( ) );
+            	anInstance = this.generateTypeInstance( theType.getUnderlyingClass( ) );
             }
         	
             // then let's get the base class
@@ -153,8 +120,7 @@ public abstract class SerializationTypeManager <T extends SerializationType<T, F
             }
 
             // now create the type descriptor
-            T typeDescriptor = instantiateTypeDescriptor( 
-            		typeName, 
+            T typeDescriptor = generateTypeDescriptor( 
             		theType,
             		deserializedHook,
             		ValidationSupport.class.isAssignableFrom( theType.getUnderlyingClass() ), // TODO: not sure I like the idea of using inheritance
@@ -177,7 +143,7 @@ public abstract class SerializationTypeManager <T extends SerializationType<T, F
 
             // now grab the directly declared fields
             for( Field field : theType.getUnderlyingClass().getDeclaredFields( ) ) {
-            	fieldDescriptor = generateField( field, typeDescriptor, anInstance );
+            	fieldDescriptor = generateFieldDescriptor( field, typeDescriptor, anInstance );
             	if( fieldDescriptor != null ) {
             		fieldDescriptors.add( fieldDescriptor );
             	}
@@ -188,8 +154,31 @@ public abstract class SerializationTypeManager <T extends SerializationType<T, F
             return typeDescriptor;
         }
     }
+
+	/**
+	 * This helper method helps determine which types can or cannot be
+	 * generated for. As an example it could be we cannot generate for
+	 * simple types (e.g. String) or if an annotation is missing, etc. 
+	 * @param theType the type to verify if we can generate for
+	 * @return true means we can generate, false means we cannot
+	 */
+	abstract protected boolean canGenerateTypeDescriptor( JavaType theType );
 	
-	protected Object generateInstance( Class<?> theClass ) {
+	/**
+	 * Creates an instance of a particular type descriptor.
+	 * @param theType the type to generate for
+	 * @param theDeserializationHook a deserialization hook to use
+	 * @param supportsValid indicates if the type supports validation
+	 * @param theBaseTypeDescriptor the parent/base for the type, if any
+	 * @return a newly minted type descriptor for the particular type
+	 */
+	abstract protected T generateTypeDescriptor( 
+			JavaType theType, 
+			Method theDeserializationHook,
+			boolean supportsValid, 
+			T theBaseTypeDescriptor );
+
+	protected Object generateTypeInstance( Class<?> theClass ) {
 		Constructor<?> defaultConstructor;
 		
         try {
@@ -205,13 +194,6 @@ public abstract class SerializationTypeManager <T extends SerializationType<T, F
         }
 	}
 	
-	abstract protected T instantiateTypeDescriptor( 
-			String theTypeName, 
-			JavaType theType, 
-			Method theDeserializationHook,
-			boolean supportsValid, 
-			T theBaseTypeDescriptor );
-
     /**
      * Analyzes the field to recursively go through the field type
      * looking at element types if a collection, key/value types
@@ -220,5 +202,5 @@ public abstract class SerializationTypeManager <T extends SerializationType<T, F
      * @param theDeclaringType the type the field is a member of
      * @return returns the generated data contract field, or null if the field isn't suitable
      */
-	abstract protected F generateField( Field theField, T theDeclaringType, Object aDeclaringInstance );
+	abstract protected F generateFieldDescriptor( Field theField, T theDeclaringType, Object aDeclaringInstance );
 }

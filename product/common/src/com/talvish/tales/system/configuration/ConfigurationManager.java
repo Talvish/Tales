@@ -445,7 +445,8 @@ public class ConfigurationManager implements Facility {
 			// we warn if we have a collection name BUT the field doesn't have a 
 			// parameterized name since it could be the person putting together
 			// the setting collection forgot to put a parameter in the setting name
-			if( !field.hasParameterizedName() && !Strings.isNullOrEmpty( theCollectionName ) ) {
+			// this warning isn't needed for the settings name based field 
+			if( !field.hasParameterizedName() && !Strings.isNullOrEmpty( theCollectionName ) && !field.isSettingsName( ) ) {
 				logger.warn( "Field '{}.{}' doesn't have a parameterized name even though it is contained inside a collection named '{}'.", typeDescriptor.getType().getName(), field.getSite().getName( ), theCollectionName );
 			}
 			
@@ -453,12 +454,12 @@ public class ConfigurationManager implements Facility {
 			// a parameterized name, but a collection name wasnt' given for the
 			// parameter
 			String fieldName = field.generateName( theCollectionName );
-			if( !settingTypeManager.isValidFieldName( fieldName ) ) {
+			if( !settingTypeManager.isValidSettingName( fieldName ) ) {
 				throw new ConfigurationException( String.format( "The field name '%s' on '%s.%s' did not conform the field name validator.", fieldName, typeDescriptor.getType().getName(), field.getSite().getName( ) ) );
 			}
 			try {
 				// depending on the type (object, collection, map) we do different things
-				if( field.isSettingCollection( ) ) {
+				if( field.isSettingsCollection( ) ) {
 					// so we can assume it is a list of strings and that we can use those
 					// strings to get to particular object types, which we will then load
 					// and place into a registered collection
@@ -468,6 +469,7 @@ public class ConfigurationManager implements Facility {
 					RegisteredCollection<Object> registeredCollection = new RegisteredCollection(); 
 					List<String> collectionNames;
 					
+					// we directly call the list value here BUT field.getSettingMethod( ) will return the config manager's list methods as well
 					if( field.isRequired( ) ) {
 						collectionNames = getListValue( fieldName, String.class );
 					} else {
@@ -477,7 +479,7 @@ public class ConfigurationManager implements Facility {
 					if( collectionNames != null ) {
 						for( String collectionName : collectionNames ) {
 							if( registeredCollection.contains( collectionName ) ) {
-								throw new ConfigurationException( String.format( "Field '%s.%s' via setting name '%s' is attempting to add the collection '%s' more than once.", typeDescriptor.getType().getName(), fieldName, field.getSite().getName( ), collectionName ) );
+								throw new ConfigurationException( String.format( "Field '%s.%s' via setting name '%s' is attempting to add the collection '%s' more than once.", typeDescriptor.getType().getName(), field.getSite().getName( ), fieldName, collectionName ) );
 							} else {
 								registeredCollection.register( 
 										collectionName, 
@@ -488,6 +490,16 @@ public class ConfigurationManager implements Facility {
 						}
 					}
 					value = registeredCollection;
+					
+				} else if( field.isSettingsName( ) ) {
+					// so we this field is where we place the name for the settings collection
+					// it does mean that the collection name cannot be missing
+					if( Strings.isNullOrEmpty( theCollectionName ) ) {
+						throw new ConfigurationException( String.format( "Field '%s.%s' is marked to hold the settings name however the name isn't available.", typeDescriptor.getType().getName(), field.getSite().getName( ) ) );
+					} else {
+						value = theCollectionName;
+					}
+					
 					
 				} else if( field.isObject( ) ) {
 					// we have a simple standard object

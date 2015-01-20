@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.talvish.tales.parts.naming.LowerCaseValidator;
 import com.talvish.tales.parts.naming.NameManager;
@@ -45,6 +46,9 @@ public class DataContractManager extends SerializationTypeManager< DataContractT
 	public static final String CONTRACT_TYPE_NAME_VALIDATOR = "tales.contracts.contract_type_name";
 	public static final String CONTRACT_MEMBER_NAME_VALIDATOR = "tales.contracts.contract_member_name";
 	
+	private final NameValidator typeNameValidator;
+	private final NameValidator memberNameValidator;
+
 	static {
 		if( !NameManager.hasValidator( DataContractManager.CONTRACT_TYPE_NAME_VALIDATOR ) ) {
 			NameManager.setValidator( DataContractManager.CONTRACT_TYPE_NAME_VALIDATOR, new SegmentedLowercaseValidator( ) );
@@ -59,28 +63,63 @@ public class DataContractManager extends SerializationTypeManager< DataContractT
     }
     
     public DataContractManager( NameValidator theTypeNameValidator, NameValidator theMemberNameValidator ) {
-    	super(
-    			DataContract.class,
-    			theTypeNameValidator == null ? NameManager.getValidator( DataContractManager.CONTRACT_TYPE_NAME_VALIDATOR ) : theTypeNameValidator,
-    			DataMember.class,
-    			theMemberNameValidator == null ? NameManager.getValidator( DataContractManager.CONTRACT_MEMBER_NAME_VALIDATOR ) : theMemberNameValidator );
+    	typeNameValidator = theTypeNameValidator == null ? NameManager.getValidator( DataContractManager.CONTRACT_TYPE_NAME_VALIDATOR ) : theTypeNameValidator;
+    	memberNameValidator = theMemberNameValidator == null ? NameManager.getValidator( DataContractManager.CONTRACT_MEMBER_NAME_VALIDATOR ) : theMemberNameValidator;
+    			
+		Preconditions.checkNotNull( typeNameValidator, "missing a type name validator" );
+        Preconditions.checkNotNull( memberNameValidator, "missing a member name validator" );
+    }
+    
+    /**
+     * We can only generate a type descriptor for something that has had the
+     * proper annotation on it.
+     */
+    @Override
+    protected boolean canGenerateTypeDescriptor( JavaType theType ) {
+    	return theType.getUnderlyingClass().isAnnotationPresent( DataContract.class );
     }
 
+	/**
+	 * We simply instantiate the type descriptor.
+	 */
 	@Override
-	protected DataContractType instantiateTypeDescriptor(
-			String theTypeName,
+	protected DataContractType generateTypeDescriptor(
 			JavaType theType, 
 			Method theDeserializationHook,
 			boolean supportsValid, 
 			DataContractType theBaseTypeDescriptor) {
+
 		return new DataContractType( 
-				theTypeName, 
+				generateTypeName( theType ), 
 				theType, 
 				theDeserializationHook, 
 				supportsValid, 
 				theBaseTypeDescriptor );
 	}
-	
+
+    /**
+     * Helper method that generates a name based on the annotation or the java class and
+     * then we validate the name is okay.
+     */
+	private String generateTypeName( JavaType theType ) {
+		DataContract typeAnnotation = theType.getUnderlyingClass().getAnnotation( DataContract.class );
+    	String typeName = null;
+		
+		if( typeAnnotation == null ) {
+			throw new IllegalStateException( String.format( "Type '%s' is not marked as a data contract.", theType.getUnderlyingClass().getSimpleName() ) );
+		} else {
+			typeName = typeAnnotation.name();
+        	if( Strings.isNullOrEmpty( typeName ) ) {
+        		typeName = theType.getSimpleName();
+        	}
+			if( !typeNameValidator.isValid( typeName ) ) {
+				throw new IllegalStateException( String.format( "Type '%s' is using the name '%s' that does not conform to validator '%s'.", theType.getUnderlyingClass().getSimpleName(), typeName, typeNameValidator.getClass().getSimpleName() ) );
+			}
+		}
+		
+		return typeName;
+	}
+
     /**
      * Analyzes the field to recursively go through the field type
      * looking at element types if a collection, key/value types
@@ -90,7 +129,7 @@ public class DataContractManager extends SerializationTypeManager< DataContractT
      * @return returns the generated data contract field, or null if the field isn't suitable
      */
 	@Override
-	protected DataContractField generateField( Field theField, DataContractType theDeclaringType, Object aDeclaringInstance ) {
+	protected DataContractField generateFieldDescriptor( Field theField, DataContractType theDeclaringType, Object aDeclaringInstance ) {
 		DataContractField dataContractField = null;
         DataMember dataMemberAnnotation = theField.getAnnotation( DataMember.class );
         // if we have serialization declaration we will save it

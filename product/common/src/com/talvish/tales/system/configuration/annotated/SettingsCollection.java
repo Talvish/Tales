@@ -29,7 +29,7 @@ import java.lang.annotation.Target;
  */
 @Retention( RetentionPolicy.RUNTIME)
 @Target( ElementType.FIELD )
-public @interface SettingCollection {
+public @interface SettingsCollection {
     /**
      * The name of the setting for the collection of names used
      * to get a named collection of other settings
