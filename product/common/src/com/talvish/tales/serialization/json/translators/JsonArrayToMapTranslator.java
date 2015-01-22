@@ -102,7 +102,7 @@ public class JsonArrayToMapTranslator implements Translator {
 		// if we only have one key type than pull out the translator directly 
 		// since it will speed things up at runtime during translation
 		if( theKeyTypeReferences.size() == 1 ) {
-			keyTranslator = theKeyTypeReferences.get( 0 ).getToJsonTranslator();
+			keyTranslator = theKeyTypeReferences.get( 0 ).getFromJsonTranslator();
 		} else {
 			keyTranslator = null;
 		}
@@ -114,7 +114,7 @@ public class JsonArrayToMapTranslator implements Translator {
 		// if we only have one key type than pull out the translator directly 
 		// since it will speed things up at runtime during translation
 		if( theValueTypeReferences.size() == 1 ) {
-			valueTranslator = theValueTypeReferences.get( 0 ).getToJsonTranslator();
+			valueTranslator = theValueTypeReferences.get( 0 ).getFromJsonTranslator();
 		} else {
 			valueTranslator = null;
 		}

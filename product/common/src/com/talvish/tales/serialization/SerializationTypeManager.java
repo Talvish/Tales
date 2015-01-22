@@ -60,17 +60,6 @@ public abstract class SerializationTypeManager <T extends SerializationType<T, F
      * @param theType the type 
      */
 	protected T generateType( JavaType theType, Object anInstance ) {
-		/**
-		 * TODO
-		 * For data contracts:
-		 * - root must have annotation, abstract/base classes do not need annotation?
-		 *   - maybe this can all be handled by the base class
-		 * - needed since they show up in contracts contract as a reference
-		 * 
-		 * For settings
-		 * - do not need type item, as long as the fields have them, we are okay
-		 */
-
         if( !canGenerateTypeDescriptor( theType ) ) {
         	// we check if we can generate type descriptors for the given type
         	// if not (e.g. simple types like String, Integer, etc) then we
@@ -100,9 +89,8 @@ public abstract class SerializationTypeManager <T extends SerializationType<T, F
             // if we have a base class, we analyze it
             if( baseType != null && !baseType.getUnderlyingClass().equals( Object.class ) ) {
                 baseTypeDescriptor = generateType( baseType, anInstance );
-                // TODO: by calling this generateType, IF there isn't an annotation on the class
-                //		 then it won't consider the children fields, not sure if I like that
                 if( baseTypeDescriptor != null ) { 
+                	// base classes must have any annotation on them as well
                 	baseTypeFieldDescriptors = baseTypeDescriptor.getFields( );
                 }
             }

@@ -48,23 +48,8 @@ public final class ConfigurationConstants {
 	public static final String HTTP_INTERFACE_CONNECTOR = INTERFACES + ".%s.connector";
 	
 	// connector settings
-	
-	public static final String HTTP_CONNECTORS = "service.http_connectors";
-	
-	public static final String HTTP_CONNECTORS_ACCEPTORS = HTTP_CONNECTORS + ".%s.acceptors";
-	public static final String HTTP_CONNECTORS_ACCEPT_QUEUE_SIZE = HTTP_CONNECTORS + ".%s.accept_queue_size";
-	public static final String HTTP_CONNECTORS_IDLE_TIMEOUT = HTTP_CONNECTORS + ".%s.idle_timeout"; 
-	
-	public static final String HTTP_CONNECTORS_HEADER_CACHE_SIZE = HTTP_CONNECTORS + ".%s.header_cache_size";
-	public static final String HTTP_CONNECTORS_REQUEST_HEADER_SIZE = HTTP_CONNECTORS + ".%s.request_header_size";
-	public static final String HTTP_CONNECTORS_RESPONSE_HEADER_SIZE = HTTP_CONNECTORS + ".%s.response_header_size";
-	public static final String HTTP_CONNECTORS_OUTPUT_BUFFER_SIZE = HTTP_CONNECTORS + ".%s.output_buffer_size"; 
 
-	public static final String HTTP_CONNECTORS_SELECTORS= HTTP_CONNECTORS + ".%s.selectors";
-	
-	public static final String HTTP_CONNECTORS_MAX_FORM_CONTENT_SIZE = HTTP_CONNECTORS + ".%s.max_form_content_size";
-	
-	public static final String HTTP_CONNECTORS_REQUEST_BUFFER_SIZE = HTTP_CONNECTORS + ".%s.request_buffer_size";
+	public static final String HTTP_CONNECTORS = "service.http_connectors";
 	
 	// thread pool settings
 	

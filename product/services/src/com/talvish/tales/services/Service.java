@@ -47,13 +47,11 @@ import org.joda.time.Period;
 import org.joda.time.PeriodType;
 import org.joda.time.format.PeriodFormatter;
 import org.joda.time.format.PeriodFormatterBuilder;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-
 import com.talvish.tales.contracts.data.DataContractTypeSource;
 import com.talvish.tales.contracts.services.http.ResourceFacility;
 import com.talvish.tales.parts.naming.LowerCaseValidator;
@@ -80,6 +78,7 @@ import com.talvish.tales.system.FacilityManager;
 import com.talvish.tales.system.SimpleFacilityManager;
 import com.talvish.tales.system.configuration.ConfigurationException;
 import com.talvish.tales.system.configuration.ConfigurationManager;
+import com.talvish.tales.system.configuration.annotated.RegisteredCollection;
 import com.talvish.tales.system.status.MonitorableStatusValue;
 import com.talvish.tales.system.status.RatedLong;
 import com.talvish.tales.system.status.StatusManager;
@@ -788,12 +787,10 @@ public abstract class Service implements Runnable {
 		ConnectorConfigurationManager connectorConfigurationManager = new ConnectorConfigurationManager();
 		if( getConfigurationManager( ).contains( ConfigurationConstants.HTTP_CONNECTORS ) ) {
 			logger.info( "Preparing connectors for '{}'.", this.getCanonicalName( ) );
-			ConnectorConfiguration connectorConfiguration = null;
-			
-			// configurations are loaded based firstly on the list found in the config 
-			List<String> connectorConfigurations = getConfigurationManager( ).getListValue( ConfigurationConstants.HTTP_CONNECTORS, String.class );
-			for( String connectorConfigurationName : connectorConfigurations ) {
-				connectorConfiguration = loadConnectorConfiguration( connectorConfigurationName );
+			RegisteredCollection<ConnectorConfiguration> connectorCollection = this.getConfigurationManager().getValues( ConfigurationConstants.HTTP_CONNECTORS, ConnectorConfiguration.class );			
+
+			// TODO: don't like doing it this way, ideally this handled differently
+			for( ConnectorConfiguration connectorConfiguration : connectorCollection.getAll( ) ) {
 				connectorConfigurationManager.register( connectorConfiguration );
 			}
 		}
@@ -801,15 +798,6 @@ public abstract class Service implements Runnable {
 		// allows others to manual register if they so desire
 		this.facilityManager.addFacility( ConnectorConfigurationManager.class, connectorConfigurationManager );
 	}
-	
-	/**
-	 * Private method, creating a connector configuration, which can be used for connector creation
-	 * if the configuration for an interface references the specified name
-	 * @return the configuration, if settings specify it exists, null otherwise
-	 */
-	private ConnectorConfiguration loadConnectorConfiguration( String theName ) {
-    	return new ConnectorConfiguration( theName, this.getConfigurationManager() );
-    }
 	
 	/**
 	 * Private method that will load thread pool definitions from configuration and

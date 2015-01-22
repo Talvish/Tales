@@ -411,15 +411,84 @@ public class ConfigurationManager implements Facility {
 	}
  	
 	/**
-	 * This is convenience mechanism that will load all settings
-	 * as identified by the annotations on field members in a 
-	 * class.
+	 * This method will load all setting as identified by annotations on the
+	 * fields of the specified class.
 	 * @param theClass the class that has annotations outlining the settings desired
 	 * @return an instance of the class with the settings loaded and set 
 	 */
 	public <T> T getValues( Class<T> theClass ) {
+		Preconditions.checkNotNull( theClass, "Cannot get values for a null class." );
 		return getValues( theClass, null );
 	}
+
+
+	/**
+	 * This method will get a collection of settings, where the individual names
+	 * for the collections are identified by the setting in the string <code>theName</code>.
+	 * The list of names is loaded and then for each name, settings identified by 
+	 * by annotations on the specified class will loaded, placed into an instance of the
+	 * class and then the class will be placed in the collection to be returned.
+	 * @param theName the name of the setting that contains a list of collection names to load
+	 * @param theClass the class that has annotations outlining the settings desired
+	 * @return the collection of instances of the specified class
+	 */
+	public <T> RegisteredCollection<T> getValues( String theName, Class<T> theClass ) {
+		Preconditions.checkArgument( !Strings.isNullOrEmpty( theName ), "Cannot get values with a null or empty setting name." );
+		Preconditions.checkNotNull( theClass, "Cannot get values for setting '%s' using a null class.", theName );
+		
+		List<String> collectionNames = getListValue( theName, String.class );
+		return _getValues( theName, theClass, collectionNames, null );
+	}
+	
+	/**
+	 * This method will get a collection of settings, where the individual names
+	 * for the collections are identified by the setting in the string <code>theName</code>.
+	 * The list of names is loaded and then for each name, settings identified by 
+	 * by annotations on the specified class will loaded, placed into an instance of the
+	 * class and then the class will be placed in the collection to be returned.
+	 * @param theName the name of the setting that contains a list of collection names to load
+	 * @param theClass the class that has annotations outlining the settings desired
+	 * @param theDefaultCollectionNames if the setting doesn't exist, this is the default set of collection names to use
+	 * @return the collection of instances of the specified class
+	 */
+	public <T> RegisteredCollection<T> getValues( String theName, Class<T> theClass, List<String> theDefaultCollectionNames ) {
+		Preconditions.checkArgument( !Strings.isNullOrEmpty( theName ), "Cannot get values with a null or empty setting name." );
+		Preconditions.checkNotNull( theClass, "Cannot get values for setting '%s' using a null class.", theName );
+		
+		List<String> collectionNames = getListValue( theName, String.class, theDefaultCollectionNames );
+		return _getValues( theName, theClass, collectionNames, null );
+	}
+	
+	/**
+	 * Internal helper method for loading a collection of settings.
+	 * @param theName the name of the setting that was used to get <code>theCollectionNames</code>
+	 * @param theClass the class that has annotations outlining the settings desired
+	 * @param theCollectionNames the collection names, previously loaded
+	 * @return the collection of instances of the specified class
+	 */
+	private <T> RegisteredCollection<T> _getValues( String theName, Class<T> theClass, List<String> theCollectionNames, SettingField theField ) {
+		RegisteredCollection<T> registeredCollection = new RegisteredCollection<>(); 
+		// okay so now we have list of collection names, which will be used, most likely, as parameter names
+		if( theCollectionNames != null ) {
+			for( String collectionName : theCollectionNames ) {
+				if( registeredCollection.contains( collectionName ) ) {
+					if( theField == null ) {
+						throw new ConfigurationException( String.format( "Setting name '%s' is attempting to add the collection '%s' more than once.", theName, collectionName ) );
+					} else {
+						throw new ConfigurationException( String.format( "Field '%s.%s' via setting name '%s' is attempting to add the collection '%s' more than once.", theField.getContainingType().getName(), theField.getSite().getName( ), theName, collectionName ) );
+					}
+				} else {
+					registeredCollection.register( 
+							collectionName, 
+							// so we get the values (from ourselves, the configuration manager, for the type that 
+							// was created for the registered collection), but we send in the name of collection 
+							getValues( theClass, collectionName ) );
+				}
+			}
+		}
+		return registeredCollection;
+	}
+	
 	/**
 	 * This is an internal version of the convenience mechanism that will load all settings
 	 * as identified by the annotations on field members in a class. This version takes
@@ -429,7 +498,7 @@ public class ConfigurationManager implements Facility {
 	 * @param theCollectionName the name for the collection of settings, used for generating the string Setting name
 	 * @return an instance of the class with the settings loaded and set 
 	 */
-	@SuppressWarnings( { "unchecked", "rawtypes"} )
+	@SuppressWarnings( "unchecked" )
 	private <T> T getValues( Class<T> theClass, String theCollectionName ) {
 		SettingType typeDescriptor = settingTypeManager.generateType( new JavaType( theClass ) );
 
@@ -463,10 +532,6 @@ public class ConfigurationManager implements Facility {
 					// so we can assume it is a list of strings and that we can use those
 					// strings to get to particular object types, which we will then load
 					// and place into a registered collection
-
-					// we declare this as an object type, though it is clearly not, but we don't know the 
-					// type at this time, and now reflection is done on this so should be safe
-					RegisteredCollection<Object> registeredCollection = new RegisteredCollection(); 
 					List<String> collectionNames;
 					
 					// we directly call the list value here BUT field.getSettingMethod( ) will return the config manager's list methods as well
@@ -476,20 +541,11 @@ public class ConfigurationManager implements Facility {
 						collectionNames = getListValue( fieldName, String.class, ( List<String> )field.getDefaultValue( ) );
 					}
 					// okay so now we have list of collection names, which will be used, most likely, as parameter names
-					if( collectionNames != null ) {
-						for( String collectionName : collectionNames ) {
-							if( registeredCollection.contains( collectionName ) ) {
-								throw new ConfigurationException( String.format( "Field '%s.%s' via setting name '%s' is attempting to add the collection '%s' more than once.", typeDescriptor.getType().getName(), field.getSite().getName( ), fieldName, collectionName ) );
-							} else {
-								registeredCollection.register( 
-										collectionName, 
-										// so we get the values (from ourselves, the configuration manager, for the type that 
-										// was created for the registered collection), but we send in the name of collection 
-										getValues( field.getValueTypes( ).get( 0 ).getType().getUnderlyingClass(), collectionName ) );
-							}
-						}
-					}
-					value = registeredCollection;
+					value = _getValues( 
+								fieldName,
+								field.getValueTypes( ).get( 0 ).getType().getUnderlyingClass(),
+								collectionNames,
+								field );
 					
 				} else if( field.isSettingsName( ) ) {
 					// so we this field is where we place the name for the settings collection

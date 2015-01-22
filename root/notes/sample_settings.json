@@ -78,10 +78,6 @@
 							"value" : "8192",
 							"description" : "The size of the buffer, in bytes, to use for the response headers."
 						},{
-							"name" : "service.http_connectors.sample_connector.request_buffer_size",
-							"value" : "8192",
-							"description" : "The buffer size, in bytes, to use for requests."
-						},{
 							"name" : "service.http_connectors.sample_connector.output_buffer_size",
 							"value" : "32768",
 							"description" : "The full output buffer size, in bytes."

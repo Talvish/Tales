@@ -17,25 +17,52 @@ package com.talvish.tales.services.http;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.talvish.tales.services.ConfigurationConstants;
-import com.talvish.tales.system.configuration.ConfigurationManager;
 
+import com.talvish.tales.system.configuration.annotated.Setting;
+import com.talvish.tales.system.configuration.annotated.Settings;
+import com.talvish.tales.system.configuration.annotated.SettingsName;
+
+
+/**
+ * The connector configuration class. This is based on configuration for Jetty that
+ * can be largely found here:
+ * http://git.eclipse.org/c/jetty/org.eclipse.jetty.project.git/tree/examples/embedded/src/main/java/org/eclipse/jetty/embedded/ManyConnectors.java
+ * @author jmolnar
+ *
+ */
+@Settings
 public class ConnectorConfiguration {
-	private final String name;
+	@SettingsName
+	private String name = "default";
 	
-	private final Integer acceptors; // ServerConnector( acceptors, selectors )
-	private final Integer acceptQueueSize; // ServerConnector.setAcceptQueueSize
+	@Setting( name="service.http_connectors.{name}.acceptors" )
+	private Integer acceptors; // ServerConnector( acceptors, selectors )
 	
-	private final Integer selectors;
+	@Setting( name="service.http_connectors.{name}.accept_queue_size" )
+	private Integer acceptQueueSize; // ServerConnector.setAcceptQueueSize
 	
-	private final Integer idleTimeout; // ServerConnector.setIdleTimeout
+	@Setting( name="service.http_connectors.{name}.selectors" )
+	private Integer selectors;
 	
-	private final Integer headerCacheSize; 
-	private final Integer requestHeaderSize; 
-	private final Integer responseHeaderSize; 
-	private final Integer outputBufferSize; 
+	@Setting( name="service.http_connectors.{name}.idle_timeout" )
+	private Integer idleTimeout; // ServerConnector.setIdleTimeout
+	
+	@Setting( name="service.http_connectors.{name}.header_cache_size" )
+	private Integer headerCacheSize; 
+	
+	@Setting( name="service.http_connectors.{name}.request_header_size" )
+	private Integer requestHeaderSize; 
+	
+	@Setting( name="service.http_connectors.{name}.response_header_size" )	
+	private Integer responseHeaderSize; 
+	
+	@Setting( name="service.http_connectors.{name}.output_buffer_size" )
+	private Integer outputBufferSize; 
 
-	private final Integer maxFormContentSize; // TODO: ?
+	@Setting( name="service.http_connectors.{name}.max_form_content_size" )
+	private Integer maxFormContentSize; 
+	
+	
 	// TODO: the HttpConnectionFactory in Jetty has an input buffer size, not sure if we need to set that somehow?
 	// TODO: there is a reference to low resources here: http://www.eclipse.org/jetty/documentation/9.0.1.v20130408/limit-load.html
 	//       more class details here: http://download.eclipse.org/jetty/stable-9/apidocs/org/eclipse/jetty/server/LowResourceMonitor.html
@@ -51,39 +78,12 @@ public class ConnectorConfiguration {
 	 * Creates a default connector configuration.
 	 */
 	public ConnectorConfiguration( ) {
-		name = "default";
-		acceptors = null;
-		acceptQueueSize = null;
-		selectors = null;
-		idleTimeout = null;
-		headerCacheSize = null;
-		requestHeaderSize = null;
-		responseHeaderSize = null;
-		outputBufferSize = null;
-		maxFormContentSize = null;
 	}
 	
-	public ConnectorConfiguration( String theName, ConfigurationManager theConfigurationManager ) {
-		// http://git.eclipse.org/c/jetty/org.eclipse.jetty.project.git/tree/examples/embedded/src/main/java/org/eclipse/jetty/embedded/ManyConnectors.java
-			
+	public ConnectorConfiguration( String theName) {
 		Preconditions.checkArgument( !Strings.isNullOrEmpty( theName ), "need a name" );
-		Preconditions.checkNotNull( theConfigurationManager, "need a configuration manager" );
-		
 		name = theName;
-		
-		acceptors = theConfigurationManager.getIntegerValue( String.format( ConfigurationConstants.HTTP_CONNECTORS_ACCEPTORS, theName ), null );
-		acceptQueueSize = theConfigurationManager.getIntegerValue( String.format( ConfigurationConstants.HTTP_CONNECTORS_ACCEPT_QUEUE_SIZE, theName ), null );
-		
-		selectors = theConfigurationManager.getIntegerValue( String.format( ConfigurationConstants.HTTP_CONNECTORS_SELECTORS, theName ), null );
-
-		idleTimeout = theConfigurationManager.getIntegerValue( String.format( ConfigurationConstants.HTTP_CONNECTORS_IDLE_TIMEOUT, theName ), null );
-
-		headerCacheSize = theConfigurationManager.getIntegerValue( String.format( ConfigurationConstants.HTTP_CONNECTORS_HEADER_CACHE_SIZE, theName ), null );
-		requestHeaderSize = theConfigurationManager.getIntegerValue( String.format( ConfigurationConstants.HTTP_CONNECTORS_REQUEST_HEADER_SIZE, theName ), null );
-		responseHeaderSize = theConfigurationManager.getIntegerValue( String.format( ConfigurationConstants.HTTP_CONNECTORS_RESPONSE_HEADER_SIZE, theName ), null );
-		outputBufferSize = theConfigurationManager.getIntegerValue( String.format( ConfigurationConstants.HTTP_CONNECTORS_OUTPUT_BUFFER_SIZE, theName ), null );
-
-		maxFormContentSize = theConfigurationManager.getIntegerValue( String.format( ConfigurationConstants.HTTP_CONNECTORS_MAX_FORM_CONTENT_SIZE, theName ), null );
+		// TODO: need to add the manual setters if we are going to allow these to be create manually (instead of just from the config manager)
 	}
 
 	/**
@@ -148,7 +148,6 @@ public class ConnectorConfiguration {
 	public Integer getOutputBufferSize() {
 		return outputBufferSize;
 	}
-
 
 	/**
 	 * @return the maxContentFormSize

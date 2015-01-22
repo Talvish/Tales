@@ -446,7 +446,7 @@ public abstract class HttpInterfaceBase extends InterfaceBase {
     			this.server, 
     			null, // use the server's executor
     			null, // use the server's scheduler
-    			null, // use a default bye pool with default configuration
+    			null, // use a default byte pool with default configuration
     			theConfiguration.getAcceptors() == null ? -1 : theConfiguration.getAcceptors( ), 
     			theConfiguration.getSelectors() == null ? -1 : theConfiguration.getSelectors( ),  
     			new SslConnectionFactory( this.sslFactory,  "http/1.1" ),
@@ -476,7 +476,7 @@ public abstract class HttpInterfaceBase extends InterfaceBase {
     
     private HttpConfiguration generateJettyHttpConfiguration( ConnectorConfiguration theConfiguration ) {
     	HttpConfiguration httpConfiguration = new HttpConfiguration();
-    	
+
     	if( theConfiguration.getHeaderCacheSize( ) != null ) {
     		httpConfiguration.setHeaderCacheSize( theConfiguration.getHeaderCacheSize( ) );
     	}
