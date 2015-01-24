@@ -418,7 +418,19 @@ public class ConfigurationManager implements Facility {
 	 */
 	public <T> T getValues( Class<T> theClass ) {
 		Preconditions.checkNotNull( theClass, "Cannot get values for a null class." );
-		return getValues( theClass, null );
+		return getValues( theClass, null, null );
+	}
+
+	/**
+	 * This method will load all setting as identified by annotations on the fields of the specified class.
+	 * A prefix for the setting is given for those settings that require a prefix.
+	 * @param theSettingPrefix the prefix to add to settings that have requested a prefix
+	 * @param theClass the class that has annotations outlining the settings desired
+	 * @return an instance of the class with the settings loaded and set 
+	 */
+	public <T> T getValues( String theSettingPrefix, Class<T> theClass ) {
+		Preconditions.checkNotNull( theClass, "Cannot get values for a null class." );
+		return getValues( theClass, theSettingPrefix, null );
 	}
 
 
@@ -432,7 +444,7 @@ public class ConfigurationManager implements Facility {
 	 * @param theClass the class that has annotations outlining the settings desired
 	 * @return the collection of instances of the specified class
 	 */
-	public <T> RegisteredCollection<T> getValues( String theName, Class<T> theClass ) {
+	public <T> RegisteredCollection<T> getCollectionValues( String theName, Class<T> theClass ) {
 		Preconditions.checkArgument( !Strings.isNullOrEmpty( theName ), "Cannot get values with a null or empty setting name." );
 		Preconditions.checkNotNull( theClass, "Cannot get values for setting '%s' using a null class.", theName );
 		
@@ -451,7 +463,7 @@ public class ConfigurationManager implements Facility {
 	 * @param theDefaultCollectionNames if the setting doesn't exist, this is the default set of collection names to use
 	 * @return the collection of instances of the specified class
 	 */
-	public <T> RegisteredCollection<T> getValues( String theName, Class<T> theClass, List<String> theDefaultCollectionNames ) {
+	public <T> RegisteredCollection<T> getCollectionValues( String theName, Class<T> theClass, List<String> theDefaultCollectionNames ) {
 		Preconditions.checkArgument( !Strings.isNullOrEmpty( theName ), "Cannot get values with a null or empty setting name." );
 		Preconditions.checkNotNull( theClass, "Cannot get values for setting '%s' using a null class.", theName );
 		
@@ -482,7 +494,7 @@ public class ConfigurationManager implements Facility {
 							collectionName, 
 							// so we get the values (from ourselves, the configuration manager, for the type that 
 							// was created for the registered collection), but we send in the name of collection 
-							getValues( theClass, collectionName ) );
+							getValues( theClass, null, collectionName ) );
 				}
 			}
 		}
@@ -499,7 +511,7 @@ public class ConfigurationManager implements Facility {
 	 * @return an instance of the class with the settings loaded and set 
 	 */
 	@SuppressWarnings( "unchecked" )
-	private <T> T getValues( Class<T> theClass, String theCollectionName ) {
+	private <T> T getValues( Class<T> theClass, String theSettingPrefix, String theCollectionName ) {
 		SettingType typeDescriptor = settingTypeManager.generateType( new JavaType( theClass ) );
 
 		T instance = ( T )typeDescriptor.newInstance();
@@ -515,14 +527,14 @@ public class ConfigurationManager implements Facility {
 			// parameterized name since it could be the person putting together
 			// the setting collection forgot to put a parameter in the setting name
 			// this warning isn't needed for the settings name based field 
-			if( !field.hasParameterizedName() && !Strings.isNullOrEmpty( theCollectionName ) && !field.isSettingsName( ) ) {
+			if( !field.containNameParameter() && !Strings.isNullOrEmpty( theCollectionName ) && !field.isSettingsName( ) ) {
 				logger.warn( "Field '{}.{}' doesn't have a parameterized name even though it is contained inside a collection named '{}'.", typeDescriptor.getType().getName(), field.getSite().getName( ), theCollectionName );
 			}
 			
 			// the generate name call will throw an exception if the field has
 			// a parameterized name, but a collection name wasnt' given for the
 			// parameter
-			String fieldName = field.generateName( theCollectionName );
+			String fieldName = field.generateName( theSettingPrefix, theCollectionName );
 			if( !settingTypeManager.isValidSettingName( fieldName ) ) {
 				throw new ConfigurationException( String.format( "The field name '%s' on '%s.%s' did not conform the field name validator.", fieldName, typeDescriptor.getType().getName(), field.getSite().getName( ) ) );
 			}
@@ -592,10 +604,9 @@ public class ConfigurationManager implements Facility {
 			field.setData( instance, value );
 		}
 		
-		// if the class has a deserialization hook we call it
-		if( typeDescriptor.supportsDeserializedHook( ) ) {
-			typeDescriptor.callDeserializedHook( instance );
-		}
+		// we call the deserialization and validation 
+		typeDescriptor.callDeserializedHook( instance );
+		typeDescriptor.callValidationHook( instance );
 		
 		return instance;
 	}

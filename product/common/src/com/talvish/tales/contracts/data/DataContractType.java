@@ -33,10 +33,10 @@ public class DataContractType extends SerializationType< DataContractType, DataC
      * @param theName the name to give the type
      * @param theType the underlying type
      * @param theDeserializedHook the method to call if the type wants to participate when an instance is deserialized 
-     * @param validationSupport indicates if the contract supports validation
+     * @param theValidationHook the method to call if the type wants to participate validation
      * @param theBaseType the base class, if applicable
      */
-    protected DataContractType( String theName, JavaType theType, Method theDeserializedHook, boolean validationSupport, DataContractType theBaseType ) {
-    	super( theName, theType, theDeserializedHook, validationSupport, theBaseType  );
+    protected DataContractType( String theName, JavaType theType, Method theDeserializedHook, Method theValidationHook, DataContractType theBaseType ) {
+    	super( theName, theType, theDeserializedHook, theValidationHook, theBaseType  );
     }
 }

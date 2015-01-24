@@ -26,9 +26,10 @@ import com.talvish.tales.parts.naming.RegExValidator;
  *
  */
 public class SegmentedLowercaseParameterizedValidator extends RegExValidator {
+	public static final String PREFIX_REGEX = "\\{prefix\\}";
 	public static final String PARAM_REGEX = "\\{name\\}";
 	private static final String CHAR_ELEMENT_REGEX = String.format( "[\\p{javaLowerCase}_0-9]|(%1$s)", PARAM_REGEX );
-	private static final String START_CHAR_ELEMENT_REGEX = String.format( "[\\p{javaLowerCase}_]|(%1$s)", PARAM_REGEX );
+	private static final String START_CHAR_ELEMENT_REGEX = String.format( "[\\p{javaLowerCase}_]|(%1$s)|(%2$s)", PREFIX_REGEX, PARAM_REGEX );
 	private static final String PART_REGEX = String.format( "(%1$s)(%2$s)*", START_CHAR_ELEMENT_REGEX, CHAR_ELEMENT_REGEX );
 	private static final String FULL_REGEX = String.format( "^(%1$s)(\\.(%1$s))*$", PART_REGEX );
 

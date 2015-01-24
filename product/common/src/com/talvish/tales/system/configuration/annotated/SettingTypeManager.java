@@ -104,13 +104,17 @@ public class SettingTypeManager extends SerializationTypeManager< SettingType, S
 	protected SettingType generateTypeDescriptor(
 			JavaType theType, 
 			Method theDeserializationHook,
-			boolean supportsValid, 
+			Method theValidationHook, 
 			SettingType theBaseTypeDescriptor) {
+		Settings typeAnnotation = theType.getUnderlyingClass().getAnnotation( Settings.class ); // we know this exists since it is checked
+		String prefix = typeAnnotation.prefix();
+
 		return new SettingType ( 
 				theType.getSimpleName(), 
 				theType, 
 				theDeserializationHook, 
-				supportsValid, 
+				theValidationHook, 
+				prefix,
 				theBaseTypeDescriptor );
 	}
 	

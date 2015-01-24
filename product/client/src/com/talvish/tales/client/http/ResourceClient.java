@@ -100,7 +100,7 @@ public class ResourceClient {
 	 * @param theUserAgent the user agent that this client should use
 	 * @param allowUntrustedSSL indicates whether SSL will be trusted or not, which can be useful for self-certs, early development, etc
 	 */
-	public ResourceClient( ResourceConfiguration theConfiguration, String theContractRoot, String theContractVersion, String theUserAgent ) {
+	public ResourceClient( ResourceConfigurationBase<?> theConfiguration, String theContractRoot, String theContractVersion, String theUserAgent ) {
 		this( theConfiguration, theContractRoot, theContractVersion, theUserAgent, null, null );
 	}
 	
@@ -114,7 +114,7 @@ public class ResourceClient {
 	 * @param theClient the HttpClient to use
 	 * @param theJsonFacility the JsonTypeFacility to use
 	 */
-	private ResourceClient( ResourceConfiguration theConfiguration, String theContractRoot, String theContractVersion, String theUserAgent, HttpClient theClient, JsonTranslationFacility theJsonFacility ) {
+	private ResourceClient( ResourceConfigurationBase<?> theConfiguration, String theContractRoot, String theContractVersion, String theUserAgent, HttpClient theClient, JsonTranslationFacility theJsonFacility ) {
 		Preconditions.checkNotNull( theConfiguration, "need a configuration object so we can get our endpoint" );
     	Preconditions.checkArgument( !Strings.isNullOrEmpty( theContractRoot ), "need a contract root" );
     	Preconditions.checkArgument( theContractRoot.startsWith( "/" ), "the contract root '%s' must be a reference from the root (i.e. start with '/')", theContractRoot );
@@ -122,6 +122,10 @@ public class ResourceClient {
     	Preconditions.checkArgument( ContractVersion.isValidVersion( theContractVersion),  "the version string '%s' for contract root '%s' is not valid", theContractVersion, theContractRoot );
 		Preconditions.checkArgument( !Strings.isNullOrEmpty( theUserAgent ), "need a user agent for this client" );
 
+		// lets make sure the configuration is valid
+		theConfiguration.validate();
+		
+		// now let's start preparing the client
 		endpoint = new HttpEndpoint( theConfiguration.getEndpoint( ) ); // this will do validation on the endpoint 
 		contractRoot = theContractRoot; 
 		contractVersion = theContractVersion;

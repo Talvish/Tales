@@ -787,7 +787,7 @@ public abstract class Service implements Runnable {
 		ConnectorConfigurationManager connectorConfigurationManager = new ConnectorConfigurationManager();
 		if( getConfigurationManager( ).contains( ConfigurationConstants.HTTP_CONNECTORS ) ) {
 			logger.info( "Preparing connectors for '{}'.", this.getCanonicalName( ) );
-			RegisteredCollection<ConnectorConfiguration> connectorCollection = this.getConfigurationManager().getValues( ConfigurationConstants.HTTP_CONNECTORS, ConnectorConfiguration.class );			
+			RegisteredCollection<ConnectorConfiguration> connectorCollection = this.getConfigurationManager().getCollectionValues( ConfigurationConstants.HTTP_CONNECTORS, ConnectorConfiguration.class );			
 
 			// TODO: don't like doing it this way, ideally this handled differently
 			for( ConnectorConfiguration connectorConfiguration : connectorCollection.getAll( ) ) {

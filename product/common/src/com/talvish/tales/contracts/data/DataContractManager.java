@@ -86,14 +86,14 @@ public class DataContractManager extends SerializationTypeManager< DataContractT
 	protected DataContractType generateTypeDescriptor(
 			JavaType theType, 
 			Method theDeserializationHook,
-			boolean supportsValid, 
+			Method theValidationHook, 
 			DataContractType theBaseTypeDescriptor) {
 
 		return new DataContractType( 
 				generateTypeName( theType ), 
 				theType, 
 				theDeserializationHook, 
-				supportsValid, 
+				theValidationHook, 
 				theBaseTypeDescriptor );
 	}
 

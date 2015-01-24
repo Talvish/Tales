@@ -33,14 +33,17 @@ import com.talvish.tales.system.Conditions;
  * @author jmolnar
  */
 public class SettingField extends SerializationField<SettingType, SettingField> {
-	private static final Pattern PARAN_PATTERN = Pattern.compile( SegmentedLowercaseParameterizedValidator.PARAM_REGEX );
+	private static final Pattern PARAM_PATTERN = Pattern.compile( SegmentedLowercaseParameterizedValidator.PARAM_REGEX );
+	private static final Pattern PREFIX_PATTERN = Pattern.compile( SegmentedLowercaseParameterizedValidator.PREFIX_REGEX );
 	
 	private final boolean required;
 	private final Object defaultValue;
 	private final Method settingMethod;
 	
 	private final String nameFormat;
-	private final boolean parameterizedName;
+	private final boolean hasNameParameter;
+	private final boolean hasPrefixParameter;
+	
 	
 	private final boolean settingsCollection;	// TODO: consider putting an enum for these settings related guys
 	private final boolean settingsName;
@@ -82,7 +85,8 @@ public class SettingField extends SerializationField<SettingType, SettingField> 
     	// now we want to verify the name in question for 
     	// a parameter and if so mark we have one
     	nameFormat = generateNameFormat( name );
-    	parameterizedName = nameFormat != name; // we can use reference check since it is the same string we return if none are found
+    	hasPrefixParameter = nameFormat.contains( "%1$s" );	// if we have the replacement variable, we know it contains a prefix parameter
+    	hasNameParameter = nameFormat.contains( "%2$s" ); 	// if we have the replacement variable, we know it contains a name parameter
     	
     	settingsCollection = this.site.getType().getUnderlyingClass().equals( RegisteredCollection.class );
     	settingsName = false;
@@ -126,7 +130,8 @@ public class SettingField extends SerializationField<SettingType, SettingField> 
     	// now we want to verify the name in question for 
     	// a parameter and if so mark we have one
     	nameFormat = generateNameFormat( name );
-    	parameterizedName = nameFormat != name; // we can use reference check since it is the same string we return if none are found
+    	hasPrefixParameter = nameFormat.contains( "%1$s" );	// if we have the replacement variable, we know it contains a prefix parameter
+    	hasNameParameter = nameFormat.contains( "%2$s" ); 	// if we have the replacement variable, we know it contains a name parameter
     	
     	settingsCollection = this.site.getType().getUnderlyingClass().equals( RegisteredCollection.class );
     	settingsName = false;
@@ -163,7 +168,8 @@ public class SettingField extends SerializationField<SettingType, SettingField> 
     	// now we want to verify the name in question for 
     	// a parameter and if so mark we have one
     	nameFormat = generateNameFormat( name ); // we do this BUT not much point, since there isn't a parameter, the name is hard-coded
-    	parameterizedName = nameFormat != name; // we can use reference check since it is the same string we return if none are found
+    	hasPrefixParameter = nameFormat.contains( "%1$s" );	// if we have the replacement variable, we know it contains a prefix parameter
+    	hasNameParameter = nameFormat.contains( "%2$s" ); 	// if we have the replacement variable, we know it contains a name parameter
     	
     	settingsCollection = false;
     	settingsName = true;
@@ -175,12 +181,19 @@ public class SettingField extends SerializationField<SettingType, SettingField> 
      * @return the format to use for name generation
      */
     private String generateNameFormat( String theName ) {
-    	Matcher matcher = PARAN_PATTERN.matcher( theName );
     	String generatedName;
+
+    	Matcher matcher;
+
+    	// the code below doesn't do a replace in part because it needs to
+    	// look for multiple uses of the pattern and fail if there are any
     	
+    	// first we look for the collection name parameter
+    	matcher= PARAM_PATTERN.matcher( theName );
+
     	if( matcher.find() ) {
     		// we need the start-stop index
-    		generatedName = theName.substring( 0, matcher.start( ) ) + "%s";
+    		generatedName = theName.substring( 0, matcher.start( ) ) + "%2$s";
     		if( matcher.end( ) < theName.length( ) ) {
     			generatedName += theName.substring( matcher.end( ) );
     		}
@@ -188,27 +201,62 @@ public class SettingField extends SerializationField<SettingType, SettingField> 
     	} else {
     		generatedName = theName;
     	}
+    	
+    	// now we go back and reset to the newly generated name (and generated name gets reset)
+    	theName = generatedName;
+    	
+    	// next we look for the prefix
+    	matcher= PREFIX_PATTERN.matcher( theName );
+    	
+    	if( matcher.find() ) {
+    		// we need the start-stop index
+    		generatedName = theName.substring( 0, matcher.start( ) ) + "%1$s";
+    		if( matcher.end( ) < theName.length( ) ) {
+    			generatedName += theName.substring( matcher.end( ) );
+    		}
+        	Conditions.checkConfiguration( !matcher.find( ), "Setting '%s' for '%s.%s' indicates it wants more than one prefix, which isn't allowed.", this.name, this.containingType.getType().getSimpleName(), this.site.getName( ) );
+    	} else {
+    		generatedName = theName;
+    	}
+
     	return generatedName;
     }
 
     /**
-     * Indicates if a collection name is expected to be given so a proper setting name can be generated. 
-     * @return true if a collection name is expected, false otherwise
+     * Indicates if the setting name expects a prefix to be given.
+     * @return true if a prefix is expected to be given, false otherwise
      */
-    public boolean hasParameterizedName( ) {
-    	return parameterizedName;
+    public boolean containsPrefixParameter( ) {
+    	return hasPrefixParameter;
     }
     
     /**
-     * Generates the setting name to use for a parameterized setting field.
-     * The name is not verified as the proper format by this method.
-     * @param theCollectionName the name for the collection of settings
+     * Indicates if a collection name is expected to be given so a proper setting name can be generated. 
+     * @return true if a collection name is expected, false otherwise
+     */
+    public boolean containNameParameter( ) {
+    	return hasNameParameter;
+    }
+    
+    /**
+     * Generates the setting name to use for a field.
+     * The name is not verified as the proper format by this method, the caller must do that.
+     * The 
+     * @param theCollectionName the name for the collection of settings, this can be null if a name isn't expected
+     * @param thePrefix the prefix string to use, which isn't require unless one wasn't declared and the field expects one
      * @return the generated name
      */
-    public String generateName( String theCollectionName ) {
-    	Conditions.checkConfiguration( !parameterizedName || !Strings.isNullOrEmpty( theCollectionName ), "Setting '%s' for '%s.%s' is expecting a collection name but none was given.", this.name, this.containingType.getType().getSimpleName(), this.site.getName( ) );
+    public String generateName( String thePrefix, String theCollectionName ) {
+    	Conditions.checkConfiguration( !hasNameParameter || !Strings.isNullOrEmpty( theCollectionName ), "Setting '%s' for '%s.%s' is expecting a collection name but none was given.", this.name, this.containingType.getType().getSimpleName(), this.site.getName( ) );
+    	
+    	// we take the prefix as an override, if one is given, instead of using what is on the type
+    	String prefix = Strings.isNullOrEmpty( thePrefix ) ? this.containingType.getSettingPrefix() : thePrefix;
+    	Conditions.checkConfiguration( !hasPrefixParameter || !Strings.isNullOrEmpty( prefix ), "Setting '%s' for '%s.%s' is expecting a prefix but none was given.", this.name, this.containingType.getType().getSimpleName(), this.site.getName( ) );
+    	
     	// verification of this name will occur by the caller
-    	return String.format( nameFormat, theCollectionName );
+    	// this gets the containing (not declaring) prefix to use allow
+    	// overrides to change what the prefix is to use
+    	return String.format( nameFormat, prefix, theCollectionName );
     }
     
     /**

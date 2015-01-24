@@ -25,6 +25,8 @@ import com.talvish.tales.serialization.SerializationType;
  * @author jmolnar
  */
 public class SettingType extends SerializationType< SettingType, SettingField > {
+	private final String settingPrefix;
+	
     /**
      * Constructor taking the name to use and the underlying type represented.
      * This implementation does not construct the fields since it would rely
@@ -33,10 +35,20 @@ public class SettingType extends SerializationType< SettingType, SettingField > 
      * @param theName the name to give the type
      * @param theType the underlying type
      * @param theDeserializedHook the method to call if the type wants to participate when an instance is deserialized 
-     * @param validationSupport indicates if the contract supports validation
+     * @param theValidationHook the method called if the instance is going to participate in validation
      * @param theBaseType the base class, if applicable
      */
-    protected SettingType( String theName, JavaType theType, Method theDeserializedHook, boolean validationSupport, SettingType theBaseType ) {
-    	super( theName, theType, theDeserializedHook, validationSupport, theBaseType );
+    protected SettingType( String theName, JavaType theType, Method theDeserializedHook, Method theValidationHook, String theSettingPrefix, SettingType theBaseType ) {
+    	super( theName, theType, theDeserializedHook, theValidationHook, theBaseType );
+    
+    	settingPrefix = theSettingPrefix;
+    }
+    
+    /**
+     * The prefix to use for settings that request a prefix.
+     * @return prefix to use for setting names for settings that request a prefix
+     */
+    public String getSettingPrefix( ) {
+    	return settingPrefix;
     }
 }

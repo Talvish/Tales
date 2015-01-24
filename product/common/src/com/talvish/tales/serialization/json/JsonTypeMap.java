@@ -104,6 +104,8 @@ public class JsonTypeMap {
 		}
 		// call the deserialized hook (this method verifies the hook is there)
 		reflectedType.callDeserializedHook( theInstance );
+		// after deserialization, we call the validation hook
+		reflectedType.callValidationHook( theInstance );
 	}
 
 	/**

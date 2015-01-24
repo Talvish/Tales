@@ -8,25 +8,33 @@ import com.talvish.tales.parts.reflection.JavaType;
 import com.talvish.tales.parts.reflection.TypeDescriptor;
 
 public class SerializationType <T extends SerializationType<T, F>, F extends SerializationField<T, F>> extends TypeDescriptor<T,F>{
-	private final boolean supportsValidation;
+	private final Method validationHook;
 	private final Method deserializedHook;
 	
-	protected SerializationType( String theName, JavaType theType, Method theDeserializedHook, boolean validationSupport, T theBaseType ) {
+	protected SerializationType( String theName, JavaType theType, Method theDeserializedHook, Method theValidationHook, T theBaseType ) {
     	super( theName, theType, theBaseType );
     	
     	Preconditions.checkArgument( theDeserializedHook == null || theDeserializedHook.getParameters().length == 0, "'%s.%s' cannot have method parameters.", theType.getName(), theDeserializedHook == null ? "" : theDeserializedHook.getName( ) );
+    	Preconditions.checkArgument( theValidationHook == null || theValidationHook.getParameters().length == 0, "'%s.%s' cannot have method parameters.", theType.getName(), theValidationHook == null ? "" : theValidationHook.getName( ) );
 
     	deserializedHook = theDeserializedHook;
-    	supportsValidation = validationSupport;
+    	validationHook = theValidationHook;
     }
 	
     /**
      * Indicates if the type has validation supports.
      * @return true if the data contract type has validation support, false otherwise
      */
-    public boolean supportsValidation( ) {
-    	// TODO: this isn't suppoted yet
-    	return this.supportsValidation;
+    public boolean supportsValidationHook( ) {
+    	return validationHook != null;
+    }
+    
+    /**
+     * Returns the method, if one was set, called when validation occurs.
+     * @return the validation method or null if not set
+     */
+    public Method getValidationHook( ) {
+    	return validationHook;
     }
     
     /**
@@ -35,6 +43,33 @@ public class SerializationType <T extends SerializationType<T, F>, F extends Ser
      */
     public boolean supportsDeserializedHook( ) {
     	return deserializedHook != null;
+    }
+    
+    /**
+     * Returns the method, if one was set, called when deserialization occurs.
+     * @return the deserialization method or null if not set
+     */
+    public Method getDeserializationHook( ) {
+    	return deserializedHook;
+    }
+
+    /**
+     * Calls the validation hook if available.
+     * If the hook is not available a call is
+     * not made but an error isn't thrown 
+     * either. 
+     * @param theInstance the instance to call the hook against
+     */
+    public void callValidationHook( Object theInstance ) {
+    	if( validationHook != null ) {
+    		Preconditions.checkNotNull( theInstance, "'%s' was not given an instance", this.getType().getName( ) );
+
+	    	try {
+	    		validationHook.invoke( theInstance );
+			} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+				throw new IllegalStateException( String.format( "Failure executing validation hook for type '%s'.", this.getType().getName() ), e );
+			}
+    	}
     }
 
     /**
@@ -51,7 +86,7 @@ public class SerializationType <T extends SerializationType<T, F>, F extends Ser
 	    	try {
 				deserializedHook.invoke( theInstance );
 			} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-				throw new IllegalStateException( String.format( "'%s' was unable to execute the deserialized hook", this.getType().getName() ), e );
+				throw new IllegalStateException( String.format( "Failure executing deserialized hook for type '%s'.", this.getType().getName() ), e );
 			}
     	}
     }

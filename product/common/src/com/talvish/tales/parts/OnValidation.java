@@ -1,5 +1,5 @@
 // ***************************************************************************
-// *  Copyright 2012 Joseph Molnar
+// *  Copyright 2015 Joseph Molnar
 // *
 // *  Licensed under the Apache License, Version 2.0 (the "License");
 // *  you may not use this file except in compliance with the License.
@@ -15,16 +15,17 @@
 // ***************************************************************************
 package com.talvish.tales.parts;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
 /**
- * This interface is used to indicate that a class supports validation.
+ * This annotation indicates a method is meant to be used for validation.
  * @author jmolnar
- *
  */
-public interface ValidationSupport {
-	/**
-	 * Method called to validate. If validation fails
-	 * ValidationException is expected to be thrown.
-	 * This allows the type of failure to be exposed.
-	 */
-	void validate( );
+@Retention( RetentionPolicy.RUNTIME)
+@Target( ElementType.METHOD )
+public @interface OnValidation {
+
 }

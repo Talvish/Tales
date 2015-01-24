@@ -27,5 +27,10 @@ import java.lang.annotation.Target;
 @Retention( RetentionPolicy.RUNTIME)
 @Target( ElementType.TYPE )
 public @interface Settings {
-
+    /**
+     * The prefix to place to prepend to settings names if they are indicate they want a prefix.
+     * Subclasses can override the prefix name that will be used. 
+     * @return the prefix
+     */
+    String prefix( ) default "";
 }

@@ -25,7 +25,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.google.common.base.Preconditions;
-import com.talvish.tales.parts.ValidationSupport;
+
+import com.talvish.tales.parts.OnValidation;
 import com.talvish.tales.parts.reflection.JavaType;
 import com.talvish.tales.system.Facility;
 
@@ -95,8 +96,14 @@ public abstract class SerializationTypeManager <T extends SerializationType<T, F
                 }
             }
             
-            // and we need to see if the class supports serialization hooks
+            // and we need to see if the class supports serialization and validation hooks
+            // but we start with setting the validation hook to what the base class may have
+            // it may still be overwritten later if the subclass defined methods 
+            Method baseDeserializedHook = baseTypeDescriptor != null ? baseTypeDescriptor.getDeserializationHook( ) : null;
+            Method baseValidationHook = baseTypeDescriptor != null ? baseTypeDescriptor.getValidationHook( ) : null;
+
             Method deserializedHook = null;
+            Method validationHook = null;
             
             for( Method method : theType.getUnderlyingClass().getDeclaredMethods( ) ) {
             	if( method.getAnnotation( OnDeserialized.class ) != null ) {
@@ -104,14 +111,27 @@ public abstract class SerializationTypeManager <T extends SerializationType<T, F
             		deserializedHook = method;
             		deserializedHook.setAccessible( true ); // make sure we can access it
             		// we keep looping in case more than one hook is defined
+            	} else if( method.getAnnotation( OnValidation.class ) != null ) {
+            		Preconditions.checkState( validationHook == null, "'%s' already has a validation hook, '%s', defined.", theType.getName( ), method.getName( ) );
+            		validationHook = method;
+            		validationHook.setAccessible( true ); // make sure we can access it
+            		// we keep looping in case more than one hook is defined
             	}
+            }
+
+            // if we didn't find any hooks, we use the hooks from the base class, if available
+            if( deserializedHook == null ) {
+            	deserializedHook = baseDeserializedHook;
+            }
+            if( validationHook == null ) {
+            	validationHook = baseValidationHook;
             }
 
             // now create the type descriptor
             T typeDescriptor = generateTypeDescriptor( 
             		theType,
             		deserializedHook,
-            		ValidationSupport.class.isAssignableFrom( theType.getUnderlyingClass() ), // TODO: not sure I like the idea of using inheritance
+            		validationHook,
             		baseTypeDescriptor );
             F fieldDescriptor = null;
             
@@ -163,7 +183,7 @@ public abstract class SerializationTypeManager <T extends SerializationType<T, F
 	abstract protected T generateTypeDescriptor( 
 			JavaType theType, 
 			Method theDeserializationHook,
-			boolean supportsValid, 
+			Method theValidationHook, 
 			T theBaseTypeDescriptor );
 
 	protected Object generateTypeInstance( Class<?> theClass ) {
