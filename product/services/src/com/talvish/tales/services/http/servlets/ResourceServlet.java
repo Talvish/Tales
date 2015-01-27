@@ -210,25 +210,90 @@ public class ResourceServlet extends HttpServlet {
 	protected void doHead(HttpServletRequest theRequest, HttpServletResponse theResponse) throws ServletException ,IOException {
 		doCall( theRequest, theResponse, headMethods );
 	}
+
+	/**
+	 * Implementation of the options method.
+	 */
+	@Override
+	protected void doOptions(HttpServletRequest theRequest, HttpServletResponse theResponse) throws ServletException ,IOException {
+		// let's see if this is a COR-preflight request
+		
+		// TODO: consider if we are doing CORS ...
+		//       if so then we need to check for request method headers, origin needs to exists, etc 
+		// String accessControlRequestMethod = theRequest.getHeader( HeaderConstants.ACCESS_CONTROL_REQUEST_METHOD );
+		// String origin = theRequest.getHeader( HeaderConstants.ORIGIN );
+		
+
+
+		// so for options we find a matching method and if we can find one
+		// we indicate which verbs can be used with the method
+		ResourceMethod matchingMethod = null;
+		
+		matchingMethod = getMatchedMethod( theRequest, getMethods );
+		if( matchingMethod != null ) {
+			ResponseHelper.writeOptionsResponse( theRequest, theResponse, matchingMethod );
+			return;
+		}
+		matchingMethod = getMatchedMethod( theRequest, postMethods );
+		if( matchingMethod != null ) {
+			ResponseHelper.writeOptionsResponse( theRequest, theResponse, matchingMethod );
+			return;
+		}
+		matchingMethod = getMatchedMethod( theRequest, putMethods );
+		if( matchingMethod != null ) {
+			ResponseHelper.writeOptionsResponse( theRequest, theResponse, matchingMethod );
+			return;
+		}
+		matchingMethod = getMatchedMethod( theRequest, deleteMethods );
+		if( matchingMethod != null ) {
+			ResponseHelper.writeOptionsResponse( theRequest, theResponse, matchingMethod );
+			return;
+		}
+		matchingMethod = getMatchedMethod( theRequest, headMethods );
+		if( matchingMethod != null ) {
+			ResponseHelper.writeOptionsResponse( theRequest, theResponse, matchingMethod );
+			return;
+		}
+	}
 	
 	/**
-	 * Private method that implements the work for the http verb methods by running against the methods. 
-	 * @param theRequest the http request object
-	 * @param theResponse the http response object
-	 * @param theMethods the methods which will be looked at to try to find one to run
+	 * A helper method used by the OPTIONS verb to help determine which method
+	 * matches the request brough in.
+	 * @param theRequest the request itself
+	 * @param theMethods the set of methods to go through
+	 * @return the matching method, if found
 	 */
-	private void doCall(HttpServletRequest theRequest, HttpServletResponse theResponse, Map<String,List<ResourceMethod>> theMethods ) throws ServletException, IOException {
-		ResourceMethodResult result = null;
+	private ResourceMethod getMatchedMethod( HttpServletRequest theRequest, Map<String,List<ResourceMethod>> theMethods ) {
+		ResourceMethod method = null;
 		ResourceMethod.MatchStatus bestStatus = null;
-		ResourceMethod.MatchStatus currentStatus = null;
-		int pathIndex = 0;
-
+		
 		// grab the version of the resource methods that are appropriate
 		List<ResourceMethod> specificMethods = theMethods.get( theRequest.getParameter( ParameterConstants.VERSION_PARAMETER ) );
 
 		// if we got the methods, then find the particular one
 		if( specificMethods != null ) {
-			for( ResourceMethod method : specificMethods ) {
+			bestStatus = getMatchStatus( theRequest, specificMethods );
+		}
+		if( bestStatus != null ) {
+			method = specificMethods.get( bestStatus.getPathIndex( ) );
+		}
+		return method;
+	}
+	
+	/**
+	 * Helper method that gets the best fit method based on a set of methods.
+	 * @param theRequest the request, to help make comparisons
+	 * @param theSpecificMethods the methods that will be analyzed to find a best fit
+	 * @return the best fit method information
+	 */
+	private ResourceMethod.MatchStatus getMatchStatus( HttpServletRequest theRequest, List<ResourceMethod> theSpecificMethods ) {
+		ResourceMethod.MatchStatus currentStatus = null;
+		ResourceMethod.MatchStatus bestStatus = null;
+		int pathIndex = 0;
+		
+		// if we got the methods, then find the particular one
+		if( theSpecificMethods != null ) {
+			for( ResourceMethod method : theSpecificMethods ) {
 				currentStatus = method.match(theRequest, pathIndex );
 				if( currentStatus != null ) {
 					if( ( bestStatus == null ) || 
@@ -244,6 +309,27 @@ public class ResourceServlet extends HttpServlet {
 				pathIndex += 1;
 			}
 		}
+		return bestStatus;
+	}
+
+	/**
+	 * Private method that implements the work for the http verb methods by running against the methods. 
+	 * @param theRequest the http request object
+	 * @param theResponse the http response object
+	 * @param theMethods the methods which will be looked at to try to find one to run
+	 */
+	private void doCall(HttpServletRequest theRequest, HttpServletResponse theResponse, Map<String,List<ResourceMethod>> theMethods ) throws ServletException, IOException {
+		ResourceMethodResult result = null;
+		ResourceMethod.MatchStatus bestStatus = null;
+		
+		// grab the version of the resource methods that are appropriate
+		List<ResourceMethod> specificMethods = theMethods.get( theRequest.getParameter( ParameterConstants.VERSION_PARAMETER ) );
+
+		// if we got the methods, then find the particular one
+		if( specificMethods != null ) {
+			bestStatus = getMatchStatus( theRequest, specificMethods );
+		}
+
 		// if we found the particular method, let's run it
 		if( bestStatus != null ) {
 			ResourceMethod method = specificMethods.get( bestStatus.getPathIndex( ) );

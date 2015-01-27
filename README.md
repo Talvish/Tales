@@ -15,7 +15,12 @@ For more details please view the [wiki pages](https://github.com/Talvish/Tales/w
 
 Latest Changes
 --------------------
-January 7, 2015 - Major updates in Tales 1.6.5 include:
+January 26, 2015 - Primary updates in Tales 1.6.6 include:
+* Annotated Java class configuration support
+* ResourceClient updated to use new class-based configuration pattern
+* Misc items (OPTIONS responses, deserialization of maps bug fix)
+
+January 7, 2015 - Primary updates in Tales 1.6.5 include:
 * New json configuration source for the configuration management system (supports include files, profiles, inheritence, overrides, deferred definitions, etc)
 * Preliminary auth-related features include json web tokens and capabilities
 

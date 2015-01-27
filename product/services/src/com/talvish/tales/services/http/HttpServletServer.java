@@ -117,10 +117,11 @@ class HttpServletServer extends Server {
 		// TODO can we be explicit about this in the Wrapper and not use attributes ?
 		requestWrapper.setAttribute( AttributeConstants.OPERATION_REQUEST_CONTEXT, operationContext );
 		logger.info( 
-				"Request received with the associated operation context information\n\troot request id = {}\n\tcalling request id = {}\n\tcurrent request id = {}", new Object[]{ 
+				"Request of type '{}' received with the associated operation context information\n\troot request id = {}\n\tcalling request id = {}\n\tcurrent request id = {}", 
+				request.getMethod(),
 				operationContext.getRootRequestId(),
 				operationContext.getParentRequestId(),
-				operationContext.getCurrentRequestId() } );
+				operationContext.getCurrentRequestId() );
 		super.handle(target, baseRequest, requestWrapper, response);
 		// error handling here isn't possible (try/catch around super.handle) since 
 		// jetty traps the exception prior to it coming back here

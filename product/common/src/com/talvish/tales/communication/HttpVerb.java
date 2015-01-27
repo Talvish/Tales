@@ -41,7 +41,11 @@ public enum HttpVerb {
 	/**
 	 * Represents a HEAD request.
 	 */
-	HEAD( "HEAD" );
+	HEAD( "HEAD" ),
+	/**
+	 * Represents an OPTIONS request.
+	 */
+	OPTIONS( "OPTIONS" );
 	
 	private final String value;
 	

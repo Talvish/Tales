@@ -34,6 +34,7 @@ import com.google.gson.JsonObject;
 import com.talvish.tales.communication.HeaderConstants;
 import com.talvish.tales.communication.HttpStatus;
 import com.talvish.tales.communication.Status;
+import com.talvish.tales.contracts.services.http.ResourceMethod;
 import com.talvish.tales.contracts.services.http.ResourceMethodResult;
 import com.talvish.tales.serialization.Readability;
 import com.talvish.tales.services.OperationContext;
@@ -50,6 +51,18 @@ public class ResponseHelper {
 	
 	private static final Gson machineGson = new GsonBuilder( ).serializeNulls( ).create();
 	private static final Gson humanGson = new GsonBuilder( ).serializeNulls( ).setPrettyPrinting( ).create();
+
+	
+	/**
+	 * Helper method for writing out the options response.
+	 * @param theRequest the request that was made
+	 * @param theResponse the response to write out to
+	 * @param theMethod the method that was requested
+	 */
+	public static void writeOptionsResponse( HttpServletRequest theRequest, HttpServletResponse theResponse, ResourceMethod theMethod ) {
+		theResponse.addHeader( "Allow", String.join( ", ", theMethod.getVerbs( ) ) );
+		theResponse.setStatus( HttpStatus.convert( Status.OPERATION_COMPLETED ).getCode( ) );
+	}
 
 	/**
 	 * Shared helper method to write a failure response to the caller.

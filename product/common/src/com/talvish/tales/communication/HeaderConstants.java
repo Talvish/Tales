@@ -27,6 +27,14 @@ public class HeaderConstants {
 	public static final String ROOT_REQUEST_ID_HEADER = "Root-Request-Id";
 	public static final String PARENT_REQUEST_ID_HEADER = "Parent-Request-Id";
 	
+	// CORS related
+	
+	// request headers
+	public static final String ORIGIN = "Origin";
+	public static final String ACCESS_CONTROL_REQUEST_METHOD = "Access-Control-Request-Method";
+	public static final String ACCESS_CONTROL_REQUEST_HEADERS = "Access-Control-Request-Headers";
+	
+	
 	// TODO: if we set the cache-control headers we shoudl also be sending the date field
 	//		 see: http://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html
 	public static final String DATE_HEADER = "DATE";
