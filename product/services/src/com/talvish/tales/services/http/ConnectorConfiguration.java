@@ -30,36 +30,36 @@ import com.talvish.tales.system.configuration.annotated.SettingsName;
  * @author jmolnar
  *
  */
-@Settings
+@Settings( prefix="service.http_connectors" )
 public class ConnectorConfiguration {
 	@SettingsName
 	private String name = "default";
 	
-	@Setting( name="service.http_connectors.{name}.acceptors" )
+	@Setting( name="{prefix}.{name}.acceptors" )
 	private Integer acceptors; // ServerConnector( acceptors, selectors )
 	
-	@Setting( name="service.http_connectors.{name}.accept_queue_size" )
+	@Setting( name="{prefix}.{name}.accept_queue_size" )
 	private Integer acceptQueueSize; // ServerConnector.setAcceptQueueSize
 	
-	@Setting( name="service.http_connectors.{name}.selectors" )
+	@Setting( name="{prefix}.{name}.selectors" )
 	private Integer selectors;
 	
-	@Setting( name="service.http_connectors.{name}.idle_timeout" )
+	@Setting( name="{prefix}.{name}.idle_timeout" )
 	private Integer idleTimeout; // ServerConnector.setIdleTimeout
 	
-	@Setting( name="service.http_connectors.{name}.header_cache_size" )
+	@Setting( name="{prefix}.{name}.header_cache_size" )
 	private Integer headerCacheSize; 
 	
-	@Setting( name="service.http_connectors.{name}.request_header_size" )
+	@Setting( name="{prefix}.{name}.request_header_size" )
 	private Integer requestHeaderSize; 
 	
-	@Setting( name="service.http_connectors.{name}.response_header_size" )	
+	@Setting( name="{prefix}.{name}.response_header_size" )	
 	private Integer responseHeaderSize; 
 	
-	@Setting( name="service.http_connectors.{name}.output_buffer_size" )
+	@Setting( name="{prefix}.{name}.output_buffer_size" )
 	private Integer outputBufferSize; 
 
-	@Setting( name="service.http_connectors.{name}.max_form_content_size" )
+	@Setting( name="{prefix}.{name}.max_form_content_size" )
 	private Integer maxFormContentSize; 
 	
 	
@@ -80,7 +80,7 @@ public class ConnectorConfiguration {
 	public ConnectorConfiguration( ) {
 	}
 	
-	public ConnectorConfiguration( String theName) {
+	public ConnectorConfiguration( String theName ) {
 		Preconditions.checkArgument( !Strings.isNullOrEmpty( theName ), "need a name" );
 		name = theName;
 		// TODO: need to add the manual setters if we are going to allow these to be create manually (instead of just from the config manager)

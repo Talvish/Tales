@@ -192,19 +192,23 @@ public class ObjectId {
 	private static ObjectId tryParse( String theStringForm, boolean shouldExcept ) {
 		ObjectId result = null;
 		
-		Matcher matcher = OID_PATTERN.matcher( theStringForm );
-		if( matcher.matches( ) ) {
-			// set our values, none of which should fail given the regex
-			long valueId = Long.parseLong( matcher.group( 1 ), 16 );
-			int typeId = Integer.parseInt( matcher.group( 2 ), 16 );
-			long sourceId = Long.parseLong( matcher.group( 3 ), 16 );
-
-			if( isValid( valueId, typeId, sourceId, shouldExcept ) ) {					
-				result = new ObjectId( valueId, typeId, sourceId, false ); // false means don't validate (since I just did)
-			} // no need to throw exceptions if bad, isValid will
-
+		if( theStringForm != null ) {
+			Matcher matcher = OID_PATTERN.matcher( theStringForm );
+			if( matcher.matches( ) ) {
+				// set our values, none of which should fail given the regex
+				long valueId = Long.parseLong( matcher.group( 1 ), 16 );
+				int typeId = Integer.parseInt( matcher.group( 2 ), 16 );
+				long sourceId = Long.parseLong( matcher.group( 3 ), 16 );
+	
+				if( isValid( valueId, typeId, sourceId, shouldExcept ) ) {					
+					result = new ObjectId( valueId, typeId, sourceId, false ); // false means don't validate (since I just did)
+				} // no need to throw exceptions if bad, isValid will
+	
+			} else if( shouldExcept ) {
+				throw new IllegalArgumentException( String.format( "string, '%s', is either not %s characters long or does not have required shape", OID_LENGTH, theStringForm ) );
+			}
 		} else if( shouldExcept ) {
-			throw new IllegalArgumentException( String.format( "string, '%s', is either not %s characters long or does not have required shape", OID_LENGTH, theStringForm ) );
+			throw new IllegalArgumentException( "string was not given to parse " );
 		}
 
 		return result;
