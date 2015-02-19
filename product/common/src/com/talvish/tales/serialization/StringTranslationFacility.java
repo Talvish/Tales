@@ -17,7 +17,8 @@ package com.talvish.tales.serialization;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.ZonedDateTime;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.BitSet;
 import java.util.Map;
 import java.util.UUID;
@@ -42,12 +43,13 @@ import com.talvish.tales.parts.translators.StringToDoubleTranslator;
 import com.talvish.tales.parts.translators.StringToEnumTranslator;
 import com.talvish.tales.parts.translators.StringToFloatTranslator;
 import com.talvish.tales.parts.translators.StringToIntegerTranslator;
+import com.talvish.tales.parts.translators.StringToLocalDateTimeTranslator;
 import com.talvish.tales.parts.translators.StringToLocalDateTranslator;
 import com.talvish.tales.parts.translators.StringToLongTranslator;
 import com.talvish.tales.parts.translators.StringToObjectIdTranslator;
 import com.talvish.tales.parts.translators.StringToStringTranslator;
 import com.talvish.tales.parts.translators.StringToUuidTranslator;
-import com.talvish.tales.parts.translators.StringToZonedDateTimeTranslator;
+import com.talvish.tales.parts.translators.StringToOffsetDateTimeTranslator;
 import com.talvish.tales.parts.translators.Translator;
 import com.talvish.tales.parts.translators.UuidToStringTranslator;
 import com.talvish.tales.system.Facility;
@@ -100,8 +102,11 @@ public final class StringTranslationFacility implements Facility {
 		
 		Translator toDateTimeTranslator = new StringToDateTimeTranslator( true, null, null );
 		this.registerTranslators( new JavaType( DateTime.class ), toDateTimeTranslator, fromObjectTranslator );
-		Translator toZonedDateTimeTranslator = new StringToZonedDateTimeTranslator( true,  null,  null );
-		this.registerTranslators( new JavaType( ZonedDateTime.class ), toZonedDateTimeTranslator, fromObjectTranslator );
+
+		Translator toOffsetDateTimeTranslator = new StringToOffsetDateTimeTranslator( true,  null,  null );
+		this.registerTranslators( new JavaType( OffsetDateTime.class ), toOffsetDateTimeTranslator, fromObjectTranslator );		
+		Translator toLocalDateTimeTranslator = new StringToLocalDateTimeTranslator( true,  null,  null );
+		this.registerTranslators( new JavaType( LocalDateTime.class ), toLocalDateTimeTranslator, fromObjectTranslator );		
 		Translator toLocalDateTranslator = new StringToLocalDateTranslator( true,  null,  null );
 		this.registerTranslators( new JavaType( LocalDate.class ), toLocalDateTranslator, fromObjectTranslator );
 

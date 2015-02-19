@@ -84,6 +84,7 @@ public final class ResourceFacility implements Facility {
 				return new ResourceMethodResult( 
 						DependencyException.Problem.convert( theException.getProblem( ) ),
 						null,
+						null,
 						String.format( 
 								"A dependency failure occurred while running '%s.%s'.", 
 								theMethod.getResourceType().getType().getSimpleName(), 
@@ -100,10 +101,9 @@ public final class ResourceFacility implements Facility {
 					parameter.addProperty( "name", theException.getName( ) );
 				}
 				return new ResourceMethodResult(
-						// TODO: we were sending the parameter in BUT it causes client problems since since it changes the expected return type / kills the type compatibility 
-						// parameter		
 						Status.CALLER_BAD_INPUT,
 						theException.getCode(),
+						theException.getName(),
 						String.format( 
 								"Received invalid data for '%s.%s'.", 
 								theMethod.getResourceType().getType().getSimpleName(), 
@@ -117,6 +117,7 @@ public final class ResourceFacility implements Facility {
 				return new ResourceMethodResult( 
 						Status.CALLER_BAD_STATE,
 						theException.getCode(),
+						null,
 						String.format( 
 								"'%s.%s' indicated it is in an invalid state.", 
 								theMethod.getResourceType().getType().getSimpleName(), 
@@ -130,6 +131,7 @@ public final class ResourceFacility implements Facility {
 				return new ResourceMethodResult( 
 						Status.CALLER_NOT_FOUND,
 						theException.getCode(),
+						theException.getIdentifier(),
 						String.format( 
 								"Cannot find necessary data for '%s.%s'.", 
 								theMethod.getResourceType().getType().getSimpleName(), 
@@ -142,6 +144,7 @@ public final class ResourceFacility implements Facility {
 			public ResourceMethodResult toResult( ResourceMethod theMethod, AuthorizationException theException ) {
 				ResourceMethodResult result = new ResourceMethodResult( 
 						Status.CALLER_UNAUTHORIZED,
+						null,
 						null,
 						String.format( 
 								"Not authorized to execute method '%s.%s'.", 
@@ -331,15 +334,16 @@ public final class ResourceFacility implements Facility {
 			}
 			
 			if( result == null ) {
+				String methodName = String.format( "%s.%s", theMethod.getResourceType().getType().getSimpleName(), theMethod.getMethod( ).getName( ) ); 
 				String message = String.format( 
-						"Unmanaged exception '%s' occurred while running '%s.%s'.", 
+						"Unmanaged exception '%s' occurred while running '%s'.", 
 						theException.getClass( ).getSimpleName( ), 
-						theMethod.getResourceType().getType().getSimpleName(), 
-						theMethod.getMethod( ).getName( ) ); 
+						methodName ); 
 				logger.error( message, theException );
 				result = new ResourceMethodResult( 
 						Status.LOCAL_ERROR, 
 						FailureSubcodes.UNHANDLED_EXCEPTION,
+						methodName,
 						message,
 						theException );
 			} else {
@@ -354,16 +358,20 @@ public final class ResourceFacility implements Facility {
 			}
 			
 		} catch( Exception e ) {
-			String message = String.format( 
-					 "While attempting to handle exception '%s', which occurred while running '%s.%s', exception '%s' occurred.", 
-					theException == null ? "<unknown>" : theException.getClass( ).getSimpleName( ), 
+			String methodName = String.format( 
+					"%s.%s", 
 					theMethod == null ? "<unknown>" : theMethod.getResourceType().getType().getSimpleName(), 
-					theMethod == null ? "<unknown>" : theMethod.getMethod( ).getName( ),
+					theMethod == null ? "<unknown>" : theMethod.getMethod( ).getName( ) );
+			String message = String.format( 
+					 "While attempting to handle exception '%s', which occurred while running '%s', exception '%s' occurred.", 
+					theException == null ? "<unknown>" : theException.getClass( ).getSimpleName( ), 
+					methodName, 
 					e.getClass( ).getSimpleName( ) ); 
 			logger.error( message, theException );
 			result = new ResourceMethodResult( 
 					Status.LOCAL_ERROR, 
 					FailureSubcodes.UNHANDLED_EXCEPTION,
+					methodName,
 					message,
 					theException );
 		}

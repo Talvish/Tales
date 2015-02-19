@@ -51,6 +51,10 @@ public enum HttpStatus {
 	 */
 	CLIENT_UNAUTHORIZED( 401 ),
 	/**
+	 * Client of the service is forbidden to make the call. 
+	 */
+	CLIENT_FORBIDDEN( 403 ),
+	/**
 	 * Client of the service requested something that could not be found.
 	 */
 	CLIENT_NOT_FOUND( 404 ),

@@ -91,16 +91,16 @@ public class Conditions {
 	/**
 	 * Checks the condition and if false throws a NotFoundException.
 	 */
-	public static void checkFound( boolean theCondition ) {
+	public static void checkFound( boolean theCondition, String theIdentifier ) {
 		checkFound( theCondition, "failed found check" );
 	}
 	
 	/**
 	 * Checks the condition and if false throws a NotFoundException.
 	 */
-	public static void checkFound( boolean theCondition, String theMessage, Object... theMessageParameters ) {
+	public static void checkFound( boolean theCondition, String theIdentifier, String theMessage, Object... theMessageParameters ) {
 		if( !theCondition ) {
-			throw new NotFoundException( String.format( theMessage, theMessageParameters ) );
+			throw new NotFoundException( theIdentifier, String.format( theMessage, theMessageParameters ) );
 		} 
 	}
 

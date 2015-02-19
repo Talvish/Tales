@@ -15,7 +15,7 @@
 // ***************************************************************************
 package com.talvish.tales.businessobjects;
 
-import java.time.ZonedDateTime;
+import java.time.OffsetDateTime;
 
 import com.google.common.base.Preconditions;
 import com.talvish.tales.contracts.data.DataContract;
@@ -62,7 +62,7 @@ public abstract class BusinessObjectBase extends TimestampedBase {
 	 * @param theCreationTimestamp the datetime the object was created
 	 * @param theModificationTimestamp the datetime the object was last modified
 	 */
-	protected BusinessObjectBase( ObjectId theId, ZonedDateTime theCreationTimestamp, ZonedDateTime theModificationTimestamp ) {
+	protected BusinessObjectBase( ObjectId theId, OffsetDateTime theCreationTimestamp, OffsetDateTime theModificationTimestamp ) {
 		super( theCreationTimestamp, theModificationTimestamp );
 		Preconditions.checkNotNull( theId, "need an id" );
 		id = theId;

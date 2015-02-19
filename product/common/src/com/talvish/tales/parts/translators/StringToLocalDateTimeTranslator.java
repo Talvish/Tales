@@ -1,5 +1,5 @@
 // ***************************************************************************
-// *  Copyright 2014 Joseph Molnar
+// *  Copyright 2015 Joseph Molnar
 // *
 // *  Licensed under the Apache License, Version 2.0 (the "License");
 // *  you may not use this file except in compliance with the License.
@@ -15,16 +15,16 @@
 // ***************************************************************************
 package com.talvish.tales.parts.translators;
 
-import java.time.ZonedDateTime;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
-public class StringToZonedDateTimeTranslator extends StringToObjectTranslatorBase implements Translator {
+public class StringToLocalDateTimeTranslator extends StringToObjectTranslatorBase implements Translator {
 
-	public StringToZonedDateTimeTranslator( ) {
+	public StringToLocalDateTimeTranslator( ) {
 		this( true, null, null );
 	}
-	public StringToZonedDateTimeTranslator( boolean shouldTrim, Object theEmptyValue, Object theNullValue) {
+	public StringToLocalDateTimeTranslator( boolean shouldTrim, Object theEmptyValue, Object theNullValue) {
 		super(shouldTrim, theEmptyValue, theNullValue);
 	}
 
@@ -43,7 +43,7 @@ public class StringToZonedDateTimeTranslator extends StringToObjectTranslatorBas
 				if( stringValue.equals("") ) {
 					returnValue = this.emptyValue;
 				} else {
-					returnValue = ZonedDateTime.parse( stringValue, DateTimeFormatter.ISO_DATE_TIME );
+					returnValue = LocalDateTime.parse( stringValue, DateTimeFormatter.ISO_DATE_TIME );
 				}
 			} catch( DateTimeParseException e ) {
 				throw new TranslationException( String.format( "Unable to translate '%s' into a datetime.", anObject ), e );

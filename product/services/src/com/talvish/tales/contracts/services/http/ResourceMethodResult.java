@@ -21,23 +21,26 @@ import com.talvish.tales.communication.Status;
 
 /**
  * This class represents the result of an execution of a resource method.
+ * This is meant for internal framework use only. Users of the framework
+ * should use ResourceResult.
  * It covers both successful and unsuccessful cases.
  * @author jmolnar
  *
  */
-public class ResourceMethodResult extends HttpResult<JsonElement> {
+public class ResourceMethodResult extends HttpResult<JsonElement,ResourceMethodResult> {
 	/**
 	 * Modified copy constructor taking a different value.
 	 * @param theValue the value to use
 	 * @param theOriginal the original result to clone
 	 */
-	ResourceMethodResult( JsonElement theValue, HttpResult<?> theOriginal ) {
+	ResourceMethodResult( JsonElement theValue, HttpResult<?,?> theOriginal ) {
 		Preconditions.checkNotNull( theOriginal, "the original result must not be null" );
 		this.value = theValue;
 		this.headers = theOriginal.headers;
 		this.cookies = theOriginal.cookies;
 		this.code = theOriginal.code;
 		this.subcode = theOriginal.subcode;
+		this.subject = theOriginal.subject;
 		this.message = theOriginal.message;
 		this.exception = theOriginal.exception;
 	}
@@ -48,6 +51,7 @@ public class ResourceMethodResult extends HttpResult<JsonElement> {
 		this.value = theValue;
 		this.code = theStatus;
 		this.subcode = null;
+		this.subject = null;
 		this.message = null;
 		this.exception = null;
 	}
@@ -59,11 +63,12 @@ public class ResourceMethodResult extends HttpResult<JsonElement> {
 	 * @param theMessage the failure message to display
 	 * @param theException the exception, which may be null
 	 */
-	ResourceMethodResult( Status theCode, String theSubcode, String theMessage, Throwable theException ) {
+	ResourceMethodResult( Status theCode, String theSubcode, String theSubject, String theMessage, Throwable theException ) {
 		Preconditions.checkNotNull( theCode, "need a status code" );
 		this.value = null;
 		this.code = theCode;
 		this.subcode = theSubcode;
+		this.subject = theSubject;
 		this.message = theMessage;
 		this.exception = theException;
 	}
@@ -75,12 +80,13 @@ public class ResourceMethodResult extends HttpResult<JsonElement> {
 	 * @param theMessage the failure message to display
 	 * @param theException the exception, which may be null
 	 */
-	ResourceMethodResult( JsonElement theValue, Status theCode, String theSubcode, String theMessage, Throwable theException ) {
+	ResourceMethodResult( JsonElement theValue, Status theCode, String theSubcode, String theSubject, String theMessage, Throwable theException ) {
 		Preconditions.checkNotNull( theValue, "need a value" );
 		Preconditions.checkNotNull( theCode, "need a status code" );
 		this.value = theValue;
 		this.code = theCode;
 		this.subcode = theSubcode;
+		this.subject = theSubject;
 		this.message = theMessage;
 		this.exception = theException;
 	}

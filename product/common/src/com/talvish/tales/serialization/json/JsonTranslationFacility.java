@@ -17,7 +17,8 @@ package com.talvish.tales.serialization.json;
 
 import java.lang.reflect.ParameterizedType;
 import java.time.LocalDate;
-import java.time.ZonedDateTime;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -34,7 +35,6 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
-
 import com.talvish.tales.businessobjects.ObjectId;
 import com.talvish.tales.parts.reflection.FieldDescriptor;
 import com.talvish.tales.parts.reflection.JavaType;
@@ -195,7 +195,14 @@ public final class JsonTranslationFacility implements Facility {
 				new JsonElementToStringToChainTranslator( stringTranslators.getFromStringTranslator( javaType ) ),
 				objectToJsonTranslator );
 
-		javaType = new JavaType( ZonedDateTime.class );
+		javaType = new JavaType( OffsetDateTime.class );
+		registerJsonElementTranslators( 
+				javaType,
+				"datetime", 
+				new JsonElementToStringToChainTranslator( stringTranslators.getFromStringTranslator( javaType ) ),
+				objectToJsonTranslator );
+
+		javaType = new JavaType( LocalDateTime.class );
 		registerJsonElementTranslators( 
 				javaType,
 				"datetime", 

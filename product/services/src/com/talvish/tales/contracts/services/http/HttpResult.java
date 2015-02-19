@@ -32,17 +32,20 @@ import com.talvish.tales.communication.Status;
 /**
  * This class represents the result of an execution of a HTTP request.
  * It covers both successful and unsuccessful cases.
+ * This is a class really meant for implementation re-use by the framework. 
  * @author jmolnar
  *
  */
-public abstract class HttpResult<T> {
-	protected T value;
+@SuppressWarnings("rawtypes")
+public abstract class HttpResult<V, T extends HttpResult> {
+	protected V value;
 	
 	// share items 
 	protected Map<String,String> headers = new HashMap<String,String>( );
 	protected Map<String,Cookie> cookies = new HashMap<String,Cookie>( );
 	protected Status code = Status.UNKNOWN;
 	protected String subcode;
+	protected String subject;
 	protected String message;
 	protected Throwable exception;
 	
@@ -59,28 +62,34 @@ public abstract class HttpResult<T> {
 	 * The return value, which may be null if a failure case.
 	 * @return the result value
 	 */
-	public T getValue( ) {
+	public V getValue( ) {
 		return value;
 	}
 
 	/**
 	 * A convenience method that sets caching related headers to indicate we
 	 * don't want to cache.
+	 * @return returns itself so that calls can be chained together
 	 */
-	public void setCachingDisabled( ) {
+	@SuppressWarnings("unchecked")
+	public T setCachingDisabled( ) {
 		headers.put( HeaderConstants.CACHE_CONTROL, HeaderConstants.CACHE_CONTROL_DEFAULT_DIRECTIVE );
 		headers.put( HeaderConstants.PRAGMA, HeaderConstants.PRAGMA_DEFAULT_DIRECTIVE );
-		headers.put( HeaderConstants.EXPIRES, HeaderConstants.EXPIRES_DEFAULT_VALUE );	
+		headers.put( HeaderConstants.EXPIRES, HeaderConstants.EXPIRES_DEFAULT_VALUE );
+		return ( T )this;
 	}
 
 	/**
 	 * A convenience method that sets the to enable caching up to a particular date.
 	 * This method will indicate the result can be cached publicly as well.
 	 * @param theMaxAge the maximum age of the result in seconds
+	 * @return returns itself so that calls can be chained together
 	 */
-	public void setCachingEnabled( int theMaxAge ) {
+	@SuppressWarnings("unchecked")
+	public T setCachingEnabled( int theMaxAge ) {
 		Preconditions.checkArgument( theMaxAge >= 0, "need a max-age greater than or equal to zero" );
 		setCachingEnabled( theMaxAge, defaultCachingEnabledOptions );
+		return ( T )this;
 	}
 
 	/**
@@ -88,8 +97,10 @@ public abstract class HttpResult<T> {
 	 * and a particular set of options.
 	 * @param theMaxAge the maximum age of the result in seconds
 	 * @param theOptions the options to use for the caching
+	 * @return returns itself so that calls can be chained together
 	 */
-	public void setCachingEnabled( int theMaxAge, String[] theOptions ) {
+	@SuppressWarnings("unchecked")
+	public T setCachingEnabled( int theMaxAge, String[] theOptions ) {
 		Preconditions.checkArgument( theMaxAge >= 0, "need a max-age greater than or equal to zero" );
 		
 		DateTime dateTimeNow = new DateTime( DateTimeZone.UTC );
@@ -112,6 +123,7 @@ public abstract class HttpResult<T> {
 		headers.put( HeaderConstants.EXPIRES, RFC_1123_DATE_FORMATTER.print( dateTimeExpired ) );
 		// and remove pragma, to ensure no conflict
 		headers.remove( HeaderConstants.PRAGMA ); 
+		return ( T )this;
 	}
 
 	// ******* below are shared success and failure items
@@ -151,6 +163,15 @@ public abstract class HttpResult<T> {
 	 */
 	public Throwable getException( ) {
 		return exception;
+	}
+	
+	/**
+	 * The subject of the status code or status subcode.
+	 * Commonly this will point out issues with parameters.
+	 * @return the subject of the status
+	 */
+	public String getSubject( ) {
+		return subject;
 	}
 	
 	/**

@@ -849,14 +849,14 @@ public class ResourceMethod extends Subcontract {
 				// the exceptions below are handled here since they are definitely about the data coming in so no one else is meant to trap
 				} catch( JsonParseException e ) {
 					// if this happens then we have a problem with what the caller sent so we return now with a failed result
-					result = new ResourceMethodResult( Status.CALLER_BAD_INPUT, null, String.format( "Parameter '%s' for request '%s', using path '%s', is not valid JSON.", parameter.getValueName(), this.getName(), this.parameterPath ), e );
+					result = new ResourceMethodResult( Status.CALLER_BAD_INPUT, null, parameter.getValueName( ), String.format( "Parameter '%s' for request '%s', using path '%s', is not valid JSON.", parameter.getValueName(), this.getName(), this.parameterPath ), e );
 				} catch( TranslationException e) {
 					// if this happens then we have a problem with what the caller sent so we return now with a failed result
-					result = new ResourceMethodResult( Status.CALLER_BAD_INPUT, null, String.format( "Parameter '%s' for request '%s', using path '%s', is not the expected format.", parameter.getValueName(), this.getName(), this.parameterPath ), e );
+					result = new ResourceMethodResult( Status.CALLER_BAD_INPUT, null, parameter.getValueName( ), String.format( "Parameter '%s' for request '%s', using path '%s', is not the expected format.", parameter.getValueName(), this.getName(), this.parameterPath ), e );
 				} catch( DataSiteException e ) {
 					// if this happens then we passed at least parts of translation, but still saw a failure, typically due to things like attempting to assign
 					// null to a primitive type, etc, so we return now with a failed result
-					result = new ResourceMethodResult( Status.CALLER_BAD_INPUT, null, String.format( "Parameter '%s' for request '%s, using path '%s',' was not assignable ... check for null values when they aren't expected (e.g using primitive types).", parameter.getValueName(), this.getName(), this.parameterPath ), e );
+					result = new ResourceMethodResult( Status.CALLER_BAD_INPUT, null, parameter.getValueName( ), String.format( "Parameter '%s' for request '%s, using path '%s',' was not assignable ... check for null values when they aren't expected (e.g using primitive types).", parameter.getValueName(), this.getName(), this.parameterPath ), e );
 				}
 			}
 			// if we have a result we errored out
@@ -868,7 +868,10 @@ public class ResourceMethod extends Subcontract {
 				if( this.methodReturn.isResourceResponse() ) {
 					ResourceResult<?> resourceResult = ( ResourceResult<?> )typeLessResult; 
 					if( resourceResult == null ) {
-						result = new ResourceMethodResult( Status.LOCAL_ERROR, null, String.format( "ResourceResult was null for '%s'.", uri ), null );
+						String methodName = String.format( "%s.%s", 
+								this.getResourceType().getType().getSimpleName(), 
+								this.getMethod( ).getName( ) );
+						result = new ResourceMethodResult( Status.LOCAL_ERROR, null, methodName, String.format( "ResourceResult was null for '%s'.", uri ), null );
 					} else {
 						result = new ResourceMethodResult( ( JsonElement )this.methodReturn.translate( resourceResult.getValue( ) ), resourceResult );
 					}
@@ -887,15 +890,18 @@ public class ResourceMethod extends Subcontract {
 			result = theResourceFacility.toResult( this, e.getCause( ) ); 
 			
 		} catch( Exception e ) {
-			String message = String.format( 
-					"Unmanaged exception '%s' occurred while running '%s.%s'.",
-					e.getClass( ).getSimpleName( ), 
+			String methodName = String.format( "%s.%s", 
 					this.getResourceType().getType().getSimpleName(), 
 					this.getMethod( ).getName( ) );
+			String message = String.format( 
+					"Unmanaged exception '%s' occurred while running '%s'.",
+					e.getClass( ).getSimpleName( ), 
+					methodName );
 			logger.error( message, e );
 			result = new ResourceMethodResult( 
 					Status.LOCAL_ERROR, 
 					FailureSubcodes.UNHANDLED_EXCEPTION,
+					methodName,
 					message,
 					e );
 

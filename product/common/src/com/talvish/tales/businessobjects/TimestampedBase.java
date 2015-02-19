@@ -15,8 +15,8 @@
 // ***************************************************************************
 package com.talvish.tales.businessobjects;
 
+import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
 
 import com.google.common.base.Preconditions;
 import com.talvish.tales.contracts.data.DataContract;
@@ -29,14 +29,14 @@ import com.talvish.tales.contracts.data.DataMember;
  */
 @DataContract( name ="com.tales.business_objects.timestamped_base")
 public abstract class TimestampedBase {
-	@DataMember( name = "creation_timestamp" ) private ZonedDateTime creationTimestamp;
-	@DataMember( name = "modification_timestamp" ) private ZonedDateTime modificationTimestamp;
+	@DataMember( name = "creation_timestamp" ) private OffsetDateTime creationTimestamp;
+	@DataMember( name = "modification_timestamp" ) private OffsetDateTime modificationTimestamp;
 	
 	/**
 	 * A constructor used for serialization purposes.
 	 */
 	protected TimestampedBase( ) {
-		creationTimestamp = ZonedDateTime.now( ZoneOffset.UTC );
+		creationTimestamp = OffsetDateTime.now( ZoneOffset.UTC );
 		modificationTimestamp = creationTimestamp;
 	}
 
@@ -57,7 +57,7 @@ public abstract class TimestampedBase {
 	 * @param theCreationTimestamp the datetime the object was created
 	 * @param theModificationTimestamp the datetime the object was last modified
 	 */
-	protected TimestampedBase( ZonedDateTime theCreationTimestamp, ZonedDateTime theModificationTimestamp ) {
+	protected TimestampedBase( OffsetDateTime theCreationTimestamp, OffsetDateTime theModificationTimestamp ) {
 		Preconditions.checkNotNull( theCreationTimestamp, "need a creation timestamp" );
 		Preconditions.checkNotNull( theModificationTimestamp, "need a creation timestamp" );
 		Preconditions.checkArgument( !theCreationTimestamp.isAfter( theModificationTimestamp ), "the creation timestamp should be less than or equal to the modification timestamp");
@@ -69,14 +69,14 @@ public abstract class TimestampedBase {
 	/**
 	 * The date, in UTC, when the object was created.
 	 */
-	public ZonedDateTime getCreationTimestamp( ) {
+	public OffsetDateTime getCreationTimestamp( ) {
 		return creationTimestamp;
 	}	
 	
 	/**
 	 * The date, in UTC when the object was last modified.
 	 */
-	public ZonedDateTime getModificationTimestamp( ) {
+	public OffsetDateTime getModificationTimestamp( ) {
 		return modificationTimestamp;
 	}
 	
@@ -84,6 +84,6 @@ public abstract class TimestampedBase {
 	 * Method that the object has modified.
 	 */
 	protected void indicateModified( ) {
-		modificationTimestamp = ZonedDateTime.now( ZoneOffset.UTC );
+		modificationTimestamp = OffsetDateTime.now( ZoneOffset.UTC );
 	}
 }

@@ -72,7 +72,7 @@ public class ResponseHelper {
 	 * @param theMessage the message to indicate back to the caller
 	 */
 	public static void writeFailure( HttpServletRequest theRequest, HttpServletResponse theResponse, Status theStatusCode, String theMessage ) {
-		_writeResponse( theRequest, theResponse, null, theStatusCode, null, theMessage, null );
+		_writeResponse( theRequest, theResponse, null, theStatusCode, null, null, theMessage, null );
 	}
 
 	/**
@@ -84,7 +84,7 @@ public class ResponseHelper {
 	 * @param theMessage the message to indicate back to the caller
 	 */
 	public static void writeFailure( HttpServletRequest theRequest, HttpServletResponse theResponse, Status theStatusCode, String theSubCode, String theMessage ) {
-		_writeResponse( theRequest, theResponse, null, theStatusCode, theSubCode, theMessage, null );
+		_writeResponse( theRequest, theResponse, null, theStatusCode, theSubCode, null, theMessage, null );
 	}
 
 	/**
@@ -96,7 +96,7 @@ public class ResponseHelper {
 	 * @param theException the exception that indicates the the failure
 	 */
 	public static void writeFailure( HttpServletRequest theRequest, HttpServletResponse theResponse, Status theStatusCode,  String theMessage, Throwable theException ) {
-		_writeResponse( theRequest, theResponse, null, theStatusCode, null, theMessage, theException );
+		_writeResponse( theRequest, theResponse, null, theStatusCode, null, null, theMessage, theException );
 	}
 
 	/**
@@ -109,7 +109,7 @@ public class ResponseHelper {
 	 * @param theException the exception that indicates the the failure
 	 */
 	public static void writeFailure( HttpServletRequest theRequest, HttpServletResponse theResponse, Status theStatusCode, String theSubcode, String theMessage, Throwable theException ) {
-		_writeResponse(theRequest, theResponse, null, theStatusCode, theSubcode, theMessage, theException);
+		_writeResponse(theRequest, theResponse, null, theStatusCode, theSubcode, null, theMessage, theException);
 	}
 
 	/**
@@ -121,7 +121,7 @@ public class ResponseHelper {
 	 * @param theMessage the message to indicate back to the caller
 	 * @param theException the exception that indicates the the failure
 	 */
-	private static void _writeResponse( HttpServletRequest theRequest, HttpServletResponse theResponse, JsonElement theObject, Status theCode, String theSubcode, String theMessage, Throwable theException ) {
+	private static void _writeResponse( HttpServletRequest theRequest, HttpServletResponse theResponse, JsonElement theObject, Status theCode, String theSubcode, String theSubject, String theMessage, Throwable theException ) {
 		try {
 			;
 			Preconditions.checkNotNull( theResponse, "Need a response object." );
@@ -138,7 +138,7 @@ public class ResponseHelper {
 			// add the main value/result to return
 			bodyObject.add( "return", theObject );
 			// now add all the operation related values
-			addResultMetadata( theRequest, operationContext, theCode, theSubcode, theMessage, theException, bodyObject );			
+			addResultMetadata( theRequest, operationContext, theCode, theSubcode, theSubject, theMessage, theException, bodyObject );			
 			
 			Gson targetGson = operationContext.getResponseTarget() == Readability.HUMAN ? humanGson: machineGson;
 			theResponse.getWriter().write( targetGson.toJson( bodyObject ) );
@@ -167,7 +167,7 @@ public class ResponseHelper {
 	 * @param theException the exception that indicates the the failure
 	 */
 	public static void writeSuccess( HttpServletRequest theRequest, HttpServletResponse theResponse) {
-		_writeResponse( theRequest, theResponse, new JsonObject( ), Status.OPERATION_COMPLETED, null, null, null );
+		_writeResponse( theRequest, theResponse, new JsonObject( ), Status.OPERATION_COMPLETED, null, null, null, null );
 	}
 	
 	/**
@@ -178,7 +178,7 @@ public class ResponseHelper {
 	 * @param theException the exception that indicates the the failure
 	 */
 	public static void writeSuccess( HttpServletRequest theRequest, HttpServletResponse theResponse, JsonElement theObject ) {
-		_writeResponse( theRequest, theResponse, theObject, Status.OPERATION_COMPLETED, null, null, null );
+		_writeResponse( theRequest, theResponse, theObject, Status.OPERATION_COMPLETED, null, null, null, null );
 	}
 	
 	/**
@@ -206,6 +206,7 @@ public class ResponseHelper {
 				theResult.getValue( ),
 				theResult.getCode( ), 
 				theResult.getSubcode( ), 
+				theResult.getSubject( ),
 				theResult.getMessage( ), 
 				theResult.getException( ) );
 	}
@@ -215,7 +216,7 @@ public class ResponseHelper {
 	 * @param theContext the operation context of request 
 	 * @param theContainer the container json object to write the operation information into
 	 */
-	private static void addResultMetadata( HttpServletRequest theRequest, OperationContext theContext, Status theCode, String theSubcode, String theMessage, Throwable theException, JsonObject theContainer ) {
+	private static void addResultMetadata( HttpServletRequest theRequest, OperationContext theContext, Status theCode, String theSubcode, String theSubject, String theMessage, Throwable theException, JsonObject theContainer ) {
 		JsonObject operationObject = new JsonObject( );
 
 		// first we work on the status object to add to the container
@@ -225,6 +226,9 @@ public class ResponseHelper {
 
 		if( theSubcode != null ) {
 			statusObject.addProperty( "subcode", theSubcode );
+		}
+		if( theSubject != null ) {
+			statusObject.addProperty( "subject", theSubject );
 		}
 		if( theMessage != null ) {
 			statusObject.addProperty( "message", theMessage );

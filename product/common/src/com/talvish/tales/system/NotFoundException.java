@@ -26,6 +26,7 @@ public class NotFoundException extends RuntimeException {
 	 */
 	private static final long serialVersionUID = 9112814286184594345L;
 	
+	private final String identifier;
 	private final String code;
 
 	/**
@@ -33,24 +34,27 @@ public class NotFoundException extends RuntimeException {
 	 */
 	public NotFoundException() {
 		code = null;
+		this.identifier = null;
 	}
 
 	/**
 	 * Constructor taking a message.
 	 * @param message the message for the exception.
 	 */
-	public NotFoundException(String message) {
+	public NotFoundException(String identifier, String message) {
 		super(message);
 		code = null;
+		this.identifier = identifier;
 	}
 
 	/**
 	 * Constructor taking the exception that likely describes the failure.
 	 * @param cause the exception that describes the failure
 	 */
-	public NotFoundException(Throwable cause) {
+	public NotFoundException(String identifier, Throwable cause) {
 		super(cause);
 		code = null;
+		this.identifier = identifier;
 	}
 
 	/**
@@ -58,9 +62,10 @@ public class NotFoundException extends RuntimeException {
 	 * @param cause the exception that describes the failure
 	 * @param message the message for the exception
 	 */
-	public NotFoundException(String message, Throwable cause) {
+	public NotFoundException(String identifier, String message, Throwable cause) {
 		super(message, cause);
 		code = null;
+		this.identifier = identifier;
 	}
 
 	/**
@@ -68,9 +73,10 @@ public class NotFoundException extends RuntimeException {
 	 * @param message the message for the exception.
 	 * @param code a specific code the thrower decided to add
 	 */
-	public NotFoundException(String message, String code ) {
+	public NotFoundException(String identifier, String message, String code ) {
 		super(message);
 		this.code = code;
+		this.identifier = identifier;
 	}
 
 	/**
@@ -79,9 +85,10 @@ public class NotFoundException extends RuntimeException {
 	 * @param code a specific code the thrower decided to add
 	 * @param message the message for the exception
 	 */
-	public NotFoundException(String message, String code, Throwable cause) {
+	public NotFoundException(String identifier, String message, String code, Throwable cause) {
 		super(message, cause);
 		this.code = code;
+		this.identifier = identifier;
 	}
 	
 	/**
@@ -90,5 +97,13 @@ public class NotFoundException extends RuntimeException {
 	 */
 	public String getCode( ) {
 		return code;
+	}
+	
+	/**
+	 * Returns the identifier of the item that could not be found.
+	 * @return the identifier 
+	 */
+	public String getIdentifier( ) {
+		return identifier;
 	}
 }
