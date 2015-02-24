@@ -83,7 +83,7 @@ public class SettingTypeManager extends SerializationTypeManager< SettingType, S
     	settingParameterizedNameValidator = theMemberParameterizedNameValidator == null ? NameManager.getValidator( SettingTypeManager.SETTING_PARAMETERIZED_NAME_VALIDATOR ) : theMemberParameterizedNameValidator;
     			
         Preconditions.checkNotNull( settingNameValidator, "missing a member name validator" );
-		Preconditions.checkNotNull( settingParameterizedNameValidator, "missing a parameterized member ame validator" );
+		Preconditions.checkNotNull( settingParameterizedNameValidator, "missing a parameterized member name validator" );
 
     	setupConfigurationMethods( );
     }

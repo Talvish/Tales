@@ -63,15 +63,15 @@ public class Setting {
 	 */
 	public Setting( SettingDescriptor theSetting, String theRootProfile, String theRootBlock ) {
 		Preconditions.checkArgument( theSetting != null, "Attempting to create a setting without a setting descriptor." );
-		Preconditions.checkArgument( theSetting != null, "Attempting to create setting '%s' without a root profile.", name );
-		Preconditions.checkArgument( theSetting != null, "Attempting to create setting '%s' without a root block.", name );
+		Preconditions.checkArgument( theSetting != null, "Attempting to create setting '%s' without a root profile.", theSetting.getName() );
+		Preconditions.checkArgument( theSetting != null, "Attempting to create setting '%s' without a root block.", theSetting.getName() );
 		// given this is a leaf node in the history this cannot be an override
 		Conditions.checkConfiguration( !theSetting.isOverride(), "Setting '%s' from block '%s.%s' indicates it is an override but hasn't overridden anything. Occurred while processing root block '%s.%s'.", 
 				theSetting.getName( ), 
 				theSetting.getDeclaringBlock().getDeclaringProfile().getName(), 
 				theSetting.getDeclaringBlock().getName( ),
-				rootProfile,
-				rootBlock );
+				theRootProfile,
+				theRootBlock );
 		
 		name = theSetting.getName();
 		description = theSetting.getDescription();

@@ -99,7 +99,11 @@ public class JsonTypeMap {
 					logger.debug( "Ignoring unknown member '{}.{}'", this.getReflectedType().getName(), entry.getKey() );
 				}
 			} else {
-				member.setData( theInstance, entry.getValue( ) );
+				try {
+					member.setData( theInstance, entry.getValue( ) );
+				} catch( TranslationException e ) {
+					throw new TranslationException( String.format( "Error attempting to set data on member '%s.%s'.", this.reflectedType.getName(), member.getReflectedField().getName( ) ), e );
+				}
 			}
 		}
 		// call the deserialized hook (this method verifies the hook is there)

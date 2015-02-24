@@ -62,6 +62,9 @@ public final class ServiceHost {
 		// and if we do, we add a file handling source
 		if( !Strings.isNullOrEmpty( filename ) ) {
 			String profile = configurationManager.getStringValue( "settings.profile", null );
+			// TODO: it would be nice if the default for this was actually the canonical name of the services
+			//       so that the block name wouldn't have to be entered all the time though there is a 
+			//		 slight chicken-egg problem given the service class to instantiate comes from config
 			String block = configurationManager.getStringValue( "settings.block", null );
 			
 			if( !Strings.isNullOrEmpty( profile ) && !Strings.isNullOrEmpty( block ) ) {

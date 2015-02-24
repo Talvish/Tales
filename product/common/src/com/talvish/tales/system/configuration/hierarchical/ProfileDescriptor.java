@@ -287,7 +287,7 @@ class ProfileDescriptor {
 			Conditions.checkConfiguration( includedBlock != null, "Block '%s.%s' could not find included block '%s'. Occurred while processing root block '%s.%s'.", 
 					theBlock.getDeclaringProfile().getName( ), 
 					theBlock.getName(), 
-					includedBlock, 
+					includedBlockName, 
 					theRootProfile.getName( ),
 					theRootBlock.getName( ) );
 			
