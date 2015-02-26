@@ -19,7 +19,6 @@ import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
@@ -336,7 +335,7 @@ public class TokenManager {
 			combinedSegments += ".";
 		}
 		// and now we have our token
-		return new JsonWebToken( theHeaders, theClaims, combinedSegments, true );
+		return new JsonWebToken( theHeaders, theClaims, combinedSegments  );
 	}
 	
 	/**
@@ -397,15 +396,16 @@ public class TokenManager {
 	}
 	
 	/**
-	 * Creates a json web token from a string and an optional secret, which is needed if the token is signed.
+	 * Creates a json web token from a string. This call does not validate the token
+	 * but instead makes the header and claims available for evaluation. A separate
+	 * call should be made to validate.
 	 * <p>
 	 * This call is made when an existing token has been received and the claims are to be used and the
 	 * token needs validation.
 	 * @param theTokenString the string representation of the token to generate into the full tken
-	 * @param theSecret the secret to use to verify the signature of the token, it can be null if signing is not enabled
-	 * @return returns a json web token 
+	 * @return returns an unvalidated json web token 
 	 */
-	public JsonWebToken generateToken( String theTokenString, String theSecret ) {
+	public JsonWebToken generateToken( String theTokenString ) {
 		Preconditions.checkArgument( !Strings.isNullOrEmpty( theTokenString ), "need a token string to generate a token" );
 
 		String[] segments = theTokenString.split( "\\." );
@@ -415,31 +415,7 @@ public class TokenManager {
 		Map<String,Object> claimItems = processSegment( segments[ 1 ] );
 		Map<String,Object> headerItems = processSegment( segments[ 0 ] );
 		
-		// now we verify the signature
-		Object signgingAlgorithmObject = headerItems.get( "alg" );
-		Preconditions.checkNotNull( signgingAlgorithmObject, "the token is missing the signing algorithm" );
-		String signingAlgorithmString = signgingAlgorithmObject.toString( );
-		// it is possible that the fromString call below returns null which means 
-		// 'alg' was 'none' and there wasn't any signing (and that is okay), and 
-		// the fromString will ensure it is a valid value
-		SigningAlgorithm signingAlgorithm = SigningAlgorithm.fromString( signingAlgorithmString );
-		// now that we know the signing algorithm we can verify the segment count (which will change when we do encryption)
-		Preconditions.checkArgument( ( signingAlgorithm == null && segments.length == 2 ) || ( signingAlgorithm != null && segments.length == 3 ), "token contains wrong number of segments" ); 
-		
-		// and finally we check the signatures (assuming it was signed)
-		boolean verified;
-		if( signingAlgorithm != null ) {
-			Preconditions.checkArgument( !Strings.isNullOrEmpty( theSecret ), "signing of type '%s' was indicated but the secret is missing", signingAlgorithm.name( ) );
-			verified = verifySignature( 
-					String.join( ".", segments[ 0 ], segments[ 1 ] ), // we combine these since the signature requires it
-					segments[ 2 ], 
-					theSecret, 
-					signingAlgorithm );
-		} else {
-			verified = true;
-		}
-		
-		return new JsonWebToken( headerItems, claimItems, theTokenString, verified );
+		return new JsonWebToken( headerItems, claimItems, theTokenString, segments );
 	}
 
 	/**
@@ -473,33 +449,5 @@ public class TokenManager {
 			}
 		}
 		return outputItems;
-	}
-	
-	/**
-	 * Helper method that verifies the signature that was part of the of string token.
-	 * @param theCombinedString the data string portions to process for re-signing
-	 * @param theSignature the signature to check against
-	 * @param theSecret the secret to use to reconstruct the signature
-	 * @param theSigningAlgorithm the signing algorithm to use to reconstruct the signature
-	 * @return true means the signature was verified and match, false means it didn't
-	 */
-	private boolean verifySignature( String theCombinedString, String theSignature, String theSecret, SigningAlgorithm theSigningAlgorithm ) {
-		Mac mac;
-		
-		try {
-			mac = Mac.getInstance( theSigningAlgorithm.getJavaName( ) );
-			mac.init( new SecretKeySpec( theSecret.getBytes( utf8 ), theSigningAlgorithm.getJavaName( ) ) );
-			
-			// TODO: consider how to handle secret rotation
-
-			return Arrays.equals( 
-					mac.doFinal( theCombinedString.getBytes( ) ), 
-					base64Decoder.decode( theSignature ) );
-
-		} catch( NoSuchAlgorithmException e ) {
-			throw new IllegalArgumentException( String.format( "Could not find the algorithm to used for the token." ), e );
-		} catch( InvalidKeyException e ) {
-			throw new IllegalStateException( String.format( "Key issues attempting to generate token." ), e );
-		}
 	}
 }
