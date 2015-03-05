@@ -69,9 +69,13 @@ public enum Status {
 	 */
 	CALLER_BAD_VERSION,
 	/**
-	 * The caller did not finish sending data in time.
+	 * The call is not authorized to make the call.
 	 */
 	CALLER_UNAUTHORIZED,
+	/**
+	 * The call is forbidden to make the call.
+	 */
+	CALLER_FORBIDDEN,
 	/**
 	 * The caller is making a request for something that 
 	 * could not be found.

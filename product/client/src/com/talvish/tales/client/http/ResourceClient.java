@@ -63,6 +63,8 @@ import com.talvish.tales.system.Conditions;
  *
  */
 public class ResourceClient {
+	// TODO: for the clients we should allow a way to configure connect times and failure amount/rate and stop using until some other test point (ideally on some form of curve)
+	
 	private static final Logger logger = LoggerFactory.getLogger( ResourceClient.class );
 	
 	protected final HttpClient httpClient;

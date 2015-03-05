@@ -212,6 +212,24 @@ public class CapabilityFamilyDefinition {
 	public Capabilities generateInstance( ) {
 		return new Capabilities( getName( ), new BitSet( capabilityList.size( ) ) );
 	}
+	
+	/**
+	 * Generates the capability set for the family with the named capabilities set to true. 
+	 * @param names the names of the capabilities within the family to set to true
+	 * @return the capabilities
+	 */
+	public Capabilities generateInstance( String ... names ) {
+		Capabilities capabilities = new Capabilities( getName( ), new BitSet( capabilityList.size( ) ) ); 
+		CapabilityDefinition definition;
+		
+		for( String name : names ) {
+			definition = capabilityMap.get( name );
+			Preconditions.checkArgument( definition != null, "capability name '%s' could not be found in family '%s'", name, this.name );
+			capabilities.setCapability( definition.getIndex(), true );
+		}
+
+		return capabilities;
+	}
 
 	/**
 	 * This generates a set of capabilities by combining capabilities from other instances.
@@ -239,6 +257,7 @@ public class CapabilityFamilyDefinition {
 	 * @return the resulting capability set
 	 */
 	public Capabilities generateInstance( BitwiseOperator theOperator, Capabilities ... theSets ) {
+		Preconditions.checkArgument( theOperator != null, "need a bitwise operator" );
 		Preconditions.checkArgument( theSets == null || theSets.length == 0, "need at least one set" );
 
 		// we need to verify that each of the the assignments are on the same family

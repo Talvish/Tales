@@ -210,18 +210,6 @@ public class TokenManager {
 		return this.generateToken( null, theClaims, theSecret, defaultConfiguration );
 	}
 
-	/**
-	 * Creates a json web token from a set of claims and a secret and a set of configuration.
-	 * <p>
-	 * This call is made when a new, never having existed, token is to be created and sent out into the world.
-	 * @param theClaims the claims to be placed into the token
-	 * @param theSecret the secret to use when signing the token, it can be null if signing is not enabled
-	 * @param theConfiguration the configuration to use when creating the tken
-	 * @return returns a json web token 
-	 */
-	public JsonWebToken generateToken( Map<String,Object> theClaims, String theSecret, GenerationConfiguration theConfiguration ) {
-		return this.generateToken( null, theClaims, theSecret, theConfiguration );
-	}
 	// TODO: need to figure out how to handle the secret side better
 	// 		 need to options, a secret may not be sufficient and
 	//		 a secret doesn't help with you need to do some form
@@ -247,21 +235,18 @@ public class TokenManager {
 		if( theConfiguration == null ){
 			theConfiguration = defaultConfiguration;
 		}
+		
+		// first we look at the headers
+		
 		if( theHeaders == null ) {
 			theHeaders = new HashMap<>( );
 		} else {
 			theHeaders = new HashMap<>( theHeaders ); // copying for no side-effects
 		}
-		if( theClaims == null ) {
-			theClaims = new HashMap<>( );
-		} else {
-			theClaims = new HashMap<>( theClaims ); // copying for no side-effects
-		}
 		
 		SigningAlgorithm signingAlgorithm = theConfiguration.getSigningAlgorithm( );	
 		
 		// need to setup the configuration based headers
-
 		// first we have the signing algorithm
 		if( signingAlgorithm != null ) {
 			Preconditions.checkArgument( !Strings.isNullOrEmpty( theSecret ), "signing of type '%s' is configured but the secret is missing", signingAlgorithm.name( ) );
@@ -274,7 +259,14 @@ public class TokenManager {
 		// we now process the map and produce the header segment 
 		String headersSegment = processMap( theHeaders );
 
+		// second we look at the claims
 		
+		if( theClaims == null ) {
+			theClaims = new HashMap<>( );
+		} else {
+			theClaims = new HashMap<>( theClaims ); // copying for no side-effects
+		}
+
 		// need to setup the configuration based claims
 		// if the configuration is not null/false then 
 		// this code over writes the values in the claims
@@ -304,6 +296,150 @@ public class TokenManager {
 		Long expiresIn = theConfiguration.getValidDuration( );
 		if( expiresIn != null ) {
 			theClaims.put( "exp", now + validDelay + expiresIn );
+		}
+		// we generate the json from the passed-in/configured claims 
+		String claimsSegment = processMap( theClaims );		
+		
+		// we create the combined segments that will be signed
+		String combinedSegments = String.join( ".", headersSegment, claimsSegment );
+		
+		
+		// just need to create that final segments, the signature
+		if( signingAlgorithm != null ) {
+			// and now we need sign (using the configuration algorithm)
+			Mac mac;
+			
+			try {
+				mac = Mac.getInstance( signingAlgorithm.getJavaName( ) );
+				mac.init( new SecretKeySpec( theSecret.getBytes( utf8 ), signingAlgorithm.getJavaName( ) ) );
+	
+				byte[] signatureBytes = mac.doFinal( combinedSegments.getBytes( ) );		
+				String signatureSegment = base64Encoder.encodeToString( signatureBytes );
+				combinedSegments = String.join( ".", combinedSegments, signatureSegment );				
+	
+			} catch( NoSuchAlgorithmException e ) {
+				throw new IllegalArgumentException( String.format( "Could not find the algorithm to used for the token." ), e );
+			} catch( InvalidKeyException e ) {
+				throw new IllegalStateException( String.format( "Key issues attempting to generate token." ), e );
+			}
+		} else {
+			// no signing, so slap a dot on the end
+			combinedSegments += ".";
+		}
+		// and now we have our token
+		return new JsonWebToken( theHeaders, theClaims, combinedSegments  );
+	}
+	
+	
+	/**
+	 * Creates a json web token from an previous token, in addition to the new claims and a secret, if signing. This call
+	 * uses the default configuration. The values in the header and claims of the previous token are placed into the new
+	 * token and then the then new claims are added. The new claims will overwrite any existing claims.  Any well known
+	 * claims (e.g. iss, jti, etc) will also not transfer but will be based on the configuration.
+	 * @param theOriginalToken the token to base the new token on
+	 * @param theClaims the claims to be placed into the token
+	 * @param theSecret the secret to use when signing the token, it can be null if signing is not enabled
+	 * @return returns a json web token 
+	 */
+	public JsonWebToken generateToken( JsonWebToken theOriginalToken, Map<String,Object> theClaims, String theSecret ) {
+		return this.generateToken( theOriginalToken, null, theClaims, theSecret, defaultConfiguration );
+	}
+
+	/**
+	 * Creates a json web token from an previous token, in addition to the new claims and a secret, if signing. This call
+	 * uses the default configuration. The values in the header and claims of the previous token are placed into the new
+	 * token and then the then new claims are added. The new claims will overwrite any existing claims.  Any well known
+	 * claims (e.g. iss, jti, etc) will also not transfer but will be based on the configuration.
+	 * In addition it allows you to specify additional headers. This really meant to support the JWT spec where it
+	 * indicates that encrypted tokens can have claims in the header, since the header would be in the clear. Encryption, 
+	 * however, is not yet supported.
+	 * @param theOriginalToken the token to base the new token on
+	 * @param theHeaders the headers to used for the token
+	 * @param theClaims the claims to be placed into the token
+	 * @param theSecret the secret to use when signing the token, it can be null if signing is not enabled
+	 * @param theConfiguration the configuration to use when creating the tken
+	 * @return returns a json web token 
+	 */
+	public JsonWebToken generateToken( JsonWebToken theOriginalToken, Map<String,Object> theHeaders, Map<String,Object> theClaims, String theSecret, GenerationConfiguration theConfiguration ) {
+		// make sure we have defaults if not provided
+		if( theConfiguration == null ){
+			theConfiguration = defaultConfiguration;
+		}
+
+		// first we look at the headers
+		
+		// for headers, we simply take the original (since the alg algorithm will overwrite any existing value)
+		if( theHeaders == null ) {
+			theHeaders = new HashMap<>( theOriginalToken.getHeaders( ) );
+		} else {
+			theHeaders = new HashMap<>( theHeaders );
+			theHeaders.putAll( theOriginalToken.getHeaders( ) );
+		}
+		
+		SigningAlgorithm signingAlgorithm = theConfiguration.getSigningAlgorithm( );	
+		
+		// need to setup the configuration based headers
+
+		// first we have the signing algorithm
+		if( signingAlgorithm != null ) {
+			Preconditions.checkArgument( !Strings.isNullOrEmpty( theSecret ), "signing of type '%s' is configured but the secret is missing", signingAlgorithm.name( ) );
+			theHeaders.put( "alg", signingAlgorithm.name( ) );
+		} else {
+			theHeaders.put( "alg", "none" );
+		}
+		// not putting in the following because it is only needed when doing encryption (and value would be 'JWE')
+		// theHeaders.put( "typ",  "JWT" );
+		// we now process the map and produce the header segment 
+		String headersSegment = processMap( theHeaders );
+
+		// second we look at the claims
+
+		// for claims we copy the original and then reset any important well known claims below
+		if( theClaims == null ) {
+			theClaims = new HashMap<>( theOriginalToken.getClaims( ) );
+		} else {
+			theClaims = new HashMap<>( theClaims );
+			theClaims.putAll( theOriginalToken.getClaims( ) );
+		}
+
+		// need to setup the configuration based claims
+		// if the configuration is not null/false then 
+		// this code over writes the values in the claims
+		// but if null/false then the developer using 
+		// this method can use their own values by 
+		// setting the values in the map parameters
+		
+		// the indication of who issues the token
+		if( theConfiguration.getIssuer( ) != null ) {
+			theClaims.put( "iss",  theConfiguration.getIssuer( ) );
+		} else {
+			theClaims.remove( "iss" );
+		}
+		// unique id (if configured)
+		if( theConfiguration.shouldGenerateId() ) {
+			theClaims.put( "jti", UUID.randomUUID().toString( ) );
+		} else {
+			theClaims.remove( "jti" );
+		}
+		// some timing based configuration
+		long now = System.currentTimeMillis( ) / 1000l;
+		if( theConfiguration.shouldIncludeIssuedTime( ) ) {
+			theClaims.put( "iat", now );
+		} else {
+			theClaims.remove( "iat" );
+		}
+		Long validDelay = theConfiguration.getValidDelayDuration( );
+		if( validDelay != null ) {
+			theClaims.put( "nbf",  now + validDelay );
+		} else {
+			theClaims.remove( "nbf" );
+			validDelay = 0l; // we set this for the expiration below
+		}
+		Long expiresIn = theConfiguration.getValidDuration( );
+		if( expiresIn != null ) {
+			theClaims.put( "exp", now + validDelay + expiresIn );
+		} else {
+			theClaims.remove( "exp" );
 		}
 		// we generate the json from the passed-in/configured claims 
 		String claimsSegment = processMap( theClaims );		
@@ -428,6 +564,8 @@ public class TokenManager {
 		Map<String,Object> outputItems = new HashMap<>( );
 		JsonTypeReference claimHandler;
 
+		// TODO: we need to put better handling around this for json exceptions and decoder exceptions
+		//		 I want to through a translation exception in this case
 		JsonObject inputJson = ( JsonObject )jsonParser.parse( new String( base64Decoder.decode( theSegment ), utf8 ) );
 		for( Entry<String,JsonElement> entry : inputJson.entrySet( ) ) {
 			claimHandler = this.claimHandlers.get( entry.getKey( ) );

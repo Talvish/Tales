@@ -169,6 +169,8 @@ public enum HttpStatus {
 			return HttpStatus.CLIENT_BAD_DATA;
 		case CALLER_UNAUTHORIZED:
 			return HttpStatus.CLIENT_UNAUTHORIZED;
+		case CALLER_FORBIDDEN:
+			return HttpStatus.CLIENT_FORBIDDEN;
 		case CALLER_NOT_FOUND:
 			return HttpStatus.CLIENT_NOT_FOUND;
 		case CALLER_TIMEOUT:
