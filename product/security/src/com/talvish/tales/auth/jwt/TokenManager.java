@@ -39,7 +39,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
-
+import com.talvish.tales.auth.capabilities.Capabilities;
 import com.talvish.tales.auth.capabilities.StringToTokenCapabilityTranslator;
 import com.talvish.tales.auth.capabilities.TokenCapabilityToStringTranslator;
 import com.talvish.tales.contracts.data.DataContractTypeSource;
@@ -83,7 +83,7 @@ public class TokenManager {
 	
 	private final GenerationConfiguration defaultConfiguration;
 	private final JsonTranslationFacility translationFacility;
-	private final Map<String,JsonTypeReference> claimHandlers = new HashMap<>( );
+	private final Map<String,ClaimDetails> claimHandlers = new HashMap<>( );
 
 	
 	/**
@@ -125,7 +125,8 @@ public class TokenManager {
 
 		_registerClaim( 
 				"aud", 
-				new JsonTypeReference( 
+				null,
+	        	new JsonTypeReference( 
 	        			new JavaType( String[].class ), 
 	        			"list[string]",
 	        			new JsonArrayToArrayTranslator( elementType.getUnderlyingClass(), elementTypeReference.getFromJsonTranslator(), true ),
@@ -146,6 +147,7 @@ public class TokenManager {
 
 		_registerClaim(
 				theClaimName, 
+				null,
 				translationFacility.getTypeReference( new JavaType( theType ) ) );
 	}
 
@@ -162,6 +164,7 @@ public class TokenManager {
 
 		_registerClaim( 
 				theClaimName, 
+				null, 
 				theTypeReference );
 	}
 
@@ -177,9 +180,10 @@ public class TokenManager {
 
 		_registerClaim( 
 				theClaimName,
+				theCapabilityFamily,
 				new JsonTypeReference( 
-						new JavaType( String.class ),
-						"capabilities:string",
+						new JavaType( Capabilities.class ),
+						"capabilities : string",
 						new JsonElementToStringToChainTranslator( new StringToTokenCapabilityTranslator( theCapabilityFamily ) ),
 						new ChainToStringToJsonPrimitiveTranslator( new TokenCapabilityToStringTranslator( ) ) ) );						
 	}
@@ -187,14 +191,26 @@ public class TokenManager {
 	/**
 	 * Private registration mechanism used by the public version and the constructor. 
 	 * @param theClaimName the name of the claim to associate with a type
+	 * @param theCapabilityFamily the family for the capability, if the claim represents capabilities
 	 * @param theTypeReference the type reference of the claim, which means the system will attempt to translate to and from 
 	 */
-	private final void _registerClaim( String theClaimName, JsonTypeReference theTypeReference ) {
+	private final void _registerClaim( String theClaimName, String theCapabilityFamily, JsonTypeReference theTypeReference ) {
 		// we register the handler and not type since it speeds up the runtime slightly 
 		// and does give us more options for if we want more custom handling of claims
 		claimHandlers.put( 
 				theClaimName, 
-				theTypeReference ); 
+				new ClaimDetails( theClaimName, theCapabilityFamily, theTypeReference ) ); 
+	}
+	
+	/**
+	 * Returns the details around a particular claim. 
+	 * This only returns details for claims that have been registered.
+	 * @param theName the name of claim to get details for.
+	 * @return the details for the claim or null if the claim wasn't registered
+	 */
+	public ClaimDetails getRegisteredClaim( String theName ) {
+		Preconditions.checkArgument( !Strings.isNullOrEmpty( theName ), "need a name to get claim details" );
+		return claimHandlers.get( theName );
 	}
 
 	/**
@@ -482,16 +498,16 @@ public class TokenManager {
 	 * @return the utf-8, json, based64 encoded string of the claims
 	 */
 	private String processMap( Map<String,Object> theMap  ) {
-		JsonTypeReference claimHandler;
+		ClaimDetails claimDetails;
 		JsonObject outputJson = new JsonObject( );
 
 		for( Entry<String,Object> entry : theMap.entrySet() ) {
 			// quick note, the JWT spec says headers and claims shouldn't have
 			// duplicates but apps allow it so there is no attempt to enforce
-			claimHandler = this.claimHandlers.get( entry.getKey( ) );
-			if( claimHandler != null ) {
+			claimDetails = this.claimHandlers.get( entry.getKey( ) );
+			if( claimDetails != null ) {
 				try {
-					outputJson.add( entry.getKey( ), ( JsonElement )claimHandler.getToJsonTranslator( ).translate( entry.getValue( ) ) );
+					outputJson.add( entry.getKey( ), ( JsonElement )claimDetails.getTypeReference( ).getToJsonTranslator( ).translate( entry.getValue( ) ) );
 				} catch( TranslationException e ) {
 					// this will help with understanding problems ...
 					throw new IllegalArgumentException( String.format( "Claim '%s' is using a custom translation that failed to translate the associated value.", entry.getKey( ) ), e );
@@ -562,15 +578,15 @@ public class TokenManager {
 	 */
 	private Map<String,Object> processSegment( String theSegment ) {
 		Map<String,Object> outputItems = new HashMap<>( );
-		JsonTypeReference claimHandler;
+		ClaimDetails claimDetails;
 
 		// TODO: we need to put better handling around this for json exceptions and decoder exceptions
 		//		 I want to through a translation exception in this case
 		JsonObject inputJson = ( JsonObject )jsonParser.parse( new String( base64Decoder.decode( theSegment ), utf8 ) );
 		for( Entry<String,JsonElement> entry : inputJson.entrySet( ) ) {
-			claimHandler = this.claimHandlers.get( entry.getKey( ) );
-			if( claimHandler != null ) {
-				outputItems.put( entry.getKey(), claimHandler.getFromJsonTranslator().translate( entry.getValue() ) );
+			claimDetails = this.claimHandlers.get( entry.getKey( ) );
+			if( claimDetails != null ) {
+				outputItems.put( entry.getKey(), claimDetails.getTypeReference().getFromJsonTranslator().translate( entry.getValue() ) );
 			} else if( entry.getValue( ).isJsonPrimitive( ) ) {
 				JsonPrimitive primitiveJson = ( JsonPrimitive )entry.getValue( );
 				if( primitiveJson.isString( ) ) {

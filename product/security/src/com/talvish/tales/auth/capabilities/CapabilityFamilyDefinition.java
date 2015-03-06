@@ -78,12 +78,20 @@ public class CapabilityFamilyDefinition {
 	protected CapabilityFamilyDefinition( ) {
 		
 	}
-	
+
 	/**
 	 * The constructor for the group representing the definition.
-	 * @param theName
-	 * @param theDescription
-	 * @param theCapabilities
+	 * @param theName the to give the family
+	 * @param theCapabilities the definitions for individual capabilities
+	 */
+	public CapabilityFamilyDefinition( String theName, CapabilityDefinition... theCapabilities ) {
+		this( theName, Arrays.asList( theCapabilities ) );
+		
+	}
+	/**
+	 * The constructor for the group representing the definition.
+	 * @param theName the to give the family
+	 * @param theCapabilities the definitions for individual capabilities
 	 */
 	public CapabilityFamilyDefinition( String theName, Collection<CapabilityDefinition> theCapabilities ) {
 		NameValidator nameValidator = NameManager.getValidator( NAME_VALIDATOR );
@@ -110,7 +118,7 @@ public class CapabilityFamilyDefinition {
 		// and now we put the capabilities into the array that is ultimately used
 		for( CapabilityDefinition capabilityDefinition : theCapabilities ) {
 			Preconditions.checkArgument( capabilityDefinition.getFamily().equals( name ), "Capability '%s.%s' uses a different family name than the familiy name '%s'.", capabilityDefinition.getFamily(), capabilityDefinition.getName(), name );
-			Preconditions.checkArgument( array[ capabilityDefinition.getIndex( ) ] != null, "Capability '%s.%s' is set to use index %s, which is already set with '%s'.", capabilityDefinition.getFamily(), capabilityDefinition.getName(), capabilityDefinition.getIndex(), array[ capabilityDefinition.getIndex( ) ].getName( ) );
+			Preconditions.checkArgument( array[ capabilityDefinition.getIndex( ) ] == null, "Capability '%s.%s' is set to use index %s, but the index has already been set.", capabilityDefinition.getFamily(), capabilityDefinition.getName(), capabilityDefinition.getIndex( ) );
 			Preconditions.checkArgument( !capabilityMap.containsKey( capabilityDefinition.getName( ) ), "Capability '%s.%s' has already been defined.", capabilityDefinition.getFamily(), capabilityDefinition.getName() );
 			
 			array[ capabilityDefinition.getIndex( ) ] = capabilityDefinition;

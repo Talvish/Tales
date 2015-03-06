@@ -26,11 +26,15 @@ import java.util.Map.Entry;
 
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.google.common.base.Preconditions;
 
+
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.talvish.tales.auth.capabilities.CapabilityDefinitionManager;
 import com.talvish.tales.auth.capabilities.CapabilityFamilyDefinition;
+import com.talvish.tales.auth.jwt.ClaimDetails;
 import com.talvish.tales.auth.jwt.JsonWebToken;
+import com.talvish.tales.auth.jwt.TokenManager;
 
 /**
  * This class is used to verify that the caller of methods has the appropriate
@@ -41,7 +45,9 @@ import com.talvish.tales.auth.jwt.JsonWebToken;
  * @param <R> The type of access result. Subclasses can override the AcessResult to provide additional data that the base class does not.
  */
 public abstract class AccessControlManager<R extends AccessResult> {
-	private CapabilityDefinitionManager capabilityDefinitionManager;
+	private final TokenManager tokenManager;
+	private final CapabilityDefinitionManager capabilityDefinitionManager;
+	
 	private final Map<Class<? extends Annotation>, AnnotationHandler> annotationHandlers = new ConcurrentHashMap<>( 8, 0.75f, 1 );
 	private final Map<Class<? extends Annotation>, AnnotationHandler> externalAnnotationHandlers = Collections.unmodifiableMap( annotationHandlers );
 
@@ -51,10 +57,12 @@ public abstract class AccessControlManager<R extends AccessResult> {
 	 * The base constructor that takes the required capability definition manager.
 	 * @param theDefinitionManager the capability definition manager.
 	 */
-	public AccessControlManager( CapabilityDefinitionManager theDefinitionManager ) {
+	public AccessControlManager( CapabilityDefinitionManager theDefinitionManager, TokenManager theTokenManager ) {
 		Preconditions.checkNotNull( theDefinitionManager, "need a capability definition manager" );
+		Preconditions.checkNotNull( theTokenManager, "need a token manager" );
 
 		capabilityDefinitionManager = theDefinitionManager;
+		tokenManager = theTokenManager;
 		
 		registerAnnotationHandler( ClaimsAbsent.class, ( method, descriptor, manager ) -> {
 			ClaimsAbsent annotation = method.getAnnotation( ClaimsAbsent.class );
@@ -84,25 +92,32 @@ public abstract class AccessControlManager<R extends AccessResult> {
 		registerAnnotationHandler( CapabilitiesRequired.class, ( method, descriptor, manager ) -> {
 			CapabilitiesRequired[] annotations = method.getAnnotationsByType( CapabilitiesRequired.class );
 			for( CapabilitiesRequired annotation : annotations ) {
+				String claim = annotation.claim();
+				ClaimDetails claimDetails = tokenManager.getRegisteredClaim( claim );
+				Preconditions.checkNotNull( claimDetails, "method '%s.%s' is trying to use annotation '%s' but refers to an unregistered claim '%s'", method.getDeclaringClass().getSimpleName(), method.getName( ), annotation.annotationType( ).getSimpleName( ), claim );
+				Preconditions.checkNotNull( !Strings.isNullOrEmpty( claimDetails.getCapabilityFamily( ) ), "method '%s.%s' is trying to use annotation '%s' but refers to a claim '%s' that is not a capability", method.getDeclaringClass().getSimpleName(), method.getName( ), annotation.annotationType( ).getSimpleName( ), claim );
+				
+				String family = claimDetails.getCapabilityFamily( );
+				CapabilityFamilyDefinition capabilityFamily = manager.getCapabilityDefinitionManager().getFamily( family );
+				Preconditions.checkArgument( capabilityFamily != null, "method '%s.%s' is trying to use annotation '%s' but refers to a claim '%s' that is associated with the family, '%s', but that family does not exist", method.getDeclaringClass().getSimpleName(), method.getName( ), annotation.annotationType( ).getSimpleName( ), claim, family );
+				
 				if( annotation.capabilities().length == 1 ) {
 					String capabilityName = annotation.capabilities()[ 0 ];
-					CapabilityFamilyDefinition capabilityFamily = manager.getCapabilityDefinitionManager().getFamily( annotation.family( ) );
-					Preconditions.checkArgument( capabilityFamily != null, "method '%s.%s' is trying to use annotation '%s' but refers to a family, '%s', that does not exist", method.getDeclaringClass().getSimpleName(), method.getName( ), annotation.getClass().getSimpleName( ), annotation.family( ) );
-					Preconditions.checkArgument( capabilityFamily.isDefined( capabilityName ), "method '%s.%s' is trying to use annotation '%s' but refers to a capability, '%s.%s', that does not exist", method.getDeclaringClass().getSimpleName(), method.getName( ), annotation.getClass().getSimpleName( ), annotation.family( ), capabilityName );
+					Preconditions.checkArgument( capabilityFamily.isDefined( capabilityName ), "method '%s.%s' is trying to use annotation '%s' but refers to a claim '%s' with the capability, '%s.%s', but that capability does not exist", method.getDeclaringClass().getSimpleName(), method.getName( ), annotation.annotationType( ).getSimpleName( ), claim, family, capabilityName );
 							
 					int capabilityIndex = capabilityFamily.getCapability( capabilityName ).getIndex( );
 					
 					descriptor.addVerifier( 
-							new CapabilityRequiredVerifier( 
-									annotation.family(), 
+							new CapabilityRequiredVerifier(
+									claim,
+									family,
 									capabilityName,
 									capabilityIndex ) );
 				} else if( annotation.capabilities().length > 1 ) {
-					CapabilityFamilyDefinition capabilityFamily = manager.getCapabilityDefinitionManager().getFamily( annotation.family( ) );
-					Preconditions.checkArgument( capabilityFamily != null, "method '%s.%s' is trying to use annotation '%s' but refers to a family, '%s', that does not exist", method.getDeclaringClass().getSimpleName(), method.getName( ), annotation.getClass().getSimpleName( ), annotation.family( ) );
-
 					descriptor.addVerifier( 
-							new CapabilitiesRequiredVerifier( capabilityFamily.generateInstance( annotation.capabilities( ) ) ) );
+							new CapabilitiesRequiredVerifier( 
+									family, 
+									capabilityFamily.generateInstance( annotation.capabilities( ) ) ) );
 				}
 			}
 		} );
@@ -115,6 +130,15 @@ public abstract class AccessControlManager<R extends AccessResult> {
 	 */
 	public CapabilityDefinitionManager getCapabilityDefinitionManager( ) {
 		return capabilityDefinitionManager;
+	}
+	
+	/**
+	 * The token manager, which has claim definitions and claim to capability
+	 * family mapping.
+	 * @return the token manager
+	 */
+	public TokenManager getTokenManager( ) {
+		return tokenManager;
 	}
 
 	/**

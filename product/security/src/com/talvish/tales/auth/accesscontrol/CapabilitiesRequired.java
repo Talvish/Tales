@@ -32,10 +32,12 @@ import java.lang.annotation.Target;
 @Target( ElementType.METHOD )
 public @interface CapabilitiesRequired {
 	/**
-	 * The capability family the capabilities are from. 
-	 * @return the capability family
+	 * The claim that holds capabilities for a particular capability family. 
+	 * This is not the same as the family. To get the capability family
+	 * the associated TokenManager must be consulted.
+	 * @return the claim name the capabilities are found within
 	 */
-	String family( );
+	String claim( );
 	
 	/**
 	 * The names of the capabilities required.

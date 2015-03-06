@@ -21,13 +21,14 @@ import com.talvish.tales.auth.capabilities.Capabilities;
 import com.talvish.tales.auth.jwt.JsonWebToken;
 
 /**
- * Checks a json web token for the existence of a particular 
- * capability. If you are looking to check three, maybe two, or more
- * capabilities from a particular family, use <code>CapabilitiesRequiredVerifier</code>
+ * Checks a json web token for the existence of a particular claim that has a particular 
+ * capability set. If you are looking to check three, maybe two, or more capabilities 
+ * from a particular family, use <code>CapabilitiesRequiredVerifier</code>
  * @author jmolnar
  *
  */
 public class CapabilityRequiredVerifier implements ClaimVerifier {
+	private String claim;
 	private String family;
 	private String capabilityName;
 	private int capabilityIndex;
@@ -38,14 +39,48 @@ public class CapabilityRequiredVerifier implements ClaimVerifier {
 	 * @param theCapabilityName the name given to the index, this is only used for error reporting
 	 * @param theCapabilityIndex the index of the capability to check for
 	 */
-	public CapabilityRequiredVerifier( String theFamily, String theCapabilityName, int theCapabilityIndex ) {
-		Preconditions.checkArgument( !Strings.isNullOrEmpty( theFamily ), "need the family to check for" );
-		Preconditions.checkArgument( !Strings.isNullOrEmpty( capabilityName ), "cannot check in family '%s' for an unknown capability", theFamily );
-		Preconditions.checkArgument( theCapabilityIndex > 0, "cannot check in family '%s' for capability '%s' with index '%s' since it is not greater than zero", theFamily, theCapabilityName, theCapabilityIndex );
+	public CapabilityRequiredVerifier( String theClaim, String theFamily, String theCapabilityName, int theCapabilityIndex ) {
+		Preconditions.checkArgument( !Strings.isNullOrEmpty( theClaim ), "need a claim to check for" );
+		Preconditions.checkArgument( !Strings.isNullOrEmpty( theFamily ), "need the family associated with the claim '%s'", theClaim );
+		Preconditions.checkArgument( !Strings.isNullOrEmpty( theCapabilityName ), "cannot check in family '%s', associated with claim '%s', for an unknown capability", theFamily, theClaim );
+		Preconditions.checkArgument( theCapabilityIndex > 0, "cannot check in family '%s', associated with claim '%s', for capability '%s' with index '%s' since it is not greater than zero", theFamily, theClaim, theCapabilityName, theCapabilityIndex );
 		
+		claim = theClaim;
 		family = theFamily;
 		capabilityIndex = theCapabilityIndex;
 		capabilityName = theCapabilityName;
+	}
+	
+	/**
+	 * The claim the capability is found within. 
+	 * @return the claim
+	 */
+	public String getClaim( ) {
+		return claim;
+	}
+	
+	/**
+	 * The family that is associated with the specified claim.
+	 * @return the family
+	 */
+	public String getFamily( ) {
+		return family;
+	}
+	
+	/**
+	 * The capability name of the capability to check for within the claim.
+	 * @return the capability name
+	 */
+	public String getCapabilityName( ) {
+		return capabilityName;
+	}
+
+	/**
+	 * The index of the capability to check for within the claim.
+	 * @return the capability index
+	 */
+	public int getCapabilityIndex( ) {
+		return capabilityIndex;
 	}
 	
 	/**
@@ -53,12 +88,11 @@ public class CapabilityRequiredVerifier implements ClaimVerifier {
 	 */
 	@Override
 	public void verify( JsonWebToken theToken, AccessResult theResult ) {
-		// TODO: need to figure out the family to claim conversion
 		Capabilities tokenCapabilities = ( Capabilities )theToken.getClaims( ).get( family );
 		if( tokenCapabilities == null ) {
-			theResult.setResult( AccessStatus.MISSING_CLAIM, "claim '%s' is missing", family );
+			theResult.setResult( AccessStatus.MISSING_CLAIM, "claim '%s' is missing", claim );
 		} else if( !tokenCapabilities.hasCapability( capabilityIndex ) ) {
-			theResult.setResult( AccessStatus.MISSING_CAPABILITIES, "capability '%s.%s' is missing", family, capabilityName );
+			theResult.setResult( AccessStatus.MISSING_CAPABILITIES, "capability '%s.%s' (index '%s') is missing from claim '%s'", family, capabilityName, capabilityIndex, claim );
 		} else {
 			theResult.setResult( AccessStatus.VERIFIED );
 		}

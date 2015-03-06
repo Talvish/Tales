@@ -16,9 +16,9 @@
 package com.talvish.tales.auth.accesscontrol;
 
 import com.google.common.base.Preconditions;
-
 import com.talvish.tales.auth.capabilities.CapabilityDefinitionManager;
 import com.talvish.tales.auth.jwt.JsonWebToken;
+import com.talvish.tales.auth.jwt.TokenManager;
 
 /**
  * An implementation of the access control manager that uses as well known
@@ -33,9 +33,10 @@ public class SimpleAccessControlManager extends AccessControlManager<AccessResul
 	 * Constructor taking the capability definition family and needed secret.
 	 * @param theSecret the secret to use to verify tokens
 	 * @param theDefinitionManager the capability definition manager.
+	 * @param theTokenManager the token manager
 	 */
-	public SimpleAccessControlManager( String theSecret, CapabilityDefinitionManager theDefinitionManager ) {
-		super( theDefinitionManager );
+	public SimpleAccessControlManager( String theSecret, CapabilityDefinitionManager theDefinitionManager, TokenManager theTokenManager ) {
+		super( theDefinitionManager, theTokenManager );
 		secret = theSecret;
 	}
 	
