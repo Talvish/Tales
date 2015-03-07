@@ -66,7 +66,7 @@ public class CapabilitiesRequiredVerifier implements ClaimVerifier {
 	 */
 	@Override
 	public void verify( JsonWebToken theToken, AccessResult theResult ) {
-		Capabilities tokenCapabilities = ( Capabilities )theToken.getClaims( ).get( capabilities.getFamily( ) );
+		Capabilities tokenCapabilities = ( Capabilities )theToken.getClaims( ).get( claim );
 		if( tokenCapabilities == null ) {
 			theResult.setResult( AccessStatus.MISSING_CLAIM, "claim '%s' is missing", claim );
 		} else {

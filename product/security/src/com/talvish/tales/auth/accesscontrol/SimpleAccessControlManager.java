@@ -22,7 +22,7 @@ import com.talvish.tales.auth.jwt.TokenManager;
 
 /**
  * An implementation of the access control manager that uses as well known
- * hard-fixed string as the secret for checking access tokens. 
+ * hard-fixed string as the secret for checking the signature of access tokens. 
  * @author jmolnar
  *
  */

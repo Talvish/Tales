@@ -116,7 +116,7 @@ public abstract class AccessControlManager<R extends AccessResult> {
 				} else if( annotation.capabilities().length > 1 ) {
 					descriptor.addVerifier( 
 							new CapabilitiesRequiredVerifier( 
-									family, 
+									claim, 
 									capabilityFamily.generateInstance( annotation.capabilities( ) ) ) );
 				}
 			}
@@ -220,7 +220,11 @@ public abstract class AccessControlManager<R extends AccessResult> {
 	
 	/**
 	 * The method that is called to verify that token has a valid shape and that the claims and
-	 * capabilities required by the method are in the auth token. 
+	 * capabilities required by the method are in the auth token. This is the method that needs
+	 * to be created that will doing signing verification. Sophisticated models based on 
+	 * app-specific secrets or keys are not provided here, but must be built. Tales includes a 
+	 * class called <code>SimpleAccessControlManager</code> which will do signing verification 
+	 * but assumes all verifications use the same secret.
 	 * @param theMethod the method that is being accessed
 	 * @param theToken the token that has the claims and capabilities to check
 	 * @return the <code>AccessResult</code> outlining the success or failure of the request to execute the specified method
