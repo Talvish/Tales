@@ -37,6 +37,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 import com.talvish.tales.auth.capabilities.Capabilities;
@@ -563,9 +564,12 @@ public class TokenManager {
 		String[] segments = theTokenString.split( "\\." );
 		Preconditions.checkArgument( segments.length >= 2, "token contains wrong number of segments" ); 
 
+		Map<String,Object> claimItems = null;
+		Map<String,Object> headerItems = null;
+		
 		// need to process the items in the header and claims
-		Map<String,Object> claimItems = processSegment( segments[ 1 ] );
-		Map<String,Object> headerItems = processSegment( segments[ 0 ] );
+		claimItems = processSegment( segments[ 1 ], 1 );
+		headerItems = processSegment( segments[ 0 ], 0 );
 		
 		return new JsonWebToken( headerItems, claimItems, theTokenString, segments );
 	}
@@ -576,30 +580,44 @@ public class TokenManager {
 	 * @param theSegment the segment to process
 	 * @return the map of values generated from the segment
 	 */
-	private Map<String,Object> processSegment( String theSegment ) {
+	private Map<String,Object> processSegment( String theSegment, int theSegmentIndex ) {
 		Map<String,Object> outputItems = new HashMap<>( );
 		ClaimDetails claimDetails;
-
-		// TODO: we need to put better handling around this for json exceptions and decoder exceptions
-		//		 I want to through a translation exception in this case
-		JsonObject inputJson = ( JsonObject )jsonParser.parse( new String( base64Decoder.decode( theSegment ), utf8 ) );
-		for( Entry<String,JsonElement> entry : inputJson.entrySet( ) ) {
-			claimDetails = this.claimHandlers.get( entry.getKey( ) );
-			if( claimDetails != null ) {
-				outputItems.put( entry.getKey(), claimDetails.getTypeReference().getFromJsonTranslator().translate( entry.getValue() ) );
-			} else if( entry.getValue( ).isJsonPrimitive( ) ) {
-				JsonPrimitive primitiveJson = ( JsonPrimitive )entry.getValue( );
-				if( primitiveJson.isString( ) ) {
-					outputItems.put( entry.getKey(), primitiveJson.getAsString( ) );
-				} else if( primitiveJson.isNumber( ) ) {
-					outputItems.put( entry.getKey(), primitiveJson.getAsNumber( ) );
-				} else if( primitiveJson.isBoolean( ) ) {
-					outputItems.put( entry.getKey(), primitiveJson.getAsBoolean( ) );
+		String claimName = null;
+		JsonElement claimValue = null;
+		
+		try {
+			JsonObject inputJson = ( JsonObject )jsonParser.parse( new String( base64Decoder.decode( theSegment ), utf8 ) );
+			for( Entry<String,JsonElement> entry : inputJson.entrySet( ) ) {
+				claimName = entry.getKey();
+				claimValue = entry.getValue();
+				claimDetails = this.claimHandlers.get( claimName );
+				if( claimDetails != null ) {
+					outputItems.put( claimName, claimDetails.getTypeReference().getFromJsonTranslator().translate( claimValue ) );
+				} else if( claimValue.isJsonPrimitive( ) ) {
+					JsonPrimitive primitiveJson = ( JsonPrimitive )claimValue;
+					if( primitiveJson.isString( ) ) {
+						outputItems.put( claimName, primitiveJson.getAsString( ) );
+					} else if( primitiveJson.isNumber( ) ) {
+						outputItems.put( claimName, primitiveJson.getAsNumber( ) );
+					} else if( primitiveJson.isBoolean( ) ) {
+						outputItems.put( claimName, primitiveJson.getAsBoolean( ) );
+					} else {
+						throw new IllegalArgumentException( String.format( "Claim '%s' is a primitive json type with value '%s', which has no mechanism for translation.", claimName, claimValue.getAsString() ) );	
+					}
 				} else {
-					throw new IllegalArgumentException( String.format( "Claim '%s' is a primitive json type with value '%s', which has no mechanism for translation.", entry.getKey(), primitiveJson.getAsString() ) );	
+					throw new IllegalArgumentException( String.format( "Claim '%s' is not a primitive json type with value '%s', which has no mechanism for translation.", claimName, claimValue.getAsString() ) );
 				}
+			}
+		} catch( JsonParseException e ) {
+			throw new IllegalArgumentException( String.format( "Segment '%d' contains invalid json.", theSegmentIndex ), e );
+		} catch( TranslationException e ) {
+			// claim name will be set if we have this exception, if not it will be null and will not cause a problem
+			// but to be safe for the value, which should also be not null, we check so no exceptions are thrown
+			if( claimValue != null ) {
+				throw new IllegalArgumentException( String.format( "Claim '%s' in segment '%d' contains invalid data '%s'.", claimName, theSegmentIndex, claimValue.getAsString( ) ), e );
 			} else {
-				throw new IllegalArgumentException( String.format( "Claim '%s' is not a primitive json type with value '%s', which has no mechanism for translation.", entry.getKey(), entry.getValue( ).getAsString() ) );
+				throw new IllegalArgumentException( String.format( "Claim '%s' in segment '%d' contains invalid data.", claimName, theSegmentIndex ), e );
 			}
 		}
 		return outputItems;

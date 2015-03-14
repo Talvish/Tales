@@ -100,7 +100,7 @@ public class JsonWebToken {
 			if( extractedObject instanceof Number ) {
 				extractedValue = ( ( Number )extractedObject ).longValue();
 			} else {
-				throw new IllegalStateException( String.format( "The claim '%s' has value '%s' instead of a long", theClaim, extractedObject ) );
+				throw new IllegalArgumentException( String.format( "The claim '%s' has value '%s' instead of a long", theClaim, extractedObject ) );
 			}
 		}
 		return extractedValue;
