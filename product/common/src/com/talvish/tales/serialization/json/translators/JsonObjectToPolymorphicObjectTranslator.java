@@ -26,21 +26,21 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.talvish.tales.parts.translators.TranslationException;
 import com.talvish.tales.parts.translators.Translator;
-import com.talvish.tales.serialization.json.JsonTypeReference;
+import com.talvish.tales.serialization.TypeFormatAdapter;
 
 public class JsonObjectToPolymorphicObjectTranslator implements Translator {
-	private final Map<String, JsonTypeReference> typeReferences = new HashMap<>( 2 );
+	private final Map<String, TypeFormatAdapter> typeAdapters = new HashMap<>( 2 );
 
 	/**
-	 * Constructor taking the needed references.
+	 * Constructor taking the needed adapters.
 	 */
-	public JsonObjectToPolymorphicObjectTranslator( List<JsonTypeReference> theTypeReferences ) {
-		Preconditions.checkNotNull( theTypeReferences );
-		Preconditions.checkArgument( theTypeReferences.size( ) > 0, "Need at least one value type reference." );
+	public JsonObjectToPolymorphicObjectTranslator( List<TypeFormatAdapter> theTypeAdapters ) {
+		Preconditions.checkNotNull( theTypeAdapters );
+		Preconditions.checkArgument( theTypeAdapters.size( ) > 0, "Need at least one value type adapter." );
 
-		for( JsonTypeReference typeReference : theTypeReferences ) {
-			Preconditions.checkArgument( !typeReferences.containsKey( typeReference.getName()), String.format( "Attempting to add type reference '%s' more than once.", typeReference.getType( ).getName()));
-			typeReferences.put( typeReference.getName( ), typeReference );
+		for( TypeFormatAdapter typeAdapter : theTypeAdapters ) {
+			Preconditions.checkArgument( !typeAdapters.containsKey( typeAdapter.getName()), String.format( "Attempting to add type adapter '%s' more than once.", typeAdapter.getType( ).getName()));
+			typeAdapters.put( typeAdapter.getName( ), typeAdapter );
 		}
 	}
 
@@ -69,12 +69,12 @@ public class JsonObjectToPolymorphicObjectTranslator implements Translator {
 					throw new TranslationException( String.format( "The associate value for type '%s' is missing.", valueTypeJson.getAsString() ) );
 				} else {
 					String valueTypeString = valueTypeJson.getAsString();
-					JsonTypeReference typeReference = typeReferences.get( valueTypeString );
+					TypeFormatAdapter typeAdapter = typeAdapters.get( valueTypeString );
 					
-					if( typeReference == null ) {
+					if( typeAdapter == null ) {
 						throw new TranslationException( String.format( "Json is referring to a type '%s' that isn't supported.", valueTypeString ) );
 					} else {
-						returnValue = typeReference.getFromJsonTranslator().translate( valueJson );
+						returnValue = typeAdapter.getFromFormatTranslator().translate( valueJson );
 					}
 				}
 

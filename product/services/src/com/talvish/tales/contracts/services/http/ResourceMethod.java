@@ -56,8 +56,8 @@ import com.talvish.tales.parts.sites.DataSiteException;
 import com.talvish.tales.parts.translators.TranslationException;
 import com.talvish.tales.parts.translators.Translator;
 import com.talvish.tales.serialization.Readability;
+import com.talvish.tales.serialization.TypeFormatAdapter;
 import com.talvish.tales.serialization.UrlEncoding;
-import com.talvish.tales.serialization.json.JsonTypeReference;
 import com.talvish.tales.services.OperationContext;
 import com.talvish.tales.services.http.FailureSubcodes;
 import com.talvish.tales.services.http.servlets.ResourceServlet.AsyncState;
@@ -281,7 +281,7 @@ public class ResourceMethod extends Subcontract {
 		// THIRD, look at the return type and make sure we have something appropriate
 
 		JavaType returnType = new JavaType( method.getGenericReturnType( ) );		
-		JsonTypeReference typeReference;
+		TypeFormatAdapter typeAdapter;
 		if( Void.TYPE.equals( returnType ) ) {
 			// void returns are very simple
 			this.methodReturn = new ResourceMethodReturn( returnType, this );
@@ -290,20 +290,20 @@ public class ResourceMethod extends Subcontract {
 			// if this is the special resource response type, then we need
 			// to pull the data down a bit differently to get the actual type
 			returnType = new JavaType( ( ( ParameterizedType ) returnType.getType() ).getActualTypeArguments( )[ 0 ] );
-			typeReference = theResourceFacility.getJsonFacility().getTypeReference( returnType );
-			if( typeReference == null ) {
+			typeAdapter = theResourceFacility.getJsonFacility().getTypeAdapter( returnType );
+			if( typeAdapter == null ) {
 				throw new IllegalStateException( String.format( "Return type '%s' on method '%s.%s' could not be analyzed because a translator could not be found.", returnType.getSimpleName(), method.getDeclaringClass().getName(), method.getName() ) );
 			} else {
-				this.methodReturn = new ResourceMethodReturn( returnType, true, typeReference.getToJsonTranslator(), this );
+				this.methodReturn = new ResourceMethodReturn( returnType, true, typeAdapter.getToFormatTranslator(), this );
 			}
 
 		} else {
 			// otherwise the type is just something we are looking to return
-			typeReference = theResourceFacility.getJsonFacility().getTypeReference( returnType );
-			if( typeReference == null ) {
+			typeAdapter = theResourceFacility.getJsonFacility().getTypeAdapter( returnType );
+			if( typeAdapter == null ) {
 				throw new IllegalStateException( String.format( "Return type '%s' on method '%s.%s' could not be analyzed because a translator could not be found.", returnType.getSimpleName(), method.getDeclaringClass().getName(), method.getName() ) );
 			} else {
-				this.methodReturn = new ResourceMethodReturn( returnType, false, typeReference.getToJsonTranslator(), this );
+				this.methodReturn = new ResourceMethodReturn( returnType, false, typeAdapter.getToFormatTranslator(), this );
 			}
 		}
 	}

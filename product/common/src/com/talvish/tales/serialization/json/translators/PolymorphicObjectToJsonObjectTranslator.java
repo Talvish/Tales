@@ -25,7 +25,7 @@ import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.talvish.tales.parts.translators.TranslationException;
 import com.talvish.tales.parts.translators.Translator;
-import com.talvish.tales.serialization.json.JsonTypeReference;
+import com.talvish.tales.serialization.TypeFormatAdapter;
 
 /**
  * A translator that looks at the type to be translated and picks an appropriate translator.
@@ -36,18 +36,18 @@ import com.talvish.tales.serialization.json.JsonTypeReference;
  *
  */
 public class PolymorphicObjectToJsonObjectTranslator implements Translator {
-	private final Map<Class<?>, JsonTypeReference> typeReferences = new HashMap<>( 2 );
+	private final Map<Class<?>, TypeFormatAdapter> typeAdapters = new HashMap<>( 2 );
 
 	/**
-	 * Constructor taking the needed references.
+	 * Constructor taking the needed adapters.
 	 */
-	public PolymorphicObjectToJsonObjectTranslator( List<JsonTypeReference> theTypeReferences ) {
-		Preconditions.checkNotNull( theTypeReferences );
-		Preconditions.checkArgument( theTypeReferences.size( ) > 0, "Need at least one value type reference." );
+	public PolymorphicObjectToJsonObjectTranslator( List<TypeFormatAdapter> theTypeAdapters ) {
+		Preconditions.checkNotNull( theTypeAdapters );
+		Preconditions.checkArgument( theTypeAdapters.size( ) > 0, "Need at least one value type adapter." );
 
-		for( JsonTypeReference typeReference : theTypeReferences ) {
-			Preconditions.checkArgument( !typeReferences.containsKey( typeReference.getType().getUnderlyingClass()), String.format( "Attempting to add type reference '%s' more than once (differences in generic type parameters are not sufficient).", typeReference.getType( ).getUnderlyingClass().getName()));
-			typeReferences.put( typeReference.getType().getUnderlyingClass(), typeReference );
+		for( TypeFormatAdapter typeAdapter : theTypeAdapters ) {
+			Preconditions.checkArgument( !typeAdapters.containsKey( typeAdapter.getType().getUnderlyingClass()), String.format( "Attempting to add type adapter '%s' more than once (differences in generic type parameters are not sufficient).", typeAdapter.getType( ).getUnderlyingClass().getName()));
+			typeAdapters.put( typeAdapter.getType().getUnderlyingClass(), typeAdapter );
 		}
 	}
 
@@ -63,15 +63,15 @@ public class PolymorphicObjectToJsonObjectTranslator implements Translator {
 		if( anObject == null ) {
 			returnValue = JsonNull.INSTANCE;
 		} else {
-			JsonTypeReference typeReference = typeReferences.get( anObject.getClass( ) );
-			if( typeReference == null ) {
+			TypeFormatAdapter typeAdapter = typeAdapters.get( anObject.getClass( ) );
+			if( typeAdapter == null ) {
 				throw new TranslationException( String.format( "An object of type '%s' was attempting to be converted to a json object, but this object isn't supported", anObject.getClass( ).getName( ) ));
 			} else {
 				try {
 					JsonObject jsonEntry = new JsonObject( );
 					
-					jsonEntry.addProperty( "value_type", typeReference.getName() );
-					jsonEntry.add( "value", ( JsonElement )typeReference.getToJsonTranslator().translate( anObject ) );
+					jsonEntry.addProperty( "value_type", typeAdapter.getName() );
+					jsonEntry.add( "value", ( JsonElement )typeAdapter.getToFormatTranslator().translate( anObject ) );
 	
 					returnValue = jsonEntry;
 	

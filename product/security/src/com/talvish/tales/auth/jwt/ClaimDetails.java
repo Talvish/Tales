@@ -18,40 +18,41 @@ package com.talvish.tales.auth.jwt;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.talvish.tales.auth.capabilities.Capabilities;
-import com.talvish.tales.serialization.json.JsonTypeReference;
+import com.talvish.tales.serialization.TypeFormatAdapter;
 
 /**
- * Details about claims that were registered with the token manager.
+ * Details about claims that were registered with the token manager and how 
+ * to translator the data for the claim.
  * @author jmolnar
  *
  */
 public class ClaimDetails {
 	private final String name;
-	private final JsonTypeReference typeReference;
+	private final TypeFormatAdapter typeAdapter;
 	private final String capabilityFamily;
 
 	/**
 	 * The constructor taking just the claim name and type information.
 	 * @param theName the name of the claim
-	 * @param theTypeReference the type of the claim
+	 * @param theTypeAdapter the type and translation details for the claim
 	 */
-	public ClaimDetails( String theName, JsonTypeReference theTypeReference ) {
-		this( theName, null, theTypeReference );
+	public ClaimDetails( String theName, TypeFormatAdapter theTypeAdapter ) {
+		this( theName, null, theTypeAdapter );
 	}
 	
 	/**
 	 * The constructor for capabilities, which means taking the claim name, type information and the capability family.
 	 * @param theName the name of the claim
 	 * @param theCapabilityFamily the family for the capability
-	 * @param theTypeReference the type of the claim
+	 * @param theTypeAdapter the type and translation details for the claim
 	 */
-	public ClaimDetails( String theName, String theCapabilityFamily, JsonTypeReference theTypeReference ) {
+	public ClaimDetails( String theName, String theCapabilityFamily, TypeFormatAdapter theTypeAdapter ) {
 		Preconditions.checkArgument( !Strings.isNullOrEmpty( theName ), "need a claim name" );
-		Preconditions.checkNotNull( theTypeReference, "claim '%s' needs a type reference", theName );
-		Preconditions.checkArgument( theCapabilityFamily == null || theTypeReference.getType().getUnderlyingClass().equals( Capabilities.class ), "claim '%s' indicates it is a capability but type given is '%s'", theName, theTypeReference.getType().getUnderlyingClass().getSimpleName( ) );
+		Preconditions.checkNotNull( theTypeAdapter, "claim '%s' needs a type reference", theName );
+		Preconditions.checkArgument( theCapabilityFamily == null || theTypeAdapter.getType().getUnderlyingClass().equals( Capabilities.class ), "claim '%s' indicates it is a capability but type given is '%s'", theName, theTypeAdapter.getType().getUnderlyingClass().getSimpleName( ) );
 
 		name = theName;
-		typeReference = theTypeReference;
+		typeAdapter = theTypeAdapter;
 		capabilityFamily = theCapabilityFamily;
 	}
 	
@@ -64,11 +65,11 @@ public class ClaimDetails {
 	}
 	
 	/**
-	 * The type of the claim.
-	 * @return the type of the claim
+	 * The adapter to translator to/from json for a particular type.
+	 * @return the type format adapter
 	 */
-	public JsonTypeReference getTypeReference( ) {
-		return typeReference;
+	public TypeFormatAdapter getTypeAdapter( ) {
+		return typeAdapter;
 	}
 	
 	/**

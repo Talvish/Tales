@@ -30,7 +30,7 @@ import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.talvish.tales.parts.translators.TranslationException;
 import com.talvish.tales.parts.translators.Translator;
-import com.talvish.tales.serialization.json.JsonTypeReference;
+import com.talvish.tales.serialization.TypeFormatAdapter;
 
 
 /**
@@ -41,8 +41,8 @@ import com.talvish.tales.serialization.json.JsonTypeReference;
  */
 public class JsonArrayToMapTranslator implements Translator {
 	// these are used if we have more than one possible element type
-	private final Map<String, JsonTypeReference> keyTypeReferences = new HashMap<>( 2 ); 
-	private final Map<String, JsonTypeReference> valueTypeReferences = new HashMap<>( 2 );
+	private final Map<String, TypeFormatAdapter> keyTypeAdapters = new HashMap<>( 2 ); 
+	private final Map<String, TypeFormatAdapter> valueTypeAdapters = new HashMap<>( 2 );
 	
 	// these are used if we only have one possible element type
 	private final Translator keyTranslator; 
@@ -87,34 +87,34 @@ public class JsonArrayToMapTranslator implements Translator {
 	/**
 	 * Constructor taking the list of supported key and value types.
 	 */
-	public JsonArrayToMapTranslator( List<JsonTypeReference> theKeyTypeReferences, List<JsonTypeReference> theValueTypeReferences, Class<?> theMapType ) {
-		Preconditions.checkNotNull( theKeyTypeReferences );
-		Preconditions.checkArgument( theKeyTypeReferences.size( ) > 0, "Need at least one key type reference." );
-		Preconditions.checkNotNull( theValueTypeReferences );
-		Preconditions.checkArgument( theValueTypeReferences.size( ) > 0, "Need at least one value type reference." );
+	public JsonArrayToMapTranslator( List<TypeFormatAdapter> theKeyTypeAdapters, List<TypeFormatAdapter> theValueTypeAdapters, Class<?> theMapType ) {
+		Preconditions.checkNotNull( theKeyTypeAdapters );
+		Preconditions.checkArgument( theKeyTypeAdapters.size( ) > 0, "Need at least one key type adapter." );
+		Preconditions.checkNotNull( theValueTypeAdapters );
+		Preconditions.checkArgument( theValueTypeAdapters.size( ) > 0, "Need at least one value type adapter." );
 		Preconditions.checkNotNull( theMapType, "need a map type" );
 		Preconditions.checkArgument( Map.class.isAssignableFrom( theMapType ), String.format( "'%s' needs to implement map.", theMapType.getName( ) ) );
 
-		for( JsonTypeReference keyTypeReference : theKeyTypeReferences ) {
-			Preconditions.checkArgument( !valueTypeReferences.containsKey( keyTypeReference.getName()), String.format( "Attempting to add key type reference '%s' more than once.", keyTypeReference.getType( ).getName()));
-			keyTypeReferences.put( keyTypeReference.getName(), keyTypeReference );
+		for( TypeFormatAdapter keyTypeAdapter : theKeyTypeAdapters ) {
+			Preconditions.checkArgument( !valueTypeAdapters.containsKey( keyTypeAdapter.getName()), String.format( "Attempting to add key type adapter '%s' more than once.", keyTypeAdapter.getType( ).getName()));
+			keyTypeAdapters.put( keyTypeAdapter.getName(), keyTypeAdapter );
 		}
 		// if we only have one key type than pull out the translator directly 
 		// since it will speed things up at runtime during translation
-		if( theKeyTypeReferences.size() == 1 ) {
-			keyTranslator = theKeyTypeReferences.get( 0 ).getFromJsonTranslator();
+		if( theKeyTypeAdapters.size() == 1 ) {
+			keyTranslator = theKeyTypeAdapters.get( 0 ).getFromFormatTranslator();
 		} else {
 			keyTranslator = null;
 		}
 		
-		for( JsonTypeReference valueTypeReference : theValueTypeReferences ) {
-			Preconditions.checkArgument( !valueTypeReferences.containsKey( valueTypeReference.getName()), String.format( "Attempting to add value type reference '%s' more than once.", valueTypeReference.getType( ).getName()));
-			valueTypeReferences.put( valueTypeReference.getName( ), valueTypeReference );
+		for( TypeFormatAdapter valueTypeAdapter : theValueTypeAdapters ) {
+			Preconditions.checkArgument( !valueTypeAdapters.containsKey( valueTypeAdapter.getName()), String.format( "Attempting to add value type adapter '%s' more than once.", valueTypeAdapter.getType( ).getName()));
+			valueTypeAdapters.put( valueTypeAdapter.getName( ), valueTypeAdapter );
 		}
 		// if we only have one key type than pull out the translator directly 
 		// since it will speed things up at runtime during translation
-		if( theValueTypeReferences.size() == 1 ) {
-			valueTranslator = theValueTypeReferences.get( 0 ).getFromJsonTranslator();
+		if( theValueTypeAdapters.size() == 1 ) {
+			valueTranslator = theValueTypeAdapters.get( 0 ).getFromFormatTranslator();
 		} else {
 			valueTranslator = null;
 		}
@@ -161,7 +161,7 @@ public class JsonArrayToMapTranslator implements Translator {
 				JsonElement keyType;
 				JsonElement value;
 				JsonElement valueType;
-				JsonTypeReference typeReference;
+				TypeFormatAdapter typeAdapter;
 				
 				Translator selectedKeyTranslator;
 				Translator selectedValueTranslator;
@@ -183,22 +183,22 @@ public class JsonArrayToMapTranslator implements Translator {
 					} else {
 						if( keyType != null ) {
 							String keyTypeString = keyType.getAsString();
-							typeReference = keyTypeReferences.get( keyTypeString );
+							typeAdapter = keyTypeAdapters.get( keyTypeString );
 							
-							if( typeReference == null ) {
+							if( typeAdapter == null ) {
 								throw new TranslationException( String.format( "Json is referring to a key type '%s' that isn't supported.", keyTypeString ) );
 							} else {
-								selectedKeyTranslator = typeReference.getFromJsonTranslator();
+								selectedKeyTranslator = typeAdapter.getFromFormatTranslator();
 							}
 						} 
 						if( valueType != null ) {
 							String valueTypeString = valueType.getAsString();
-							typeReference = valueTypeReferences.get( valueTypeString );
+							typeAdapter = valueTypeAdapters.get( valueTypeString );
 							
-							if( typeReference == null ) {
+							if( typeAdapter == null ) {
 								throw new TranslationException( String.format( "Json is referring to a value type '%s' that isn't supported.", valueTypeString ) );
 							} else {
-								selectedValueTranslator = typeReference.getFromJsonTranslator();
+								selectedValueTranslator = typeAdapter.getFromFormatTranslator();
 							}
 						}
 						if( selectedKeyTranslator == null ) {

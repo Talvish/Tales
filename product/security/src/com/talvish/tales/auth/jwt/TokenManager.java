@@ -46,8 +46,8 @@ import com.talvish.tales.auth.capabilities.TokenCapabilityToStringTranslator;
 import com.talvish.tales.contracts.data.DataContractTypeSource;
 import com.talvish.tales.parts.reflection.JavaType;
 import com.talvish.tales.parts.translators.TranslationException;
+import com.talvish.tales.serialization.TypeFormatAdapter;
 import com.talvish.tales.serialization.json.JsonTranslationFacility;
-import com.talvish.tales.serialization.json.JsonTypeReference;
 import com.talvish.tales.serialization.json.translators.ArrayToJsonArrayTranslator;
 import com.talvish.tales.serialization.json.translators.ChainToStringToJsonPrimitiveTranslator;
 import com.talvish.tales.serialization.json.translators.JsonArrayToArrayTranslator;
@@ -122,16 +122,16 @@ public class TokenManager {
 		
 		// we have a bit of special handling for the string[] to handle the single items to/from the json array
 		JavaType elementType = new JavaType( String.class );
-		JsonTypeReference elementTypeReference = translationFacility.getTypeReference( elementType );
+		TypeFormatAdapter elementTypeReference = translationFacility.getTypeAdapter( elementType );
 
 		_registerClaim( 
 				"aud", 
 				null,
-	        	new JsonTypeReference( 
+	        	new TypeFormatAdapter( 
 	        			new JavaType( String[].class ), 
 	        			"list[string]",
-	        			new JsonArrayToArrayTranslator( elementType.getUnderlyingClass(), elementTypeReference.getFromJsonTranslator(), true ),
-	        			new ArrayToJsonArrayTranslator( elementTypeReference.getToJsonTranslator( ), true ) ) );
+	        			new JsonArrayToArrayTranslator( elementType.getUnderlyingClass(), elementTypeReference.getFromFormatTranslator(), true ),
+	        			new ArrayToJsonArrayTranslator( elementTypeReference.getToFormatTranslator( ), true ) ) );
 		// could consider doing the other's like exp or nbf
 	}
 
@@ -149,24 +149,24 @@ public class TokenManager {
 		_registerClaim(
 				theClaimName, 
 				null,
-				translationFacility.getTypeReference( new JavaType( theType ) ) );
+				translationFacility.getTypeAdapter( new JavaType( theType ) ) );
 	}
 
 	/**
 	 * Registers a type for a particular claim (or header). This means that when this particular 
 	 * claim comes up it will use the translators associated with that type to convert to and from the json.
 	 * @param theClaimName the name of the claim to associate with a type
-	 * @param theTypeReference the type reference of the claim, which means the system will attempt to translate to and from 
+	 * @param theTypeFormatAdapter an adapter that will translate to/from json type for the type of data that the claim uses 
 	 */
-	public void registerClaim( String theClaimName, JsonTypeReference theTypeReference ) {
+	public void registerClaim( String theClaimName, TypeFormatAdapter theTypeFormatAdapter ) {
 		Preconditions.checkArgument( !Strings.isNullOrEmpty( theClaimName ), "need a claim name" );
-		Preconditions.checkNotNull( theTypeReference, "need type reference for claim '%s'", theClaimName );
+		Preconditions.checkNotNull( theTypeFormatAdapter, "need adapter for claim '%s'", theClaimName );
 		Preconditions.checkArgument( !claimHandlers.containsKey( theClaimName ), "a type/capability was already registered for claim '%s'", theClaimName );
 
 		_registerClaim( 
 				theClaimName, 
 				null, 
-				theTypeReference );
+				theTypeFormatAdapter );
 	}
 
 	/**
@@ -182,7 +182,7 @@ public class TokenManager {
 		_registerClaim( 
 				theClaimName,
 				theCapabilityFamily,
-				new JsonTypeReference( 
+				new TypeFormatAdapter( 
 						new JavaType( Capabilities.class ),
 						"capabilities : string",
 						new JsonElementToStringToChainTranslator( new StringToTokenCapabilityTranslator( theCapabilityFamily ) ),
@@ -193,14 +193,14 @@ public class TokenManager {
 	 * Private registration mechanism used by the public version and the constructor. 
 	 * @param theClaimName the name of the claim to associate with a type
 	 * @param theCapabilityFamily the family for the capability, if the claim represents capabilities
-	 * @param theTypeReference the type reference of the claim, which means the system will attempt to translate to and from 
+	 * @param theTypeFormatAdapter an adapter that will translate to/from json type for the type of data that the claim uses 
 	 */
-	private final void _registerClaim( String theClaimName, String theCapabilityFamily, JsonTypeReference theTypeReference ) {
+	private final void _registerClaim( String theClaimName, String theCapabilityFamily, TypeFormatAdapter theTypeFormatAdapter ) {
 		// we register the handler and not type since it speeds up the runtime slightly 
 		// and does give us more options for if we want more custom handling of claims
 		claimHandlers.put( 
 				theClaimName, 
-				new ClaimDetails( theClaimName, theCapabilityFamily, theTypeReference ) ); 
+				new ClaimDetails( theClaimName, theCapabilityFamily, theTypeFormatAdapter ) ); 
 	}
 	
 	/**
@@ -508,7 +508,7 @@ public class TokenManager {
 			claimDetails = this.claimHandlers.get( entry.getKey( ) );
 			if( claimDetails != null ) {
 				try {
-					outputJson.add( entry.getKey( ), ( JsonElement )claimDetails.getTypeReference( ).getToJsonTranslator( ).translate( entry.getValue( ) ) );
+					outputJson.add( entry.getKey( ), ( JsonElement )claimDetails.getTypeAdapter( ).getToFormatTranslator( ).translate( entry.getValue( ) ) );
 				} catch( TranslationException e ) {
 					// this will help with understanding problems ...
 					throw new IllegalArgumentException( String.format( "Claim '%s' is using a custom translation that failed to translate the associated value.", entry.getKey( ) ), e );
@@ -593,7 +593,7 @@ public class TokenManager {
 				claimValue = entry.getValue();
 				claimDetails = this.claimHandlers.get( claimName );
 				if( claimDetails != null ) {
-					outputItems.put( claimName, claimDetails.getTypeReference().getFromJsonTranslator().translate( claimValue ) );
+					outputItems.put( claimName, claimDetails.getTypeAdapter().getFromFormatTranslator().translate( claimValue ) );
 				} else if( claimValue.isJsonPrimitive( ) ) {
 					JsonPrimitive primitiveJson = ( JsonPrimitive )claimValue;
 					if( primitiveJson.isString( ) ) {

@@ -29,8 +29,8 @@ import com.google.common.base.Strings;
 import com.talvish.tales.communication.HttpVerb;
 import com.talvish.tales.parts.reflection.JavaType;
 import com.talvish.tales.parts.translators.Translator;
+import com.talvish.tales.serialization.TypeFormatAdapter;
 import com.talvish.tales.serialization.UrlEncoding;
-import com.talvish.tales.serialization.json.JsonTypeReference;
 import com.talvish.tales.serialization.json.translators.ChainToJsonElementToStringTranslator;
 import com.talvish.tales.system.Conditions;
 
@@ -377,10 +377,10 @@ public class ResourceMethod {
 		
 		if( translator == null ) {
 			// did not find one so we are now look for something that will be more complicated
-			JsonTypeReference typeReference = client.jsonFacility.getTypeReference(theType);
+			TypeFormatAdapter typeAdapter = client.jsonFacility.getTypeAdapter(theType);
 			// verify we got something back
-			Preconditions.checkNotNull( typeReference, "Could not get json handler for type '%s'.", theType.getSimpleName() );
-			translator = new ChainToJsonElementToStringTranslator( typeReference.getToJsonTranslator() );
+			Preconditions.checkNotNull( typeAdapter, "Could not get json adapter for type '%s'.", theType.getSimpleName() );
+			translator = new ChainToJsonElementToStringTranslator( typeAdapter.getToFormatTranslator() );
 			// we don't need to do URL encoding here since Jetty does it automatically and if we do
 			// need it we expect the caller to handle
 		}

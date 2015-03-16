@@ -13,37 +13,37 @@
 // *  See the License for the specific language governing permissions and
 // *  limitations under the License.
 // ***************************************************************************
-package com.talvish.tales.serialization.json;
+package com.talvish.tales.serialization;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.talvish.tales.parts.reflection.JavaType;
 import com.talvish.tales.parts.translators.Translator;
 
-// TODO: consider storing this at the serialization level since it doesn't have to be specific to json.
 /**
- * A class that hold references to simple and complex types and how to translate them
- * for persistence or transport.
+ * A class that hold references to simple and complex types and how to translate the type
+ * both to and from a particular format. This is useful for persistence or transport.
+ * Examples: translating to/from json, or translator to expected database formats, etc.
  * @author Joseph Molnar
  *
  */
-public class JsonTypeReference {
+public class TypeFormatAdapter {
 	private final JavaType type;
 	private final String name;
 
-	private final Translator toJsonTranslator;
-	private final Translator fromJsonTranslator;
+	private final Translator toFormatTranslator;
+	private final Translator fromFormatTranslator;
 
-	public JsonTypeReference( JavaType theType, String theName, Translator theFromJsonTranslator, Translator theToJsonTranslator ) {
+	public TypeFormatAdapter( JavaType theType, String theName, Translator theFromFormatTranslator, Translator theToFormatTranslator ) {
 		Preconditions.checkNotNull( theType, "type is required" );
 		Preconditions.checkArgument( !Strings.isNullOrEmpty( theName ), "name is required" );
-		Preconditions.checkNotNull( theToJsonTranslator, "to json translator is required" );
-		Preconditions.checkNotNull( theFromJsonTranslator, "from json translator is required" );
+		Preconditions.checkNotNull( theToFormatTranslator, "to format translator is required" );
+		Preconditions.checkNotNull( theFromFormatTranslator, "from format translator is required" );
 
 		type = theType;
 		name = theName;
-		toJsonTranslator = theToJsonTranslator;
-		fromJsonTranslator = theFromJsonTranslator;
+		toFormatTranslator = theToFormatTranslator;
+		fromFormatTranslator = theFromFormatTranslator;
 	}
 	
 	/**
@@ -61,16 +61,24 @@ public class JsonTypeReference {
 	}
 	
 	/**
-	 * The translator to turn data into the specific serialization form.
+	 * The translator to turn data into the specific serialization format.
 	 */
-	public Translator getToJsonTranslator( ) {
-		return this.toJsonTranslator;
+	public Translator getToFormatTranslator( ) {
+		return this.toFormatTranslator;
 	}
 
 	/**
-	 * The translator to deal with from the serialization specific form.
+	 * The translator to turn data from the serialization specific format to the type.
 	 */
-	public Translator getFromJsonTranslator( ) {
-		return this.fromJsonTranslator;
+	public Translator getFromFormatTranslator( ) {
+		return this.fromFormatTranslator;
+	}
+	
+	public Object translateToFormat( Object aTypeInstance) {
+		return this.toFormatTranslator.translate( aTypeInstance );
+	}
+
+	public Object translateFromFormat( Object aFormattedInstance ) {
+		return this.fromFormatTranslator.translate( aFormattedInstance );
 	}
 }

@@ -102,7 +102,7 @@ public class ResourceResponseFuture<T> extends BufferingResponseListener impleme
 				// grab the response as a string, it should all be json, so let's interpret
 				JsonElement jsonResult = request.getClient( ).jsonParser.parse( responseString );
 				// now we need to convert what was returned as a result object ... BUT ..
-				objectResult = ( ResourceResult<T> )request.getClient( ).getResultType().getFromJsonTranslator().translate( jsonResult );
+				objectResult = ( ResourceResult<T> )request.getClient( ).getResultAdapter().getFromFormatTranslator().translate( jsonResult );
 				// the actual result is not interpreted since we don't the type at registration time so we deal with the result
 				// value separately
 				JsonElement jsonReturn = jsonResult.getAsJsonObject().get( "return" );

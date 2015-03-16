@@ -38,15 +38,14 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.gson.JsonParser;
-
 import com.talvish.tales.communication.HttpEndpoint;
 import com.talvish.tales.communication.HttpVerb;
 import com.talvish.tales.contracts.ContractVersion;
 import com.talvish.tales.contracts.data.DataContractTypeSource;
 import com.talvish.tales.parts.reflection.JavaType;
+import com.talvish.tales.serialization.TypeFormatAdapter;
 import com.talvish.tales.serialization.json.JsonTranslationFacility;
 import com.talvish.tales.serialization.json.JsonTypeMap;
-import com.talvish.tales.serialization.json.JsonTypeReference;
 import com.talvish.tales.serialization.json.translators.JsonObjectToObjectTranslator;
 import com.talvish.tales.serialization.json.translators.ObjectToJsonObjectTranslator;
 import com.talvish.tales.system.Conditions;
@@ -72,7 +71,7 @@ public class ResourceClient {
 	protected ResourceMethod[] methods;
 	
 	protected final JsonTranslationFacility jsonFacility;
-	protected final JsonTypeReference resultTypeReference;
+	protected final TypeFormatAdapter resultTypeAdapter;
 	
 	protected final JsonParser jsonParser;
 	
@@ -206,10 +205,10 @@ public class ResourceClient {
 		jsonParser = new JsonParser( );
 		
 		// now that we have the json facility, let's 
-		// get the reference for the result type
+		// get the adapter for the result type
 		JavaType type = new JavaType( ResourceResult.class );
 		JsonTypeMap typeMap = jsonFacility.generateTypeMap( type ); // TODO: technically I can, if I have the type of the result, now do the full thing (need to have a field for it)
-		resultTypeReference = new JsonTypeReference( 
+		resultTypeAdapter = new TypeFormatAdapter( 
 				type,
 				typeMap.getReflectedType().getName(),
     			new JsonObjectToObjectTranslator( typeMap ),
@@ -397,11 +396,11 @@ public class ResourceClient {
 	}
 	
 	/**
-	 * A special type used to validate and parse the response from all method requests.
+	 * A special adapter used to validate and parse the response from all method requests.
 	 * @return the special type representing all service responses
 	 */
-	protected JsonTypeReference getResultType( ) {
-		return resultTypeReference;
+	protected TypeFormatAdapter getResultAdapter( ) {
+		return resultTypeAdapter;
 	}
 	
 	/**

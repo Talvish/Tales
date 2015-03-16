@@ -17,9 +17,10 @@ package com.talvish.tales.serialization.json;
 
 import com.google.common.base.Preconditions;
 import com.google.gson.JsonElement;
-import com.talvish.tales.parts.reflection.FieldDescriptor;
+
 import com.talvish.tales.parts.sites.TranslatedDataSite;
 import com.talvish.tales.parts.translators.TranslationException;
+import com.talvish.tales.serialization.SerializationField;
 
 /**
  * This class represents a member of a class that will be
@@ -31,14 +32,14 @@ public class JsonMemberMap {
 	
 	private final JsonTypeMap containingType;
 	private final TranslatedDataSite dataSite;
-	private final FieldDescriptor<?,?> reflectedField;
+	private final SerializationField<?,?> reflectedField;
 
 	/**
 	 * The constructor taking field and the translator to translate to/from the field.
 	 * @param theReflectedField the field
 	 * @param theDataSite the site that translates the data
 	 */
-	public JsonMemberMap( FieldDescriptor<?,?> theReflectedField, TranslatedDataSite theDataSite, JsonTypeMap theContainingType ) {
+	public JsonMemberMap( SerializationField<?,?> theReflectedField, TranslatedDataSite theDataSite, JsonTypeMap theContainingType ) {
 		Preconditions.checkNotNull( theReflectedField );
 		Preconditions.checkNotNull( theDataSite );
 		Preconditions.checkNotNull( theContainingType );
@@ -60,7 +61,7 @@ public class JsonMemberMap {
 	 * The field.
 	 * @return the field
 	 */
-	public FieldDescriptor<?,?> getReflectedField( ) {
+	public SerializationField<?,?> getReflectedField( ) {
 		return reflectedField;
 	}
 	
