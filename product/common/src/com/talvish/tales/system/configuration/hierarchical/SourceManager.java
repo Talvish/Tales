@@ -152,7 +152,7 @@ public class SourceManager {
 
 	    int readLength;
 	    char[] buffer = new char[ 4096 ];
-	    StringBuffer contents = new StringBuffer();
+	    StringBuilder contents = new StringBuilder();
 	    FileReader reader = null;
 	    
 		try {
@@ -247,17 +247,17 @@ public class SourceManager {
 	private void logSetting( SimpleTreeNode<SettingDescriptor> theNode, int theDepth ) {
 		
 		if( theNode.getValue() != null ) {
-			StringBuffer buffer = new StringBuffer( );
+			StringBuilder builder = new StringBuilder( );
 			for( int count = 0; count < theDepth; count += 1) {
-				buffer.append( "---- " );
+				builder.append( "---- " );
 			}
-			buffer.append( theNode.getValue().getDeclaringBlock().getDeclaringProfile().getName( ) );
-			buffer.append( "." );
-			buffer.append( theNode.getValue().getDeclaringBlock().getName( ) );
-			buffer.append( " (" );
-			buffer.append( theNode.getChildren().size( ) );
-			buffer.append( ")" );
-			logger.info( buffer.toString( ) );
+			builder.append( theNode.getValue().getDeclaringBlock().getDeclaringProfile().getName( ) );
+			builder.append( "." );
+			builder.append( theNode.getValue().getDeclaringBlock().getName( ) );
+			builder.append( " (" );
+			builder.append( theNode.getChildren().size( ) );
+			builder.append( ")" );
+			logger.info( builder.toString( ) );
 			
 			for( SimpleTreeNode<SettingDescriptor> child : theNode.getChildren() ) {
 				logSetting( child, theDepth + 1 );

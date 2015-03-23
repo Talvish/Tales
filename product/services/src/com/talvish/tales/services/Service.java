@@ -274,25 +274,25 @@ public abstract class Service implements Runnable {
 		// format will be: canonical_service/version ( os/version; arch) tales/version
 	    // also need to set the system wide property: System.setProperty("http.agent", ""); 
 
-		StringBuffer buffer = new StringBuffer( );
+		StringBuilder builder = new StringBuilder( );
 		String manifestName = getManifestName( );
 		
-		buffer.append( theServiceName );
+		builder.append( theServiceName );
 		// we try to get the tales version from the manifest
-		buffer.append( "/" );
-		buffer.append( filterUserAgentValue( getServiceVersion( manifestName ) ) );
-		buffer.append( " (" );
-		buffer.append( filterUserAgentValue( System.getProperty( "os.name" ) ) );
-		buffer.append( "/" );
-		buffer.append( filterUserAgentValue( System.getProperty( "os.version" ) ) );
-		buffer.append( "; " );
-		buffer.append( filterUserAgentValue( System.getProperty( "os.arch" ) ) );
-		buffer.append( ") " );
-		buffer.append( "tales");
-		buffer.append( "/" );
-		buffer.append( filterUserAgentValue( getTalesVersion( manifestName ) ) );
+		builder.append( "/" );
+		builder.append( filterUserAgentValue( getServiceVersion( manifestName ) ) );
+		builder.append( " (" );
+		builder.append( filterUserAgentValue( System.getProperty( "os.name" ) ) );
+		builder.append( "/" );
+		builder.append( filterUserAgentValue( System.getProperty( "os.version" ) ) );
+		builder.append( "; " );
+		builder.append( filterUserAgentValue( System.getProperty( "os.arch" ) ) );
+		builder.append( ") " );
+		builder.append( "tales");
+		builder.append( "/" );
+		builder.append( filterUserAgentValue( getTalesVersion( manifestName ) ) );
 		
-		return buffer.toString( );
+		return builder.toString( );
 	}
 	
 	/**

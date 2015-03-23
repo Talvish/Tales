@@ -45,18 +45,18 @@ public class CollectionToStringTranslator extends NullTranslatorBase implements	
 			try {
 				Collection<?> values = ( Collection<?> )anObject;
 
-				StringBuffer buffer = new StringBuffer( );
+				StringBuilder builder = new StringBuilder( );
 				int index = 0;
 				int listSize = values.size( );
 
 				for( Object value : values ) {
-				    buffer.append( translator.translate( value ) );
+				    builder.append( translator.translate( value ) );
 				    if( index < listSize - 1 ) {
-				        buffer.append( delimiter );
+				        builder.append( delimiter );
 				    }
 				    index += 1;
 				}
-				returnValue = buffer.toString();
+				returnValue = builder.toString();
 
 			} catch( ClassCastException e ) {
 				throw new TranslationException( e );

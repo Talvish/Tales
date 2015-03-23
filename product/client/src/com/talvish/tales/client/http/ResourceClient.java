@@ -216,49 +216,49 @@ public class ResourceClient {
 	}
 	
 	private void displayClientConfiguration( HttpClient theClient ) {
-		StringBuffer settingBuffer = new StringBuffer ();
+		StringBuilder settingBuilder = new StringBuilder ();
 		
-		settingBuffer.append( "\n\tAddress Resolution Timeout: " );
-		settingBuffer.append( theClient.getAddressResolutionTimeout( ) );
+		settingBuilder.append( "\n\tAddress Resolution Timeout: " );
+		settingBuilder.append( theClient.getAddressResolutionTimeout( ) );
 
-		settingBuffer.append( "\n\tConnect Timeout: " );
-		settingBuffer.append( theClient.getConnectTimeout() );
+		settingBuilder.append( "\n\tConnect Timeout: " );
+		settingBuilder.append( theClient.getConnectTimeout() );
 	
-		settingBuffer.append( "\n\tDispatch I/O: " );
-		settingBuffer.append( theClient.isDispatchIO( ) );
+		settingBuilder.append( "\n\tDispatch I/O: " );
+		settingBuilder.append( theClient.isDispatchIO( ) );
 
-		settingBuffer.append( "\n\tFollow Redirects: " );
-		settingBuffer.append( theClient.isFollowRedirects( ) );
+		settingBuilder.append( "\n\tFollow Redirects: " );
+		settingBuilder.append( theClient.isFollowRedirects( ) );
 
-		settingBuffer.append( "\n\tIdle Timeout: " );
-		settingBuffer.append( theClient.getIdleTimeout( ) );
+		settingBuilder.append( "\n\tIdle Timeout: " );
+		settingBuilder.append( theClient.getIdleTimeout( ) );
 
-		settingBuffer.append( "\n\tMax Connections Per Destination: " );
-		settingBuffer.append( theClient.getMaxConnectionsPerDestination() );
+		settingBuilder.append( "\n\tMax Connections Per Destination: " );
+		settingBuilder.append( theClient.getMaxConnectionsPerDestination() );
 
-		settingBuffer.append( "\n\tMax Redirects: " );
-		settingBuffer.append( theClient.getMaxRedirects( ) );
+		settingBuilder.append( "\n\tMax Redirects: " );
+		settingBuilder.append( theClient.getMaxRedirects( ) );
 
-		settingBuffer.append( "\n\tMax Requests Queued Per Destination: " );
-		settingBuffer.append( theClient.getMaxRequestsQueuedPerDestination( ) );
+		settingBuilder.append( "\n\tMax Requests Queued Per Destination: " );
+		settingBuilder.append( theClient.getMaxRequestsQueuedPerDestination( ) );
 
-		settingBuffer.append( "\n\tRemove Idle Destinations: " );
-		settingBuffer.append( theClient.isRemoveIdleDestinations() );
+		settingBuilder.append( "\n\tRemove Idle Destinations: " );
+		settingBuilder.append( theClient.isRemoveIdleDestinations() );
 
-		settingBuffer.append( "\n\tRequest Buffer Size: " );
-		settingBuffer.append( theClient.getRequestBufferSize( ) );
+		settingBuilder.append( "\n\tRequest Buffer Size: " );
+		settingBuilder.append( theClient.getRequestBufferSize( ) );
 
-		settingBuffer.append( "\n\tResponse Buffer Size: " );
-		settingBuffer.append( theClient.getResponseBufferSize( ) );
+		settingBuilder.append( "\n\tResponse Buffer Size: " );
+		settingBuilder.append( theClient.getResponseBufferSize( ) );
 
-		settingBuffer.append( "\n\tStrict Event Ordering: " );
-		settingBuffer.append( theClient.isStrictEventOrdering( ) );
+		settingBuilder.append( "\n\tStrict Event Ordering: " );
+		settingBuilder.append( theClient.isStrictEventOrdering( ) );
 
-		settingBuffer.append( "\n\tTCP No Delay: " );
-		settingBuffer.append( theClient.isTCPNoDelay( ));
+		settingBuilder.append( "\n\tTCP No Delay: " );
+		settingBuilder.append( theClient.isTCPNoDelay( ));
 
 		
-		logger.info( "Client for contract '{}' on endpoint '{}' is using configuration: {}", this.contractRoot, this.endpoint.toString(), settingBuffer.toString( ) );
+		logger.info( "Client for contract '{}' on endpoint '{}' is using configuration: {}", this.contractRoot, this.endpoint.toString(), settingBuilder.toString( ) );
 }
 
 	/**

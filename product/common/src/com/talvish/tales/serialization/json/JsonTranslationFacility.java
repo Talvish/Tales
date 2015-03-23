@@ -344,6 +344,7 @@ public final class JsonTranslationFacility implements Facility {
 		} else {
 			// first we need to make sure we have contract for the type
 			SerializationType<?, ?> reflectedType = this.typeSource.getSerializedType( theType );
+			Preconditions.checkArgument( reflectedType != null, "Unable to generate type information for '%s' likely due to missing annotations.", theType.getSimpleName( ) );
 
 			TypeFormatAdapter jsonTypeAdapter;
 			List<TypeFormatAdapter> keyTypeAdapters;

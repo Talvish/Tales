@@ -508,73 +508,73 @@ public abstract class HttpInterfaceBase extends InterfaceBase {
     	Preconditions.checkNotNull( theHttpConfiguration, "need jetty http configuration if you are going to apply it" );
     	Preconditions.checkNotNull( theConfiguration, "need configuration if you are going to apply it" );
     	
-    	StringBuffer settingBuffer = new StringBuffer();
+    	StringBuilder settingBuilder = new StringBuilder();
 
     	if( theConfiguration.getAcceptors() != null ) {
-    		settingBuffer.append( "\n\tAcceptors: " );
+    		settingBuilder.append( "\n\tAcceptors: " );
     	} else {
-    		settingBuffer.append( "\n\tAcceptors (default): " );
+    		settingBuilder.append( "\n\tAcceptors (default): " );
     	}
-		settingBuffer.append( theConnector.getAcceptors( ) );
+		settingBuilder.append( theConnector.getAcceptors( ) );
 
 		if( theConfiguration.getAcceptQueueSize() != null ) {
-    		settingBuffer.append( "\n\tAccept Queue Size: " );
+    		settingBuilder.append( "\n\tAccept Queue Size: " );
     	} else {
-    		settingBuffer.append( "\n\tAccept Queue Size (default): " );
+    		settingBuilder.append( "\n\tAccept Queue Size (default): " );
     	}
-		settingBuffer.append( theConnector.getAcceptQueueSize( ) );
+		settingBuilder.append( theConnector.getAcceptQueueSize( ) );
 
     	if( theConfiguration.getSelectors() != null ) {
-    		settingBuffer.append( "\n\tSelectors: " );
+    		settingBuilder.append( "\n\tSelectors: " );
     	} else {
-    		settingBuffer.append( "\n\tSelectors (default): " );
+    		settingBuilder.append( "\n\tSelectors (default): " );
     	}
-		settingBuffer.append( theConnector.getSelectorManager().getSelectorCount() );
+		settingBuilder.append( theConnector.getSelectorManager().getSelectorCount() );
 
     	if( theConfiguration.getIdleTimeout() != null ) {
-    		settingBuffer.append( "\n\tIdle Time: " );
+    		settingBuilder.append( "\n\tIdle Time: " );
     	} else {
-    		settingBuffer.append( "\n\tIdle Time (default): " );
+    		settingBuilder.append( "\n\tIdle Time (default): " );
     	}
-		settingBuffer.append( theConnector.getIdleTimeout( ) );
+		settingBuilder.append( theConnector.getIdleTimeout( ) );
 
 
     	if( theConfiguration.getHeaderCacheSize() != null ) {
-    		settingBuffer.append( "\n\tHeader Cache Size: " );
+    		settingBuilder.append( "\n\tHeader Cache Size: " );
     	} else {
-    		settingBuffer.append( "\n\tHeader Cache Size (default): " );
+    		settingBuilder.append( "\n\tHeader Cache Size (default): " );
     	}
-		settingBuffer.append( theHttpConfiguration.getHeaderCacheSize( ) );
+		settingBuilder.append( theHttpConfiguration.getHeaderCacheSize( ) );
 
 
 		if( theConfiguration.getRequestHeaderSize() != null ) {
-    		settingBuffer.append( "\n\tRequest Header Size: " );
+    		settingBuilder.append( "\n\tRequest Header Size: " );
     	} else {
-    		settingBuffer.append( "\n\tRequest Header Size (default): " );
+    		settingBuilder.append( "\n\tRequest Header Size (default): " );
     	}
-		settingBuffer.append( theHttpConfiguration.getRequestHeaderSize( ) );
+		settingBuilder.append( theHttpConfiguration.getRequestHeaderSize( ) );
 
     	if( theConfiguration.getResponseHeaderSize() != null ) {
-    		settingBuffer.append( "\n\tResponse Header Size: " );
+    		settingBuilder.append( "\n\tResponse Header Size: " );
     	} else {
-    		settingBuffer.append( "\n\tResponse Header Size (default): " );
+    		settingBuilder.append( "\n\tResponse Header Size (default): " );
     	}
-		settingBuffer.append( theHttpConfiguration.getResponseHeaderSize( ) );
+		settingBuilder.append( theHttpConfiguration.getResponseHeaderSize( ) );
 
     	if( theConfiguration.getOutputBufferSize() != null ) {
-    		settingBuffer.append( "\n\tOutput Buffer Size: " );
+    		settingBuilder.append( "\n\tOutput Buffer Size: " );
     	} else {
-    		settingBuffer.append( "\n\tOutput Buffer Size (default): " );
+    		settingBuilder.append( "\n\tOutput Buffer Size (default): " );
     	}
-		settingBuffer.append( theHttpConfiguration.getOutputBufferSize( ) );
+		settingBuilder.append( theHttpConfiguration.getOutputBufferSize( ) );
 
 
-		settingBuffer.append( "\n\tReuse Address (default): " );
-		settingBuffer.append( theConnector.getReuseAddress( ) );
+		settingBuilder.append( "\n\tReuse Address (default): " );
+		settingBuilder.append( theConnector.getReuseAddress( ) );
 
-		settingBuffer.append( "\n\tSocket Linger Time (default): " );
-		settingBuffer.append( theConnector.getSoLingerTime( ) );
+		settingBuilder.append( "\n\tSocket Linger Time (default): " );
+		settingBuilder.append( theConnector.getSoLingerTime( ) );
 
-    	logger.info( "Interface '{}' on endpoint '{}' is using configuration: {}", this.getName(), theEndpoint.toString(), settingBuffer.toString() );
+    	logger.info( "Interface '{}' on endpoint '{}' is using configuration: {}", this.getName(), theEndpoint.toString(), settingBuilder.toString() );
     }
 }
