@@ -276,7 +276,9 @@ public final class JsonTranslationFacility implements Facility {
 		Preconditions.checkNotNull( theType, "need a class" );
 		Preconditions.checkNotNull( fromStringTranslator, "need a from-string translator" );
 		Preconditions.checkNotNull( toStringTranslator, "need a to-string translator" );
-		
+
+		// TODO: put a log line if you are overwriting an existing one
+
 		// register with the string handler
 		stringTranslators.registerTranslators( theType, fromStringTranslator, toStringTranslator );
 		// now keep local
@@ -299,6 +301,8 @@ public final class JsonTranslationFacility implements Facility {
 		Preconditions.checkNotNull( theType, "need a type" );
 		Preconditions.checkNotNull( fromJsonTranslator, "need a from-Json translator" );
 		Preconditions.checkNotNull( toJsonTranslator, "need a to-Json translator" );
+		
+		// TODO: put a log line if you are overwriting an existing one
 		
 		TypeFormatAdapter jsonTypeAdapter = new TypeFormatAdapter(
 				theType,

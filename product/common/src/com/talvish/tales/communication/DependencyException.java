@@ -13,9 +13,8 @@
 // *  See the License for the specific language governing permissions and
 // *  limitations under the License.
 // ***************************************************************************
-package com.talvish.tales.services;
+package com.talvish.tales.communication;
 
-import com.talvish.tales.communication.Status;
 
 /**
  * An exception that can be thrown by the servlets or resources that indicate there is a problem
