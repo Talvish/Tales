@@ -15,15 +15,50 @@
 // ***************************************************************************
 package com.talvish.tales.auth.accesscontrol;
 
+/**
+ * The enum describing the result of access checks.
+ * @author jmolnar
+ *
+ */
 public enum AccessStatus {
+	/**
+	 * Access request is valid and may be proceed.
+	 */
 	VERIFIED,
+	/**
+	 * Access request is invalid due to a missing token.
+	 */
 	MISSING_TOKEN,
+	/**
+	 * Access request is invalid due to a missing claim.
+	 */
 	MISSING_CLAIM,
+	/**
+	 * Access request is invalid due to a missing data related to a claim.
+	 */
 	MISSING_DATA,
+	/**
+	 * Access request is invalid due to a missing capabilities within a claim.
+	 */
 	MISSING_CAPABILITIES,
+	/**
+	 * Access request is invalid due to an invalid signature.
+	 */
 	INVALID_SIGNATURE,
+	/**
+	 * Access request is invalid because the request is either too earlier or too late.
+	 */
 	INVALID_TIMEFRAME,
+	/**
+	 * Access request is invalid because it is targeting a different audience.
+	 */
 	INVALID_AUDIENCE,
+	/**
+	 * Access request is invalid because it is contains incorrect data.
+	 */
 	INVALID_CLAIM,
+	/**
+	 * Access request is invalid for an unknown reason.
+	 */
 	UNKNOWN,
 }
