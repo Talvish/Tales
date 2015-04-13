@@ -22,11 +22,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-
-
 import java.util.concurrent.ConcurrentHashMap;
-
-
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -64,21 +60,21 @@ public abstract class AccessControlManager<R extends AccessResult> {
 		capabilityDefinitionManager = theDefinitionManager;
 		tokenManager = theTokenManager;
 		
-		registerAnnotationHandler( ClaimsAbsent.class, ( method, descriptor, manager ) -> {
+		_registerAnnotationHandler( ClaimsAbsent.class, ( method, descriptor, manager ) -> {
 			ClaimsAbsent annotation = method.getAnnotation( ClaimsAbsent.class );
 			if( annotation != null ) {
 				descriptor.addVerifier( new ClaimsAbsentVerifier( annotation.claims( ) ) );
 			}
 		} );
 
-		registerAnnotationHandler( ClaimsRequired.class, ( method, descriptor, manager ) -> {
+		_registerAnnotationHandler( ClaimsRequired.class, ( method, descriptor, manager ) -> {
 			ClaimsRequired annotation = method.getAnnotation( ClaimsRequired.class );
 			if( annotation != null ) {
 				descriptor.addVerifier( new ClaimsRequiredVerifier( annotation.claims( ) ) );
 			}
 		} );
 
-		registerAnnotationHandler( ClaimValueRange.class, ( method, descriptor, manager ) -> {
+		_registerAnnotationHandler( ClaimValueRange.class, ( method, descriptor, manager ) -> {
 			ClaimValueRange[] annotations = method.getAnnotationsByType( ClaimValueRange.class );
 			if( annotations != null ) {
 				for( ClaimValueRange annotation : annotations) {
@@ -89,7 +85,7 @@ public abstract class AccessControlManager<R extends AccessResult> {
 				}
 			}
 		} );
-		registerAnnotationHandler( CapabilitiesRequired.class, ( method, descriptor, manager ) -> {
+		_registerAnnotationHandler( CapabilitiesRequired.class, ( method, descriptor, manager ) -> {
 			CapabilitiesRequired[] annotations = method.getAnnotationsByType( CapabilitiesRequired.class );
 			for( CapabilitiesRequired annotation : annotations ) {
 				String claim = annotation.claim();
@@ -99,11 +95,11 @@ public abstract class AccessControlManager<R extends AccessResult> {
 				
 				String family = claimDetails.getCapabilityFamily( );
 				CapabilityFamilyDefinition capabilityFamily = manager.getCapabilityDefinitionManager().getFamily( family );
-				Preconditions.checkArgument( capabilityFamily != null, "method '%s.%s' is trying to use annotation '%s' but refers to a claim '%s' that is associated with the family, '%s', but that family does not exist", method.getDeclaringClass().getSimpleName(), method.getName( ), annotation.annotationType( ).getSimpleName( ), claim, family );
+				Preconditions.checkArgument( capabilityFamily != null, "method '%s.%s' is trying to use annotation '%s' but refers to a claim '%s' that is associated with the family '%s' but that family does not exist", method.getDeclaringClass().getSimpleName(), method.getName( ), annotation.annotationType( ).getSimpleName( ), claim, family );
 				
 				if( annotation.capabilities().length == 1 ) {
 					String capabilityName = annotation.capabilities()[ 0 ];
-					Preconditions.checkArgument( capabilityFamily.isDefined( capabilityName ), "method '%s.%s' is trying to use annotation '%s' but refers to a claim '%s' with the capability, '%s.%s', but that capability does not exist", method.getDeclaringClass().getSimpleName(), method.getName( ), annotation.annotationType( ).getSimpleName( ), claim, family, capabilityName );
+					Preconditions.checkArgument( capabilityFamily.isDefined( capabilityName ), "method '%s.%s' is trying to use annotation '%s' but refers to a claim '%s' with the capability '%s.%s' but that capability does not exist", method.getDeclaringClass().getSimpleName(), method.getName( ), annotation.annotationType( ).getSimpleName( ), claim, family, capabilityName );
 							
 					int capabilityIndex = capabilityFamily.getCapability( capabilityName ).getIndex( );
 					
@@ -149,13 +145,22 @@ public abstract class AccessControlManager<R extends AccessResult> {
 	 * @param theHandler the function used to register to the claim verifiers on the method access descriptors
 	 */
 	public void registerAnnotationHandler( Class<? extends Annotation> theClass, AnnotationHandler theHandler ) {
+		_registerAnnotationHandler( theClass, theHandler );
+	}
+
+	/**
+	 * Private mechanism that registers <code>ClaimVerifier</code>s.
+	 * @param theClass the type of annotation that can be placed on a method
+	 * @param theHandler the function used to register to the claim verifiers on the method access descriptors
+	 */
+	private void _registerAnnotationHandler( Class<? extends Annotation> theClass, AnnotationHandler theHandler ) {
 		Preconditions.checkNotNull( theClass, "need the class for the annotation to register" );
 		Preconditions.checkNotNull( theHandler, "need the handler for the annotation class '%s'", theClass.getSimpleName( ) );
 		Preconditions.checkArgument( !annotationHandlers.containsKey( theClass ), "the annotation class '%s' has already been registered", theClass.getSimpleName( ) );
 		
 		annotationHandlers.put( theClass, theHandler );
 	}
-	
+
 	/**
 	 * Returns the annotation handlers registered with the system.
 	 * @return the annotation handlers registered with the system

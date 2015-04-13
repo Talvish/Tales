@@ -27,7 +27,7 @@ import com.talvish.tales.auth.jwt.TokenManager;
  *
  */
 public class SimpleAccessControlManager extends AccessControlManager<AccessResult> {
-	private String secret;
+	private final String secret;
 
 	/**
 	 * Constructor taking the capability definition family and needed secret.
