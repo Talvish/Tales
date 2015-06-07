@@ -51,7 +51,7 @@
 	</dependency>  
 	<dependency>
     	<groupId>com.google.guava</groupId>
-    	<artifactId>guava-jdk5</artifactId>
+    	<artifactId>guava</artifactId>
 	</dependency>	
 	<dependency>
 	    <groupId>com.google.code.gson</groupId>
@@ -65,27 +65,27 @@
 	<dependency>
     	<groupId>org.eclipse.jetty</groupId>
     	<artifactId>jetty-client</artifactId>
-    	<version>9.2.9.v20150224</version>
+    	<version>9.2.11.v20150529</version>
 	</dependency>	
 	<dependency>
     	<groupId>org.eclipse.jetty</groupId>
     	<artifactId>jetty-deploy</artifactId>
-    	<version>9.2.9.v20150224</version>
+    	<version>9.2.11.v20150529</version>
 	</dependency>	
 	<dependency>
     	<groupId>org.eclipse.jetty</groupId>
     	<artifactId>jetty-servlet</artifactId>
-    	<version>9.2.9.v20150224</version>
+    	<version>9.2.11.v20150529</version>
 	</dependency>
 	<dependency>
     	<groupId>org.eclipse.jetty</groupId>
     	<artifactId>jetty-servlets</artifactId>
-    	<version>9.2.9.v20150224</version>
+    	<version>9.2.11.v20150529</version>
 	</dependency>	
 		<dependency>
     	<groupId>org.eclipse.jetty</groupId>
     	<artifactId>jetty-jsp</artifactId>
-    	<version>9.2.9.v20150224</version>
+    	<version>9.2.11.v20150529</version>
 	</dependency>
 	
   </dependencies>  
