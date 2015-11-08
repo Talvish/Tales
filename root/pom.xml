@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.talvish.tales</groupId>
   <artifactId>tales.root</artifactId>
-  <version>1.6.7-SNAPSHOT</version>
+  <version>1.6.8-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>Tales Root</name>
   <description>The parent project for tales.</description>

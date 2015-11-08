@@ -9,7 +9,7 @@
   <parent>
     <groupId>com.talvish.tales</groupId>
     <artifactId>tales.root</artifactId>
-    <version>1.6.7-SNAPSHOT</version>
+    <version>1.6.8-SNAPSHOT</version>
     <relativePath>../../root/pom.xml</relativePath>
   </parent>
   
@@ -61,7 +61,7 @@
 	<dependency>
     	<groupId>org.eclipse.jetty</groupId>
     	<artifactId>jetty-client</artifactId>
-    	<version>9.2.9.v20150224</version>
+    	<version>9.3.5.v20151012</version>
 	</dependency>	
   </dependencies>  
 </project>
