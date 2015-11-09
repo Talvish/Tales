@@ -69,6 +69,51 @@ public class DependencyException extends RuntimeException {
 			
 			}
 		}
+
+		/**
+		 * This method takes a status code and converts it into an estimated problem value.
+		 * @param theState the state to convert
+		 * @return the problem it converts to
+		 */
+		public static Problem convert( Status theState ) {
+			switch( theState ) {
+			case CALLER_BAD_INPUT:
+			case CALLER_BAD_STATE:
+			case DEPENDENCY_BAD_DATA:
+				return BAD_DATA;
+			
+			case CALLER_FORBIDDEN:
+			case CALLER_NOT_FOUND:
+			case CALLER_BAD_VERSION:
+			case CALLER_UNAUTHORIZED:
+			case DEPENDENCY_CANNOT_COMMUNICATE:
+			case LOCAL_NOT_IMPLEMENTED:
+				return CANNOT_COMMUNICATE;
+
+			case DEPENDENCY_CANNOT_CONNECT:
+				return CANNOT_CONNECT;
+
+			case DEPENDENCY_TIMEOUT:
+			case CALLER_TIMEOUT:
+			case LOCAL_TIMEOUT:
+				return TIMEOUT;
+				
+			case DEPENDENCY_UNAVAILABLE: 
+			case LOCAL_UNAVAILABLE:
+				return UNAVAILABLE;
+
+
+			case DEPENDENCY_ERROR:
+			case LOCAL_ERROR: 
+			case OPERATION_ASYNC:
+			case OPERATION_COMPLETED:
+			case OPERATION_CREATED:
+			case OPERATION_NOT_MODIFIED:
+			case OPERATION_RETRY:
+			default:
+				return UNKNOWN_ERROR;
+			}
+		}
 	}
 	
 	private final Problem problem;
