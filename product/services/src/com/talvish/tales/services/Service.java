@@ -653,13 +653,19 @@ public abstract class Service implements Runnable {
 		        Class<?> interfaceClass	= null;
 		        Constructor<?> interfaceConstructor = null;
 		        Interface interfaceInstance;
-		        
+
+	        	Class<?> defaultClass = HttpInterface.class; // we use the HttpInterface as the default if one isn't specified
+	        	String defaultClassName = defaultClass.getCanonicalName( );
+
 		        ClassLoader classLoader = Service.class.getClassLoader();
 		        
 		        for( String interfaceName : interfaces ) {
 			        try {
-			        	// we need to get the type
-			        	interfaceType = theConfigurationManager.getStringValue( String.format( ConfigurationConstants.INTERFACE_TYPE, interfaceName ) );
+			        	// we need to get the type BUT will default to using an HttpInterface if needed
+			        	interfaceType = theConfigurationManager.getStringValue( String.format( ConfigurationConstants.INTERFACE_TYPE, interfaceName ), defaultClassName );
+
+			        	logger.info( "Interface '{}' being prepared to use interface type '{}'.", interfaceName, interfaceType);
+
 			        	// now we load the type
 			        	interfaceClass = classLoader.loadClass( interfaceType );
 			        	Preconditions.checkState( Interface.class.isAssignableFrom( interfaceClass ), "Failed to setup interface '%s' since class '%s' does not implement Interface.", interfaceName, interfaceType );
