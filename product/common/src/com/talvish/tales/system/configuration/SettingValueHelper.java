@@ -63,6 +63,16 @@ public final class SettingValueHelper {
 	}
 
 	/**
+	 * Gets a translator for a type, if available.
+	 * @param theType the type to get a translator for 
+	 * @return the translator or null if not found
+	 */
+	public static Translator getTranslator( Class<?> theType ) {
+		Preconditions.checkNotNull( theType, "Need a type to get a translator." );
+		return translators.get( theType );
+	}
+
+	/**
 	 * Generates a setting for a string, as the required type. 
 	 * It will throw exceptions if the string cannot be converted.
 	 * @param theName the name of the value 

@@ -20,8 +20,14 @@ import java.util.Map;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.talvish.tales.contracts.data.DataContractTypeSource;
+import com.talvish.tales.parts.translators.StringToListTranslator;
+import com.talvish.tales.parts.translators.StringToMapTranslator;
+import com.talvish.tales.parts.translators.TranslationException;
+import com.talvish.tales.parts.translators.Translator;
 import com.talvish.tales.serialization.json.JsonTranslationFacility;
 import com.talvish.tales.system.Conditions;
+import com.talvish.tales.system.configuration.hierarchical.JsonStringToListTranslator;
+import com.talvish.tales.system.configuration.hierarchical.JsonStringToMapTranslator;
 import com.talvish.tales.system.configuration.hierarchical.Setting;
 import com.talvish.tales.system.configuration.hierarchical.SourceManager;
 
@@ -106,7 +112,7 @@ public class HierarchicalFileSource implements ConfigurationSource {
 		LoadedSetting setting = null;
 		if( settings.containsKey( theName ) ) {
 			Setting hierarchicalSetting = settings.get( theName );
-			setting = SettingValueHelper.generateList( 
+			setting = generateList( 
 					theName, 
 					hierarchicalSetting.getValue( ), 
 					hierarchicalSetting.getDescription(), 
@@ -133,7 +139,7 @@ public class HierarchicalFileSource implements ConfigurationSource {
 		LoadedSetting setting = null;
 		if( settings.containsKey( theName ) ) {
 			Setting hierarchicalSetting = settings.get( theName );
-			setting = SettingValueHelper.generateMap( 
+			setting = generateMap( 
 					theName, 
 					hierarchicalSetting.getValue( ), 
 					hierarchicalSetting.getDescription(), 
@@ -153,5 +159,69 @@ public class HierarchicalFileSource implements ConfigurationSource {
 	@Override
 	public String getName() {
 		return defaultSourceName;
+	}
+	
+	
+	/**
+	 * Generates a setting from a string, as a list of a specific type. 
+	 * It will throw exceptions if the string cannot be converted.
+	 * @param theName the name of the value 
+	 * @param theStringValue the string value to be translated
+	 * @param theDescription the description for the setting
+	 * @param isSensitive indicates if this is a private setting
+	 * @param theSource the name given to the source of the value
+	 * @param theElementType the type of the element 
+	 * @return a configuration setting generated for value, if found, null otherwise
+	 */
+	public static LoadedSetting generateList( String theName, String theStringValue, String theDescription, boolean isSensitive, String theSource, Class<?> theElementType ) {
+		Preconditions.checkArgument( !Strings.isNullOrEmpty( theName ), "Name cannot be null or empty.");
+		Preconditions.checkArgument( !Strings.isNullOrEmpty( theSource ), "Source cannot be null or empty.");
+		Preconditions.checkNotNull( theElementType, "Need a type to be able to translate." );
+		
+		Translator elementTranslator = SettingValueHelper.getTranslator( theElementType );
+		Preconditions.checkState( elementTranslator != null, "Element type '%s' did not have a translator.", theElementType.getName( ) );
+		
+		// NOTE: we generate this on the fly, we could store create items for lookup later 
+		JsonStringToListTranslator collectionTranslator = new JsonStringToListTranslator( elementTranslator, true, null, null );
+		
+		try {
+			return new LoadedSetting( theName, collectionTranslator.translate( theStringValue ), theStringValue, theDescription, isSensitive, theSource );
+		} catch( TranslationException e ) {
+			throw new ConfigurationException( String.format( "'%s' had a value of '%s' that could not be translated into a list of '%s'.", theName, theStringValue, theElementType.getName( ) ), e );
+		}
+	}
+
+	
+	/**
+	 * Generates a setting from a json string, as a map of the specific key and value types. 
+	 * It will throw exceptions if the string cannot be converted.
+	 * @param theName the name of the value 
+	 * @param theStringValue the string value to be translated
+	 * @param theDescription the description for the setting
+	 * @param isSensitive indicates if this is a private setting
+	 * @param theSource the name given to the source of the value
+	 * @param theKeyType the type of the key 
+	 * @param theValueType the type of the value 
+	 * @return a configuration setting generated for value, if found, null otherwise
+	 */
+	private LoadedSetting generateMap( String theName, String theStringValue, String theDescription, boolean isSensitive, String theSource, Class<?> theKeyType, Class<?> theValueType ) {
+		Preconditions.checkArgument( !Strings.isNullOrEmpty( theName ), "Name cannot be null or empty.");
+		Preconditions.checkArgument( !Strings.isNullOrEmpty( theSource ), "Source cannot be null or empty.");
+		Preconditions.checkNotNull( theKeyType, "Need a key type to be able to translate." );
+		Preconditions.checkNotNull( theValueType, "Need a value type to be able to translate." );
+		
+		Translator keyTranslator = SettingValueHelper.getTranslator( theKeyType );
+		Translator valueTranslator = SettingValueHelper.getTranslator( theValueType );
+		Preconditions.checkState( keyTranslator != null, "Key type '%s' did not have a translator.", theKeyType.getName( ) );
+		Preconditions.checkState( valueTranslator != null, "Value type '%s' did not have a translator.", theValueType.getName( ) );
+		
+		// NOTE: we generate this on the fly, we could store create items for lookup later 
+		JsonStringToMapTranslator collectionTranslator = new JsonStringToMapTranslator( keyTranslator, valueTranslator, true, null, null );
+		
+		try {
+			return new LoadedSetting( theName, collectionTranslator.translate( theStringValue ), theStringValue, theDescription, isSensitive, theSource );
+		} catch( TranslationException e ) {
+			throw new ConfigurationException( String.format( "'%s' had a value of '%s' that could not be translated into a map of '[%s,%s]'.", theName, theStringValue, theKeyType.getName( ), theValueType.getName( ) ), e );
+		}
 	}
 }

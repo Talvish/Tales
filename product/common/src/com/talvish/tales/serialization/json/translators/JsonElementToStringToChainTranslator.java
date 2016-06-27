@@ -49,7 +49,16 @@ public class JsonElementToStringToChainTranslator implements Translator {
 			returnValue = chainedTranslator.translate( null );
 		} else {
 			try {
-				returnValue = chainedTranslator.translate( ( ( JsonElement )anObject ).getAsString( ) );
+				JsonElement element = ( JsonElement )anObject;
+				
+				// TODO: the underlying call for this just does an 'instanceof', which I'm not sure how fast this is
+				//       given this check is primarily for configuration purposes, may want to capture exceptions 
+				//		 instead and then try the translate 
+				if( element.isJsonPrimitive( ) ) {
+					returnValue = chainedTranslator.translate( element.getAsString( ) );
+				} else {
+					returnValue = chainedTranslator.translate( element.toString( ) );
+				}
 			} catch( ClassCastException | IllegalStateException | UnsupportedOperationException e ) {
 				throw new TranslationException( e );
 			}
