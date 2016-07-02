@@ -15,6 +15,7 @@
 // ***************************************************************************
 package com.talvish.tales.parts.reflection;
 
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -199,5 +200,14 @@ public abstract class FieldDescriptor<T extends TypeDescriptor<T, F>, F extends 
      */
     public void setData( Object theInstance, Object theValue ) {
         this.site.setData( theInstance, theValue );
+    }
+    
+    /**
+     * Returns the annotation on the field for the specified type.
+     * @param theAnnotationClass the class of the annotation to get
+     * @return the annotation or null if it doesn't exist
+     */
+    public <A extends Annotation> A getAnnotation( Class<A> theAnnotationClass ) {
+    	return this.site.getAnnotation( theAnnotationClass );
     }
 }

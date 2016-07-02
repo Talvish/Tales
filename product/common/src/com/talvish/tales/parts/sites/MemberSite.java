@@ -15,6 +15,8 @@
 // ***************************************************************************
 package com.talvish.tales.parts.sites;
 
+import java.lang.annotation.Annotation;
+
 /**
  * {@link DataSite} extension that targets members of a class.
  * @author jmolnar
@@ -32,4 +34,11 @@ public interface MemberSite extends DataSite {
 	 * @return the name of the member
 	 */
 	String getName( );
+
+	/**
+     * Returns the annotation on the field for the specified type.
+     * @param theAnnotationClass the class of the annotation to get
+     * @return the annotation or null if it doesn't exist
+     */
+    <A extends Annotation> A getAnnotation( Class<A> theAnnotationClass );
 }

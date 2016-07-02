@@ -43,6 +43,8 @@ public class JsonTypeMap {
 	private final boolean strictMatch = false;
 	private final SerializationType<?,?> reflectedType;
 	private Map<String, JsonMemberMap> members = Collections.unmodifiableMap( new HashMap<String, JsonMemberMap>( ) );
+	private JsonMemberMap unmappedNameMember = null;
+	private JsonMemberMap unmappedValueMember = null;
 	
 	/**
 	 * Constructor taking the type it represents.
@@ -88,21 +90,39 @@ public class JsonTypeMap {
 		Preconditions.checkNotNull( theElement, "need a non-null element");
 		
 		JsonMemberMap member = null;
+		String memberName = null;
 		Set<Entry<String,JsonElement>> set = theElement.entrySet();
+		String foundUnmappedMemberName = null;
 		
 		for( Entry<String, JsonElement> entry : set ) {
-			member = members.get( entry.getKey() );
+			memberName = entry.getKey( );
+			member = members.get( memberName );
 			if( member == null ) {
-				if( strictMatch ) {
-					throw new TranslationException( String.format( "Json for type '%s' refers to a member '%s' that does not exist.", reflectedType.getType().getName(), entry.getKey() ) );
+				if( unmappedNameMember != null ) {
+					// if we cannot find the member and the unmapped name is set then we presume the entry
+					// represents the unmapped name and unmapped value members
+					
+					// for the unmapped name we don't have json, so we go straight to the underlying site to store the name
+					unmappedNameMember.getDataSite().getDataSite( ).setData( theInstance, memberName );
+					// then we store the value (and we know the value member cannot be null)
+					unmappedValueMember.setData(theInstance, entry.getValue( ) );
+					
+					if( foundUnmappedMemberName != null ) {
+						// log a warning since data could be lost
+						logger.warn( "Found json members '{}' and '{}' attempting to assign to the designated unmapped member '{}.{}'.", foundUnmappedMemberName, memberName, this.reflectedType.getType().getName(), this.unmappedNameMember.getReflectedField().getName( ) );
+					}
+					foundUnmappedMemberName = memberName;
+					
+				} else if( strictMatch ) {
+					throw new TranslationException( String.format( "Json for type '%s' refers to a member '%s' that does not exist.", reflectedType.getType().getName(), memberName ) );
 				} else {
-					logger.debug( "Ignoring unknown member '{}.{}'", this.getReflectedType().getName(), entry.getKey() );
+					logger.debug( "Ignoring unknown json member '{}' for type '{}'.", memberName, this.getReflectedType().getName() );
 				}
 			} else {
 				try {
 					member.setData( theInstance, entry.getValue( ) );
 				} catch( TranslationException e ) {
-					throw new TranslationException( String.format( "Error attempting to set data on member '%s.%s'.", this.reflectedType.getName(), member.getReflectedField().getName( ) ), e );
+					throw new TranslationException( String.format( "Error attempting to set data on member '%s.%s'.",  this.reflectedType.getType().getName(), member.getReflectedField().getName( ) ), e );
 				}
 			}
 		}
@@ -144,12 +164,38 @@ public class JsonTypeMap {
     	
     	for( JsonMemberMap member : theMembers ) {
     		if( newMembers.containsKey( member.getReflectedField().getName( ) ) ) {
-    			throw new IllegalStateException( String.format( "The type with name '%s' and type '%s' is attempting to add more than one member called '%s'.", this.reflectedType.getName(), this.reflectedType.getType().getName(), member.getReflectedField().getName( ) ) );
+    			throw new IllegalStateException( String.format( "Type '%s' is attempting to add more than one member called '%s'.", this.reflectedType.getType().getName(), member.getReflectedField().getName( ) ) );
     		} else if( member.getContainingType() != this ) {
-    			throw new IllegalStateException( String.format( "The type with name '%s' and type '%s' is attempting to add a member called '%s', but the member is associated to the type '%s'.", this.reflectedType.getName(), this.reflectedType.getType().getName(), member.getReflectedField().getName( ), member.getContainingType().getReflectedType().getType( ).getName( ) ) );
+    			throw new IllegalStateException( String.format( "Type '%s' is attempting to add a member called '%s', but the member is associated to the type '%s'.", this.reflectedType.getType().getName(), member.getReflectedField().getName( ), member.getContainingType().getReflectedType().getType( ).getName( ) ) );
     		} else {
     			newMembers.put( member.getReflectedField( ).getName( ), member );
+
+    			// now we see if we have unmapped name/values
+    			if( member.getReflectedField().getAnnotation( UnmappedName.class ) != null ) {
+    				if( unmappedNameMember != null ) {
+    					throw new IllegalStateException( String.format( "Type '%s' is attempting to have members '%s' and '%s' represent unmapped json names.", this.reflectedType.getType().getName(), unmappedNameMember.getReflectedField().getName( ), member.getReflectedField().getName( ) ) );
+    				} else if( !member.getDataSite().getType( ).getType().equals( String.class ) ) {
+    					throw new IllegalStateException( String.format( "Field '%s.%s' must be a String type to represent the unmapped json member.", this.reflectedType.getType().getName(), member.getReflectedField().getName( ) ) );
+    				} else {
+    					unmappedNameMember = member;
+    				}
+    			} else if( member.getReflectedField().getAnnotation( UnmappedValue.class ) != null ) {
+    				if( unmappedValueMember != null ) {
+    					throw new IllegalStateException( String.format( "Type '%s' is attempting to have members '%s' and '%s' represent unmapped json values.", this.reflectedType.getType().getName(), unmappedValueMember.getReflectedField().getName( ), member.getReflectedField().getName( ) ) );
+    				} else {
+    					unmappedValueMember = member;
+    				}
+    			}
     		}
+    	}
+    	
+    	// we have to have both set or else we have a problem
+    	if( unmappedNameMember == null && unmappedValueMember != null ) {
+			throw new IllegalStateException( String.format( "Type '%s' has the unmapped value set to member '%s' but no unmapped name member.", this.reflectedType.getType().getName(), unmappedValueMember.getReflectedField().getName( ) ) );
+    	} else if( unmappedNameMember != null && unmappedValueMember == null ) {
+			throw new IllegalStateException( String.format( "Type '%s' has the unmapped name set to member '%s' but no unmapped value member.", this.reflectedType.getType().getName(), unmappedNameMember.getReflectedField().getName( ) ) );
+    	} else if( unmappedNameMember != null && unmappedValueMember != null ) {
+			logger.debug( "Type '{}' is using '{}' as the unmapped name member and '{}' as the unmapped value member.",  this.reflectedType.getType().getName(), unmappedNameMember.getReflectedField().getSite().getName( ), unmappedValueMember.getReflectedField().getSite().getName( ) );
     	}
     	
     	members = Collections.unmodifiableMap( newMembers );

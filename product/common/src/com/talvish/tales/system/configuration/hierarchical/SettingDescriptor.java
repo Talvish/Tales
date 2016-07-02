@@ -22,6 +22,8 @@ import com.talvish.tales.contracts.data.DataMember;
 import com.talvish.tales.parts.naming.NameManager;
 import com.talvish.tales.parts.naming.NameValidator;
 import com.talvish.tales.parts.naming.SegmentedLowercaseValidator;
+import com.talvish.tales.serialization.json.UnmappedName;
+import com.talvish.tales.serialization.json.UnmappedValue;
 import com.talvish.tales.system.Conditions;
 
 /**
@@ -39,11 +41,13 @@ class SettingDescriptor {
 		}
 	}
 
+	@UnmappedName
 	@DataMember( name="name" )
 	private String name;
 	@DataMember( name="description" )
 	private String description;
 	
+	@UnmappedValue
 	@DataMember( name="value" )
 	private String value;
 	

@@ -20,8 +20,6 @@ import java.util.Map;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.talvish.tales.contracts.data.DataContractTypeSource;
-import com.talvish.tales.parts.translators.StringToListTranslator;
-import com.talvish.tales.parts.translators.StringToMapTranslator;
 import com.talvish.tales.parts.translators.TranslationException;
 import com.talvish.tales.parts.translators.Translator;
 import com.talvish.tales.serialization.json.JsonTranslationFacility;
@@ -163,7 +161,7 @@ public class HierarchicalFileSource implements ConfigurationSource {
 	
 	
 	/**
-	 * Generates a setting from a string, as a list of a specific type. 
+	 * Generates a setting from a json string, as a list of a specific type. 
 	 * It will throw exceptions if the string cannot be converted.
 	 * @param theName the name of the value 
 	 * @param theStringValue the string value to be translated
@@ -173,7 +171,7 @@ public class HierarchicalFileSource implements ConfigurationSource {
 	 * @param theElementType the type of the element 
 	 * @return a configuration setting generated for value, if found, null otherwise
 	 */
-	public static LoadedSetting generateList( String theName, String theStringValue, String theDescription, boolean isSensitive, String theSource, Class<?> theElementType ) {
+	private LoadedSetting generateList( String theName, String theStringValue, String theDescription, boolean isSensitive, String theSource, Class<?> theElementType ) {
 		Preconditions.checkArgument( !Strings.isNullOrEmpty( theName ), "Name cannot be null or empty.");
 		Preconditions.checkArgument( !Strings.isNullOrEmpty( theSource ), "Source cannot be null or empty.");
 		Preconditions.checkNotNull( theElementType, "Need a type to be able to translate." );

@@ -15,6 +15,7 @@
 // ***************************************************************************
 package com.talvish.tales.parts.sites;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 
@@ -105,6 +106,16 @@ public class FieldSite implements MemberSite {
 	public boolean isReadOnly( ) {
 		return false;
 	}
+
+    /**
+     * Returns the annotation on the field for the specified type.
+     * @param theAnnotationClass the class of the annotation to get
+     * @return the annotation or null if it doesn't exist
+     */
+    public <A extends Annotation> A getAnnotation( Class<A> theAnnotationClass ) {
+    	return field.getAnnotation( theAnnotationClass ) ;
+    }
+	
 	/**
 	 * Gets data from a field off the source object.
 	 * @param theSource the source object to get data from.
