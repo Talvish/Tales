@@ -101,8 +101,7 @@ public final class ServiceHost {
         	// we need to get the service type
             serviceType = theManager.getStringValue( ConfigurationConstants.SERVICE_TYPE );
 
-        	logger.info( "Service host is attempting to load the service '{}'.", serviceType )
-        	;
+        	logger.info( "Service host is attempting to load the service '{}'.", serviceType );
             // now we load the type
         	serviceClass = ( Class<? extends Service> )classLoader.loadClass( serviceType );
         	

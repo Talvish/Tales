@@ -82,20 +82,21 @@ public class SourceManager {
 	 * @param theFilename the file to be loaded
 	 * @param theSourceStack ensures there isn't a loop in the include files
 	 */
-	private void loadConfiguration( String theSource, Deque<String> theSourceStack ) {
+	private void loadConfiguration( String theSource, Deque<File> theSourceStack ) {
 		logger.info( "Loading configuration from source '{}'.", theSource );
+
+		// we convert to Files so we can ultimately understand how to process the relative paths 
+		File parentSourceFile = theSourceStack.peekLast( );
+		File sourceFile = new File( parentSourceFile == null ? null : parentSourceFile.getParent(), theSource );
 
 		// first we make sure there isn't a cycle THOUGH this doesn't prevent a profile
 		// having a parent that is defined by a config source that is not included by
 		// provided by the source including this file 
-		Conditions.checkConfiguration( !theSourceStack.contains( theSource ), "Configuration source '%s' surfaced an include cycle of '%s'.", theSource, String.join( " -> ", theSourceStack ) );
+		Conditions.checkConfiguration( !theSourceStack.contains( sourceFile ), "Configuration source '%s' surfaced an include cycle of '%s'.", theSource, toString( theSourceStack ) );
 
 		// next we see if we have already processed this source in a different part of  
 		// the inclusion tree, if so, that is okay we just don't re-process
 		if( !sources.containsKey( theSource ) ) {
-			// we add to the stack to prevent cycles
-			theSourceStack.addLast( theSource );
-		
 			// to understand how this works, essentially the order of loading is important
 			// the first thing it does is load all of the files and their respective 
 			// includes into memory, it then assumes that previously loaded/referenced
@@ -104,10 +105,13 @@ public class SourceManager {
 			
 			String contents;
 			SourceDescriptor source;
-			
-			contents = getSourceContents( theSource, theSourceStack );
-			source = jsonFacility.fromJsonString( contents, sourceType );
 
+			// we load the file's content
+			contents = getSourceContents( sourceFile, theSourceStack );
+			// once loaded, we are we add to the stack to detect cycles 
+			theSourceStack.addLast( sourceFile );
+			// then turn the file contents into an in memory representation
+			source = jsonFacility.fromJsonString( contents, sourceType );
 			// now we do a bit of cleanup (which traverses all descriptors)
 			source.onDeserialized( theSource );
 
@@ -143,20 +147,18 @@ public class SourceManager {
 	
 	/**
 	 * This helper method loads into memory the contents of the specified file. 
-	 * @param theFilename the file to load
+	 * @param theSourceFile the file to load
 	 * @param theSourceStack gives context for messages in exceptions
 	 * @return the contents of the specified file
 	 */
-	private String getSourceContents( String theFilename, Deque<String> theSourceStack ) {
-		File file = new File( theFilename );
-
+	private String getSourceContents( File theSourceFile, Deque<File> theSourceStack ) {
 	    int readLength;
 	    char[] buffer = new char[ 4096 ];
 	    StringBuilder contents = new StringBuilder();
 	    FileReader reader = null;
 	    
 		try {
-			reader = new FileReader( file );
+			reader = new FileReader( theSourceFile );
 			for( ; ; ) { 
 				readLength = reader.read( buffer );
 				if( readLength > 0 ) {
@@ -168,9 +170,9 @@ public class SourceManager {
 		    return contents.toString( );
 		    
 		} catch( FileNotFoundException e ) {
-			throw new ConfigurationException( String.format( "Could not find the source '%s' while traversing/loading the configuration source stack '%s'.", theFilename, String.join( " -> ", theSourceStack ) ), e );
+			throw new ConfigurationException( String.format( "Could not find the source '%s' while traversing/loading the configuration source stack '%s'.", theSourceFile.getPath( ), toString( theSourceStack ) ), e );
 		} catch( IOException e ) {
-			throw new ConfigurationException( String.format( "Unknown I/O error reading configuration source '%s' while traversing/loading the configuration source stack '%s'.", theFilename, String.join( " -> ", theSourceStack ) ), e );
+			throw new ConfigurationException( String.format( "Unknown I/O error reading configuration source '%s' while traversing/loading the configuration source stack '%s'.", theSourceFile.getPath( ), toString( theSourceStack ) ), e );
 	    } finally {
 	    	if( reader != null ) {
 	    		try {
@@ -180,6 +182,25 @@ public class SourceManager {
 				}
 	    	}
 	    }
+	}
+	
+	/**
+	 * Given the source stack, returns a string version of the stack.
+	 * @param theSourceStack the source stack to stringify
+	 * @return the source stack as a string
+	 */
+	private String toString( Deque<File> theSourceStack ) {
+		StringBuilder list = new StringBuilder( );
+		boolean first = true;
+		
+		for( File file : theSourceStack ) {
+			if( !first ) {
+				list.append( " -> " );
+			}
+			list.append( file.getPath( ) );
+			first = false;
+		}
+		return list.toString( );
 	}
 	
 	/**
