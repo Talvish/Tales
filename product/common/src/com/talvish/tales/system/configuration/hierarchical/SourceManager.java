@@ -134,6 +134,11 @@ public class SourceManager {
 				
 				ProfileDescriptor existingProfile = profiles.get( profile.getName( ) );
 				String existingSource = existingProfile == null ? "<existing>" : existingProfile.getDeclaringSource().getSourcePath(); // this is done this way to aid debugging, exceptional conditions
+
+				// TODO: if we try to load from two different sources for a profiles 
+				//       but where we need to make sure that blocks dont' overlap
+				//       so the question is, what happens when multiple blocks
+				//       refer to the same source/block
 				Conditions.checkConfiguration( !profiles.containsKey( profile.getName( ) ), "Profile '%s' from '%s' has the same name as an existing profile from '%s'.", profile.getName(), theSource, existingSource );
 				
 				profiles.put( profile.getName(), profile );
@@ -215,11 +220,20 @@ public class SourceManager {
 	}
 	
 	/**
+	 * Checks to see if the particular profile name exists.
+	 * @param theName the name of the profile to check for
+	 * @return true if the profile exists, false otherwise
+	 */
+	public boolean hasProfile( String theName ) {
+		return this.profiles.containsKey( theName );
+	}
+	
+	/**
 	 * Gets the profile descriptor for a given profile.
 	 * @param theName the name of the profile to get
 	 * @return the profile, or null if not found
 	 */
-	protected ProfileDescriptor getProfile( String theName ) {
+	public ProfileDescriptor getProfile( String theName ) {
 		return this.profiles.get( theName );
 	}
 
@@ -239,13 +253,9 @@ public class SourceManager {
 		ProfileDescriptor profile = this.profiles.get( theProfile );
 		Preconditions.checkArgument( profile != null, "Could not find profile '%s'.", theProfile );
 		
+		// validation is done by the profile
 		Map<String, Setting> settings = profile.extractSettings( theBlock );
 
-		// now we make sure things are fully validated
-		for( Setting setting : settings.values( ) ) {
-			setting.validate();
-		}
-		
 		return settings;
 	}
 	

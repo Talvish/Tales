@@ -224,6 +224,8 @@ class ProfileDescriptor {
 
 	/**
 	 * Resolves all settings and any overrides using this profile as the root context for blocks.
+	 * This will do additional validation to ensure there are no block cycles, proper setting  
+	 * overrides, etc.
 	 * @param theBlockName the name of the block acting as the entry point
 	 * @return the available settings or empty list if not are available
 	 */
@@ -233,7 +235,15 @@ class ProfileDescriptor {
 		
 		BlockDescriptor rootBlock = this.accessibleBlockMap.get( theBlockName );
 		Conditions.checkConfiguration( !rootBlock.isDeferred(), "Block '%s.%s' is marked deferred and therfore cannot be directly used as a source of configuration settings.", this.name, theBlockName );
-		return extractSettings( this, rootBlock, rootBlock, new ArrayDeque<String>( ), false );
+		
+		Map<String, Setting> settings = extractSettings( this, rootBlock, rootBlock, new ArrayDeque<String>( ), false );
+		
+		// now we make sure things are fully validated
+		for( Setting setting : settings.values( ) ) {
+			setting.validate();
+		}
+		
+		return settings;
 	}
 	
 	/**
