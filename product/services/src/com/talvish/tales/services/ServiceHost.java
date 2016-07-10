@@ -18,6 +18,7 @@ package com.talvish.tales.services;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,9 +27,11 @@ import com.google.common.base.Strings;
 import com.talvish.tales.parts.ArgumentParser;
 import com.talvish.tales.system.configuration.ConfigurationException;
 import com.talvish.tales.system.configuration.ConfigurationManager;
+import com.talvish.tales.system.configuration.ConfigurationSource;
 import com.talvish.tales.system.configuration.HierarchicalFileSource;
 import com.talvish.tales.system.configuration.MapSource;
 import com.talvish.tales.system.configuration.PropertyFileSource;
+import com.talvish.tales.system.configuration.SourceConfiguration;
 
 /**
  * This is a simple helper class that is designed to minimize the 
@@ -72,49 +75,57 @@ public final class ServiceHost {
 			} else if( Strings.isNullOrEmpty( profile ) && Strings.isNullOrEmpty( block ) ) {
 				configurationManager.addSource( new PropertyFileSource( filename ) );
 			} else {
-				throw new ConfigurationException( String.format( "Only some configuration setup settings are available (profile:'%s', block: '%s', source: '%s').", profile, block, filename ) );
+				throw new ConfigurationException( String.format( "Cannote quite determine which source type (property file or hieararchical) due to missing settings (profile: '%s', block: '%s', source: '%s').", profile, block, filename ) );
+			}
+		}
+		// and then we see if a we have additional sources requested
+		List<String> sourceClassNames = configurationManager.getListValue( "settings.sources", String.class, null );
+		if( sourceClassNames != null ) {
+			Class<? extends ConfigurationSource> sourceClass;
+			ConfigurationSource source;
+			for( String sourceClassName : sourceClassNames ) {
+				// we try to load the class 
+		    	logger.info( "Service host is attempting to load configuration source '{}'.", sourceClassName );
+				sourceClass = loadClass( sourceClassName , ConfigurationSource.class );
+				// and then create an instance
+	        	logger.info( "Service host is attempting to create configuration source '{}'.", sourceClassName );
+				source = instantiateSource( sourceClass, configurationManager );
+				// which we save in the list of sources
+				configurationManager.addSource( source );
 			}
 		}
 		
 		return configurationManager;
 	}
-	
 
 	/**
-	 * Helper method that will use a class loader to load a class that must extend
-	 * Service and whose type name is based on the configuration setting 'service.type'.
-	 * @param theManager the configuration manager to use
-	 * @return the class representing the service
+	 * Helper method that will use a class loader to load a class.
+	 * An exception is thrown if there are any issues.
+	 * @param <T>
+	 * @param theClassName the class to load
+	 * @return the class request
 	 */
 	@SuppressWarnings("unchecked")
-	public static Class<? extends Service> loadServiceClass( ConfigurationManager theManager ) {
-		// now we see what we have in the way of which service to start        
+	private static <T> Class<? extends T> loadClass( String theClassName, Class<T> theExpectedType ) {
 		ClassLoader classLoader = null;
-        String serviceType = null;
-    	Class<? extends Service> serviceClass = null;
+    	Class<? extends T> desiredClass = null;
     	
-    	// TODO: need to fix that we have two forms of configuration ...
-		
     	try {
         	// need a class loader to create the class
 	        classLoader = ServiceHost.class.getClassLoader();
-        	// we need to get the service type
-            serviceType = theManager.getStringValue( ConfigurationConstants.SERVICE_TYPE );
-
-        	logger.info( "Service host is attempting to load the service '{}'.", serviceType );
             // now we load the type
-        	serviceClass = ( Class<? extends Service> )classLoader.loadClass( serviceType );
+	        desiredClass = ( Class<? extends T> )classLoader.loadClass( theClassName );
         	
         } catch( ClassNotFoundException e ) {
-        	throw new ConfigurationException( String.format( "Failed to load service class since the class '%s' could not be found.", serviceType ), e );
+        	throw new ConfigurationException( String.format( "Failed to load class since the class '%s' could not be found.", theClassName ), e );
         } catch( ClassCastException e ) {
-        	throw new ConfigurationException( String.format( "Failed to load service class since the class '%s' does not extend Service.", serviceType ), e );
+        	throw new ConfigurationException( String.format( "Failed to load class since the class '%s' does not extend '{}'.", theClassName, theExpectedType.getName() ), e );
         } catch( SecurityException e ) {
-        	throw new ConfigurationException( String.format( "Failed to load service class '%s' due to a security exception.", serviceType ), e );
+        	throw new ConfigurationException( String.format( "Failed to load class '%s' due to a security exception.", theClassName ), e );
         } catch( IllegalArgumentException e ) {
-        	throw new ConfigurationException( String.format( "Failed to load service class '%s' due to an exception.", serviceType ), e );
+        	throw new ConfigurationException( String.format( "Failed to load class '%s' due to an exception.", theClassName ), e );
         }
-    	return serviceClass;
+    	return desiredClass;
 	}
 	
 	/**
@@ -125,19 +136,16 @@ public final class ServiceHost {
 	 * @param theServiceClass the class of the service to instantiate
 	 * @return the instantiated service
 	 */
-	public static Service instantiateService( Class<? extends Service> theServiceClass ) {
+	private static Service instantiateService( Class<? extends Service> theServiceClass ) {
 		// now we see what we have in the way of which service to start        
     	Constructor<?> serviceConstructor = null;
     	Service serviceInstance = null;
     	
     	try {
-        	logger.info( "Service host is attempting to create the service '{}'.", theServiceClass.getName( ) );
-        	
-        	// and then get the constructor we expected
+        	// we get the constructor we expected
         	serviceConstructor = theServiceClass.getConstructor( );
         	// create the interface
         	serviceInstance = ( Service )serviceConstructor.newInstance( );
-        	
         	
         } catch( ClassCastException e ) {
         	throw new ConfigurationException( String.format( "Failed to instantiate service since class '%s' does not extend Service.", theServiceClass.getName( ) ), e );
@@ -151,6 +159,48 @@ public final class ServiceHost {
     	return serviceInstance;
 	}
 
+	/**
+	 * A helper method that will instantiate a source for use
+	 * in the configuration manager.
+	 * @param theSourceClass the class of the source to instantiate
+	 * @param theManager the configuration manager, which is used to get configuration for the source
+	 * @return the newly instantiated source
+	 */
+	private static ConfigurationSource instantiateSource( Class<? extends ConfigurationSource> theSourceClass, ConfigurationManager theManager ) {
+		// now we see what we have in the way of which service to start        
+    	Constructor<?> sourceConstructor = null;
+    	ConfigurationSource sourceInstance = null;
+    	
+    	try {
+        	
+        	// so first I need to get the annotation of the configuration class to use to get settings
+    		SourceConfiguration configurationAnnotation = theSourceClass.getAnnotation( SourceConfiguration.class );
+    		// and I need to some validation of the annotation
+    		if( configurationAnnotation == null ) {
+            	throw new ConfigurationException( String.format( "Failed to instantiate source since class '%s' does not have the SourceConfiguration annotation.", theSourceClass.getName( ) ) );
+    		}
+    		if( configurationAnnotation.settingsClass() == null ) {
+            	throw new ConfigurationException( String.format( "Failed to instantiate source since the SourceConfiguration annotation on class '%s' does not provide a settings class.", theSourceClass.getName( ) ) );
+    		}
+        	// and then I need to load the settings from the config manager
+    		Object settings = theManager.getValues( configurationAnnotation.settingsClass( ) );
+        	// and then get the constructor we need to load the source up (it takes it's settings)
+        	sourceConstructor = theSourceClass.getDeclaredConstructor( configurationAnnotation.settingsClass( ) );
+        	// and then finally we create the instance we want
+        	sourceInstance = ( ConfigurationSource )sourceConstructor.newInstance( settings );
+        	
+        	
+        } catch( ClassCastException e ) {
+        	throw new ConfigurationException( String.format( "Failed to instantiate source since class '%s' does not extend ConfigurationSource.", theSourceClass.getName( ) ), e );
+        } catch( NoSuchMethodException e ) {
+        	throw new ConfigurationException( String.format( "Failed to instantiate source since class '%s' is missing the constructor taking the parameter of the type associated with the source.", theSourceClass.getName( ) ), e );
+        } catch( IllegalAccessException | SecurityException e ) {
+        	throw new ConfigurationException( String.format( "Failed to instantiate source using class '%s' due to a security exception.", theSourceClass.getName( ) ), e );
+        } catch( IllegalArgumentException | InstantiationException | InvocationTargetException e ) {
+        	throw new ConfigurationException( String.format( "Failed to instantiate source using class '%s' due to an exception.", theSourceClass.getName( ) ), e );
+        }
+    	return sourceInstance;
+	}
 	
 	/**
 	 * The standard Java main entry point, which in this case will
@@ -161,9 +211,11 @@ public final class ServiceHost {
 	 */
     public static void main( String[ ] theArgs ) throws Exception {
     	logger.info( "Service host is initializing." );
-    	
     	ConfigurationManager configurationManager = instantiateConfiguration( theArgs );
-    	Class<? extends Service > serviceClass = loadServiceClass( configurationManager );
+        String serviceClassName = configurationManager.getStringValue( ConfigurationConstants.SERVICE_TYPE );
+    	logger.info( "Service host is attempting to load the service '{}'.", serviceClassName );
+    	Class<? extends Service > serviceClass = loadClass( serviceClassName, Service.class );
+    	logger.info( "Service host is attempting to create the service '{}'.", serviceClassName );
     	Service serviceInstance = instantiateService( serviceClass );
     	
     	// now we have the service create 
