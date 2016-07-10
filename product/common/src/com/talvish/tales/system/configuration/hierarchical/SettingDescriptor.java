@@ -17,6 +17,7 @@ package com.talvish.tales.system.configuration.hierarchical;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.gson.JsonElement;
 import com.talvish.tales.contracts.data.DataContract;
 import com.talvish.tales.contracts.data.DataMember;
 import com.talvish.tales.parts.naming.NameManager;
@@ -49,7 +50,7 @@ class SettingDescriptor {
 	
 	@UnmappedValue
 	@DataMember( name="value" )
-	private String value;
+	private JsonElement value;
 	
 	@DataMember( name="override" )
 	private Boolean override;
@@ -84,7 +85,7 @@ class SettingDescriptor {
 	 * The value given to the setting.
 	 * @return the value of the setting
 	 */
-	public String getValue( ) {
+	public JsonElement getValue( ) {
 		return value;
 	}
 	
@@ -146,7 +147,7 @@ class SettingDescriptor {
 				theDeclaringBlock.getDeclaringProfile().getName(), 
 				theDeclaringBlock.getName( ),
 				nameValidator.getClass().getSimpleName() ) );
-		Conditions.checkConfiguration( !isDeferred( ) || value == null , String.format( "Setting name '%s' on block '%s.%s' indicates it is deferred (an overridden value must be provided later) however a value was provided now.", 
+		Conditions.checkConfiguration( !isDeferred( ) || value == null || value.isJsonNull(), String.format( "Setting name '%s' on block '%s.%s' indicates it is deferred (an overridden value must be provided later) however a value was provided now.", 
 				name, 
 				theDeclaringBlock.getDeclaringProfile().getName(), 
 				theDeclaringBlock.getName( ) ) );

@@ -41,6 +41,7 @@ import com.talvish.tales.parts.reflection.JavaType;
 import com.talvish.tales.parts.reflection.TypeUtility;
 import com.talvish.tales.parts.reflection.ValueType;
 import com.talvish.tales.parts.sites.TranslatedDataSite;
+import com.talvish.tales.parts.translators.PassthroughTranslator;
 import com.talvish.tales.parts.translators.StringToEnumTranslator;
 import com.talvish.tales.parts.translators.TranslationException;
 import com.talvish.tales.parts.translators.Translator;
@@ -120,6 +121,7 @@ public final class JsonTranslationFacility implements Facility {
 		Translator stringToJsonTranslator = new StringToJsonPrimitiveTranslator( );
 		Translator jsonToVoidTransator = new JsonObjectToVoidTranslator( );
 		Translator voidToJsonTranslator = new VoidToJsonObjectTranslator( );
+		Translator passthroughTranslator = new PassthroughTranslator( );
 
 		// TODO: these could be faster if we went to number directly and then cast into the right type, instead of turning them into strings first
 		
@@ -253,6 +255,14 @@ public final class JsonTranslationFacility implements Facility {
 				"void", 
 				jsonToVoidTransator,
 				voidToJsonTranslator );
+		
+		// this is for systems that can manage json directly themselves, we allow the pass-through
+		javaType = new JavaType( JsonElement.class );
+		registerJsonElementTranslators( 
+				javaType,
+				"json", 
+				passthroughTranslator,
+				passthroughTranslator );
 	}
 	
 	/**

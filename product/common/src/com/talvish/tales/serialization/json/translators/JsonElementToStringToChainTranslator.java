@@ -49,7 +49,9 @@ public class JsonElementToStringToChainTranslator implements Translator {
 			returnValue = chainedTranslator.translate( null );
 		} else {
 			try {
-				JsonElement element = ( JsonElement )anObject;
+				JsonElement element = ( JsonElement )anObject; 
+				
+				// TODO: consider removing this
 				
 				// TODO: the underlying call for this just does an 'instanceof', which I'm not sure how fast this is
 				//       given this check is primarily for configuration purposes, may want to capture exceptions 

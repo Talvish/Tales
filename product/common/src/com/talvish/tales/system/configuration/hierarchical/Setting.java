@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.gson.JsonElement;
 import com.talvish.tales.system.Conditions;
 
 /**
@@ -43,7 +44,7 @@ public class Setting {
 
 	private String name;
 	private String description;
-	private String value;
+	private JsonElement value;
 	private boolean sensitive;
 	
 	private boolean deferred;
@@ -107,7 +108,7 @@ public class Setting {
 	 * The value given to the setting.
 	 * @return the value of the setting
 	 */
-	public String getValue( ) {
+	public JsonElement getValue( ) {
 		return value;
 	}
 	

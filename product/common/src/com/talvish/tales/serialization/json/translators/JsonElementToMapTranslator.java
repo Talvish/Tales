@@ -13,7 +13,7 @@
 //*  See the License for the specific language governing permissions and
 //*  limitations under the License.
 //***************************************************************************
-package com.talvish.tales.system.configuration.hierarchical;
+package com.talvish.tales.serialization.json.translators;
 
 import java.util.HashMap;
 import java.util.Set;
@@ -23,23 +23,21 @@ import com.google.common.base.Preconditions;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-import com.google.gson.JsonParser;
-import com.talvish.tales.parts.translators.StringToObjectTranslatorBase;
+
+import com.talvish.tales.parts.translators.NullTranslatorBase;
 import com.talvish.tales.parts.translators.TranslationException;
 import com.talvish.tales.parts.translators.Translator;
 
-public class JsonStringToMapTranslator extends StringToObjectTranslatorBase implements Translator {
-	private static final JsonParser parser = new JsonParser( );
+public class JsonElementToMapTranslator extends NullTranslatorBase implements Translator {
 	private final Translator keyTranslator;
 	private final Translator valueTranslator;
 	
-	@SuppressWarnings("rawtypes") // TODO: this works but considered, need to find a better way to handle the generics
-	public JsonStringToMapTranslator( Translator theKeyTranslator, Translator theValueTranslator ) {
-		this( theKeyTranslator, theValueTranslator, true, new HashMap( 0 ), null );
+	public JsonElementToMapTranslator( Translator theKeyTranslator, Translator theValueTranslator ) {
+		this( theKeyTranslator, theValueTranslator, null );
 	}
 	
-	public JsonStringToMapTranslator( Translator theKeyTranslator, Translator theValueTranslator, boolean shouldTrim, Object theEmptyValue, Object theNullValue ) {
-		super(shouldTrim, theEmptyValue, theNullValue);
+	public JsonElementToMapTranslator( Translator theKeyTranslator, Translator theValueTranslator, Object theNullValue ) {
+		super(theNullValue);
 		Preconditions.checkNotNull( theKeyTranslator, "theKeyTranslator" );
 		Preconditions.checkNotNull( theValueTranslator, "theValueTranslator" );
 		
@@ -55,33 +53,20 @@ public class JsonStringToMapTranslator extends StringToObjectTranslatorBase impl
 			returnValue = this.nullValue;
 		} else {
 			try {
-				String stringValue = ( String )anObject;
+				JsonElement element = ( JsonElement )anObject;
 				
-				if( this.trim ) {
-					stringValue = stringValue.trim();
-				}
-				if( stringValue.equals( "" ) ) {
-					returnValue = this.emptyValue;
-				} else {
-					JsonElement element = parser.parse( stringValue );
-					
-					if( element.isJsonObject( ) ) {
-						HashMap map = new HashMap( );
+				if( element.isJsonObject( ) ) {
+					HashMap map = new HashMap( );
 
-						JsonObject object = ( JsonObject )element;
-						Set<Entry<String,JsonElement>> set = object.entrySet();
-						
-						for( Entry<String, JsonElement> entry : set ) {
-							if( entry.getValue().isJsonPrimitive( ) ) {
-								map.put( keyTranslator.translate( entry.getKey( ) ), valueTranslator.translate( entry.getValue().getAsString( ) ) );
-							} else {
-								throw new TranslationException( String.format( "Key '%s' is attempting to use non-primitive value '%s'.", entry.getKey( ), entry.getValue().toString( ) ) );
-							}
-						}
-						returnValue = map;
-					} else {
-						throw new TranslationException( String.format( "String '%s' is not a json object.", stringValue ) );
+					JsonObject object = ( JsonObject )element;
+					Set<Entry<String,JsonElement>> set = object.entrySet();
+					
+					for( Entry<String, JsonElement> entry : set ) {
+						map.put( keyTranslator.translate( entry.getKey( ) ), valueTranslator.translate( entry.getValue( ) ) );
 					}
+					returnValue = map;
+				} else {
+					throw new TranslationException( String.format( "String '%s' is not a json object that can be used for a map.", element.toString() ) );
 				}
 			} catch( JsonParseException | ClassCastException | IllegalStateException | UnsupportedOperationException e ) {
 				throw new TranslationException( e );
