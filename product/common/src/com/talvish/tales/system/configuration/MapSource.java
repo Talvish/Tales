@@ -64,7 +64,7 @@ import com.google.common.base.Strings;
 
 		LoadedSetting setting = null;
 		if( values.containsKey( theName ) ) {
-			setting = SettingValueHelper.generateValue( theName, values.get( theName ), null, false, sourceName, theType );
+			setting = StringValueHelper.generateValue( theName, values.get( theName ), null, false, sourceName, theType );
 		}
 		return setting;
 	}
@@ -82,7 +82,7 @@ import com.google.common.base.Strings;
 
 		LoadedSetting setting = null;
 		if( values.containsKey( theName ) ) {
-			setting = SettingValueHelper.generateList( theName, values.get( theName ), null, false, sourceName, theElementType );
+			setting = StringValueHelper.generateList( theName, values.get( theName ), null, false, sourceName, theElementType );
 		}
 		return setting;
 	}
@@ -102,7 +102,7 @@ import com.google.common.base.Strings;
 
 		LoadedSetting setting = null;
 		if( values.containsKey( theName ) ) {
-			setting = SettingValueHelper.generateMap( theName, values.get( theName ), null, false, sourceName, theKeyType, theValueType );
+			setting = StringValueHelper.generateMap( theName, values.get( theName ), null, false, sourceName, theKeyType, theValueType );
 		}
 		return setting;
 	}

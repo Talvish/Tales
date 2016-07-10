@@ -26,13 +26,27 @@ import com.talvish.tales.parts.translators.NullTranslatorBase;
 import com.talvish.tales.parts.translators.TranslationException;
 import com.talvish.tales.parts.translators.Translator;
 
+/**
+ * Translates a JsonElement into a List.
+ * @author jmolnar
+ *
+ */
 public class JsonElementToListTranslator extends NullTranslatorBase implements Translator {
 	private Translator elementTranslator = null;
 	
+	/**
+	 * Constructor taking the translator needed to translate elements.
+	 * @param theElementTranslator the element translator
+	 */
 	public JsonElementToListTranslator ( Translator theElementTranslator ) {
 		this( theElementTranslator, null );
 	}
 	
+	/**
+	 * Constructor taking the translator needed to translate elements and what to return for a null.
+	 * @param theElementTranslator the element translator
+	 * @param theNullValue the value to use for null
+	 */
 	public JsonElementToListTranslator ( Translator theElementTranslator, Object theNullValue ) {
 		super(theNullValue);
 		Preconditions.checkNotNull( theElementTranslator, "theElementTranslator" );
@@ -40,6 +54,9 @@ public class JsonElementToListTranslator extends NullTranslatorBase implements T
 		elementTranslator = theElementTranslator;
 	}
 
+	/**
+	 * Translates the object into the appropriate type.
+	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" }) // TODO: this works but considered, need to find a better way to handle the generics
 	@Override
 	public Object translate(Object anObject) {
@@ -48,24 +65,20 @@ public class JsonElementToListTranslator extends NullTranslatorBase implements T
 			returnValue = this.nullValue;
 		} else {
 			try {
-				JsonElement element = ( JsonElement )anObject;
-				if( element.isJsonArray() ) {
-					// if we have an array, we take all the values, translate and put into the array list
-					ArrayList list = new ArrayList( ) ;
+				// TODO: support handling a single item array that doesn't require array syntax
+				JsonArray array = ( JsonArray )anObject;
 
-					JsonArray array = ( JsonArray )element;
-					
-					for( JsonElement entry: array ) {
-						list.add( elementTranslator.translate( entry ) );
-					}
-					returnValue = list;
+				// if we have an array, we take all the values, translate and put into the array list
+				ArrayList list = new ArrayList( array.size( ) ) ;
 				
-					// TODO: support handling a single item array that doesn't require array syntax
-					
-				} else {
-					throw new TranslationException( String.format( "Attempting to translate '%s' but it is not an array.", element.toString( ) ) );
+				for( JsonElement entry: array ) {
+					list.add( elementTranslator.translate( entry ) );
 				}
-			} catch( JsonParseException | ClassCastException | IllegalStateException | UnsupportedOperationException e ) {
+				returnValue = list;
+					
+			} catch( ClassCastException e  ) {
+				throw new TranslationException( String.format( "Attempting to translate '%s' but it is not an array.", anObject.toString( ) ) );
+			} catch( JsonParseException | IllegalStateException | UnsupportedOperationException e ) {
 				throw new TranslationException( e );
 			}
 		}

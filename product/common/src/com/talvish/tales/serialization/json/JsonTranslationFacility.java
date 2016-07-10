@@ -58,7 +58,13 @@ import com.talvish.tales.serialization.json.translators.CollectionToJsonArrayTra
 import com.talvish.tales.serialization.json.translators.JsonArrayToArrayTranslator;
 import com.talvish.tales.serialization.json.translators.JsonArrayToCollectionTranslator;
 import com.talvish.tales.serialization.json.translators.JsonArrayToMapTranslator;
+import com.talvish.tales.serialization.json.translators.JsonElementToBooleanTranslator;
+import com.talvish.tales.serialization.json.translators.JsonElementToDoubleTranslator;
+import com.talvish.tales.serialization.json.translators.JsonElementToFloatTranslator;
+import com.talvish.tales.serialization.json.translators.JsonElementToIntegerTranslator;
+import com.talvish.tales.serialization.json.translators.JsonElementToLongTranslator;
 import com.talvish.tales.serialization.json.translators.JsonElementToStringToChainTranslator;
+import com.talvish.tales.serialization.json.translators.JsonElementToStringTranslator;
 import com.talvish.tales.serialization.json.translators.JsonObjectToObjectTranslator;
 import com.talvish.tales.serialization.json.translators.JsonObjectToPolymorphicObjectTranslator;
 import com.talvish.tales.serialization.json.translators.JsonObjectToVoidTranslator;
@@ -131,65 +137,65 @@ public final class JsonTranslationFacility implements Facility {
 		registerJsonElementTranslators( 
 				javaType,
 				"int32", 
-				new JsonElementToStringToChainTranslator( stringTranslators.getFromStringTranslator( javaType ) ),
+				new JsonElementToIntegerTranslator( null ),
 				numberToJsonTranslator );
 		javaType = new JavaType( Integer.class );
 		registerJsonElementTranslators( 
 				javaType,
 				"int32", 
-				new JsonElementToStringToChainTranslator( stringTranslators.getFromStringTranslator( javaType ) ),
+				new JsonElementToIntegerTranslator( null ),
 				numberToJsonTranslator );	
 		
 		javaType = new JavaType( long.class );
 		registerJsonElementTranslators( 
 				javaType,
 				"int64", 
-				new JsonElementToStringToChainTranslator( stringTranslators.getFromStringTranslator( javaType ) ),
+				new JsonElementToLongTranslator( null ),
 				numberToJsonTranslator );
 		javaType = new JavaType( Long.class );
 		registerJsonElementTranslators( 
 				javaType,
 				"int64", 
-				new JsonElementToStringToChainTranslator( stringTranslators.getFromStringTranslator( javaType ) ),
+				new JsonElementToLongTranslator( null ),
 				numberToJsonTranslator );	
 		
 		javaType = new JavaType( float.class );
 		registerJsonElementTranslators( 
 				javaType,
 				"float32", 
-				new JsonElementToStringToChainTranslator( stringTranslators.getFromStringTranslator( javaType ) ),
+				new JsonElementToFloatTranslator( null ),
 				numberToJsonTranslator );
 		javaType = new JavaType( Float.class );
 		registerJsonElementTranslators( 
 				javaType,
 				"float32", 
-				new JsonElementToStringToChainTranslator( stringTranslators.getFromStringTranslator( javaType ) ),
+				new JsonElementToFloatTranslator( null ),
 				numberToJsonTranslator );	
 		
 		javaType = new JavaType( double.class );
 		registerJsonElementTranslators( 
 				javaType,
 				"float64", 
-				new JsonElementToStringToChainTranslator( stringTranslators.getFromStringTranslator( javaType ) ),
+				new JsonElementToDoubleTranslator( null ),
 				numberToJsonTranslator );
 		javaType = new JavaType( Double.class );
 		registerJsonElementTranslators( 
 				javaType,
 				"float64", 
-				new JsonElementToStringToChainTranslator( stringTranslators.getFromStringTranslator( javaType ) ),
+				new JsonElementToDoubleTranslator( null ),
 				numberToJsonTranslator );	
 
 		javaType = new JavaType( boolean.class );
 		registerJsonElementTranslators( 
 				javaType,
 				"boolean", 
-				new JsonElementToStringToChainTranslator( stringTranslators.getFromStringTranslator( javaType ) ),
+				new JsonElementToBooleanTranslator( null ),
 				booleanToJsonTranslator );
 		javaType = new JavaType( Boolean.class );
 		registerJsonElementTranslators( 
 				javaType,
 				"boolean", 
-				new JsonElementToStringToChainTranslator( stringTranslators.getFromStringTranslator( javaType ) ),
+				new JsonElementToBooleanTranslator( null ),
 				booleanToJsonTranslator );	
 		
 		javaType = new JavaType( DateTime.class );
@@ -224,7 +230,7 @@ public final class JsonTranslationFacility implements Facility {
 		registerJsonElementTranslators( 
 				javaType,
 				"string", 
-				new JsonElementToStringToChainTranslator( stringTranslators.getFromStringTranslator( javaType ) ),
+				new JsonElementToStringTranslator( null ),
 				stringToJsonTranslator );
 		
 		javaType = new JavaType( UUID.class );

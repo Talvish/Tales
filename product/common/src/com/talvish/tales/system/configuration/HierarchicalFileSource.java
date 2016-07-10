@@ -20,8 +20,6 @@ import java.util.Map;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.talvish.tales.contracts.data.DataContractTypeSource;
-import com.talvish.tales.parts.translators.TranslationException;
-import com.talvish.tales.parts.translators.Translator;
 import com.talvish.tales.serialization.json.JsonTranslationFacility;
 import com.talvish.tales.system.Conditions;
 import com.talvish.tales.system.configuration.hierarchical.Setting;
@@ -83,7 +81,7 @@ public class HierarchicalFileSource implements ConfigurationSource {
 		LoadedSetting setting = null;
 		if( settings.containsKey( theName ) ) {
 			Setting hierarchicalSetting = settings.get( theName );
-			setting = JsonSettingValueHelper.generateValue( 
+			setting = JsonValueHelper.generateValue( 
 					theName, 
 					hierarchicalSetting.getValue( ), 
 					hierarchicalSetting.getDescription(), 
@@ -108,7 +106,7 @@ public class HierarchicalFileSource implements ConfigurationSource {
 		LoadedSetting setting = null;
 		if( settings.containsKey( theName ) ) {
 			Setting hierarchicalSetting = settings.get( theName );
-			setting = JsonSettingValueHelper.generateList( 
+			setting = JsonValueHelper.generateList( 
 					theName, 
 					hierarchicalSetting.getValue( ), 
 					hierarchicalSetting.getDescription(), 
@@ -135,7 +133,7 @@ public class HierarchicalFileSource implements ConfigurationSource {
 		LoadedSetting setting = null;
 		if( settings.containsKey( theName ) ) {
 			Setting hierarchicalSetting = settings.get( theName );
-			setting = JsonSettingValueHelper.generateMap( 
+			setting = JsonValueHelper.generateMap( 
 					theName, 
 					hierarchicalSetting.getValue( ), 
 					hierarchicalSetting.getDescription(), 

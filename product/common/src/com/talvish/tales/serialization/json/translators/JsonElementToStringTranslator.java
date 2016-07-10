@@ -46,12 +46,7 @@ public class JsonElementToStringTranslator extends NullTranslatorBase implements
 			returnValue = this.nullValue;
 		} else {
 			try {
-				JsonElement element = ( JsonElement )anObject;
-				if( element.isJsonPrimitive( ) ) { // TODO: consider if this is a good idea or not 
-					returnValue = element.getAsString( );
-				} else {
-					returnValue = element.toString( );
-				}
+				returnValue = ( ( JsonElement )anObject ).getAsString( );
 			} catch( ClassCastException | IllegalStateException | UnsupportedOperationException e ) {
 				throw new TranslationException( e );
 			}

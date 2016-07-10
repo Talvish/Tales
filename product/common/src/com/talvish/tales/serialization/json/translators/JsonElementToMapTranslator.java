@@ -28,14 +28,30 @@ import com.talvish.tales.parts.translators.NullTranslatorBase;
 import com.talvish.tales.parts.translators.TranslationException;
 import com.talvish.tales.parts.translators.Translator;
 
+/**
+ * Translates a JsonElement into a Map.
+ * @author jmolnar
+ *
+ */
 public class JsonElementToMapTranslator extends NullTranslatorBase implements Translator {
 	private final Translator keyTranslator;
 	private final Translator valueTranslator;
 	
+	/**
+	 * Constructor taking the translator needed to translate keys/value.
+	 * @param theKeyTranslator the translator for keys
+	 * @param theValueTranslator the translator for values
+	 */
 	public JsonElementToMapTranslator( Translator theKeyTranslator, Translator theValueTranslator ) {
 		this( theKeyTranslator, theValueTranslator, null );
 	}
 	
+	/**
+	 * Constructor taking the translator needed to translate keys/value and what to return for a null.
+	 * @param theKeyTranslator the translator for keys
+	 * @param theValueTranslator the translator for values
+	 * @param theNullValue the value to use for null
+	 */
 	public JsonElementToMapTranslator( Translator theKeyTranslator, Translator theValueTranslator, Object theNullValue ) {
 		super(theNullValue);
 		Preconditions.checkNotNull( theKeyTranslator, "theKeyTranslator" );
@@ -45,6 +61,9 @@ public class JsonElementToMapTranslator extends NullTranslatorBase implements Tr
 		valueTranslator = theValueTranslator;
 	}
 
+	/**
+	 * Translates the object into the appropriate type.
+	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" }) // TODO: this works but considered, need to find a better way to handle the generics
 	@Override
 	public Object translate(Object anObject) {
@@ -53,22 +72,18 @@ public class JsonElementToMapTranslator extends NullTranslatorBase implements Tr
 			returnValue = this.nullValue;
 		} else {
 			try {
-				JsonElement element = ( JsonElement )anObject;
-				
-				if( element.isJsonObject( ) ) {
-					HashMap map = new HashMap( );
+				JsonObject object = ( JsonObject )anObject;
+				HashMap map = new HashMap( object.size( ) );
 
-					JsonObject object = ( JsonObject )element;
-					Set<Entry<String,JsonElement>> set = object.entrySet();
-					
-					for( Entry<String, JsonElement> entry : set ) {
-						map.put( keyTranslator.translate( entry.getKey( ) ), valueTranslator.translate( entry.getValue( ) ) );
-					}
-					returnValue = map;
-				} else {
-					throw new TranslationException( String.format( "String '%s' is not a json object that can be used for a map.", element.toString() ) );
+				Set<Entry<String,JsonElement>> set = object.entrySet();
+				
+				for( Entry<String, JsonElement> entry : set ) {
+					map.put( keyTranslator.translate( entry.getKey( ) ), valueTranslator.translate( entry.getValue( ) ) );
 				}
-			} catch( JsonParseException | ClassCastException | IllegalStateException | UnsupportedOperationException e ) {
+				returnValue = map;
+			} catch( ClassCastException e ) {
+				throw new TranslationException( String.format( "String '%s' is not a json object that can be used for a map.", anObject.toString() ) );
+			} catch( JsonParseException | IllegalStateException | UnsupportedOperationException e ) {
 				throw new TranslationException( e );
 			}
 		}

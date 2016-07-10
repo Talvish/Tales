@@ -96,7 +96,7 @@ public class PropertyFileSource implements ConfigurationSource {
 
 		LoadedSetting setting = null;
 		if( properties.containsKey( theName ) ) {
-			setting = SettingValueHelper.generateValue( theName, properties.getProperty( theName ), null, false, sourceName, theType );
+			setting = StringValueHelper.generateValue( theName, properties.getProperty( theName ), null, false, sourceName, theType );
 		}
 		return setting;
 	}
@@ -114,7 +114,7 @@ public class PropertyFileSource implements ConfigurationSource {
 
 		LoadedSetting setting = null;
 		if( properties.containsKey( theName ) ) {
-			setting = SettingValueHelper.generateList( theName, properties.getProperty( theName ), null, false, sourceName, theElementType );
+			setting = StringValueHelper.generateList( theName, properties.getProperty( theName ), null, false, sourceName, theElementType );
 		}
 		return setting;
 	}
@@ -134,7 +134,7 @@ public class PropertyFileSource implements ConfigurationSource {
 
 		LoadedSetting setting = null;
 		if( properties.containsKey( theName ) ) {
-			setting = SettingValueHelper.generateMap( theName, properties.getProperty( theName ), null, false, sourceName, theKeyType, theValueType );
+			setting = StringValueHelper.generateMap( theName, properties.getProperty( theName ), null, false, sourceName, theKeyType, theValueType );
 		}
 		return setting;
 	}
