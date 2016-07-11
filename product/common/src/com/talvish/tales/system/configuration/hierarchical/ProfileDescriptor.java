@@ -39,7 +39,7 @@ import com.talvish.tales.system.Conditions;
  *
  */
 @DataContract( name="talvish.tales.configuration.hierarchical.profile_descriptor")
-class ProfileDescriptor {
+public class ProfileDescriptor {
 	public static final String NAME_VALIDATOR = "tales.configuration.hierarchical.profile_name";
 	
 	static {

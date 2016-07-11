@@ -33,7 +33,7 @@ import com.talvish.tales.system.Conditions;
  *
  */
 @DataContract( name="talvish.tales.configuration.hierarchical.setting_descriptor")
-class SettingDescriptor {
+public class SettingDescriptor {
 	public static final String NAME_VALIDATOR = "tales.configuration.hierarchical.setting_name";
 	
 	static {

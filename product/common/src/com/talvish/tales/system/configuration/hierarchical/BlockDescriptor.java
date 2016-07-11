@@ -36,7 +36,7 @@ import com.talvish.tales.system.Conditions;
  *
  */
 @DataContract( name="talvish.tales.configuration.hierarchical.block_descriptor")
-class BlockDescriptor {
+public class BlockDescriptor {
 	public static final String NAME_VALIDATOR = "tales.configuration.hierarchical.block_name";
 	
 	static {

@@ -32,8 +32,8 @@ import com.talvish.tales.system.Conditions;
  * @author jmolnar
  *
  */
-@DataContract( name="talvish.tales.configuration.hierarchical.config_descriptor")
-class SourceDescriptor {
+@DataContract( name="talvish.tales.configuration.hierarchical.source_descriptor")
+public class SourceDescriptor {
 	@DataMember( name="includes" )
 	private String[] includeArray;	
 	@DataMember( name="profiles" )
