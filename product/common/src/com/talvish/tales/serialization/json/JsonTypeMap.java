@@ -74,7 +74,11 @@ public class JsonTypeMap {
 		JsonObject jsonObject = new JsonObject( );
 		
 		for( JsonMemberMap member : members.values() ) {
-			jsonObject.add( member.getReflectedField().getName(), member.getData( theInstance ) );
+			if( member == unmappedNameMember ) {				
+				jsonObject.add( unmappedNameMember.getData( theInstance ).getAsString(), unmappedValueMember.getData( theInstance ) );
+			} else if( member != unmappedValueMember ) {
+				jsonObject.add( member.getReflectedField().getName(), member.getData( theInstance ) );
+			}
 		}
 		return jsonObject;
 	}
