@@ -214,8 +214,8 @@ public class ResourceMethod {
 		Preconditions.checkArgument( !Strings.isNullOrEmpty( theName ),  "name must be given" );
 		Preconditions.checkArgument( pathParameterIndices.containsKey( theName ), "parameter '%s' was not specified in the path '%s'", theName, this.methodPath );
 		Integer index = pathParameterIndices.get( theName );
-		Preconditions.checkNotNull( index < pathParameters.size( ), "parameter '%s' refers to an unknown parameters definition", theName );
-		Preconditions.checkNotNull( pathParameters.get( index ) == null, "parameter '%s' at index '%s' was already defined", theName, index );
+		Preconditions.checkArgument( index < pathParameters.size( ), "parameter '%s' refers to an unknown parameters definition", theName );
+		Preconditions.checkArgument( pathParameters.get( index ) == null, "parameter '%s' at index '%s' was already defined", theName, index );
 		Preconditions.checkNotNull( theType, "type not specified for '%s'", theName );
 		
 		Translator translator = getSuitableTranslator( theType );  // this doesn't URL encode here, that is done when generating the path during the execute call 

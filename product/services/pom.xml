@@ -9,7 +9,7 @@
   <parent>
     <groupId>com.talvish.tales</groupId>
     <artifactId>tales.root</artifactId>
-    <version>1.6.9-SNAPSHOT</version>
+    <version>1.6.10-SNAPSHOT</version>
     <relativePath>../../root/pom.xml</relativePath>
   </parent>
 
@@ -65,27 +65,32 @@
 	<dependency>
     	<groupId>org.eclipse.jetty</groupId>
     	<artifactId>jetty-client</artifactId>
-    	<version>9.3.5.v20151012</version>
+    	<version>9.4.7.v20170914</version>
 	</dependency>	
 	<dependency>
     	<groupId>org.eclipse.jetty</groupId>
     	<artifactId>jetty-deploy</artifactId>
-    	<version>9.3.5.v20151012</version>
+    	<version>9.4.7.v20170914</version>
 	</dependency>	
 	<dependency>
     	<groupId>org.eclipse.jetty</groupId>
     	<artifactId>jetty-servlet</artifactId>
-    	<version>9.3.5.v20151012</version>
+    	<version>9.4.7.v20170914</version>
 	</dependency>
 	<dependency>
     	<groupId>org.eclipse.jetty</groupId>
     	<artifactId>jetty-servlets</artifactId>
-    	<version>9.3.5.v20151012</version>
+    	<version>9.4.7.v20170914</version>
 	</dependency>	
 	<dependency>
     	<groupId>org.eclipse.jetty</groupId>
     	<artifactId>apache-jsp</artifactId>
-    	<version>9.3.5.v20151012</version>
+    	<version>9.4.7.v20170914</version>
+	</dependency>
+	<dependency>
+    	<groupId>org.eclipse.jetty.http2</groupId>
+    	<artifactId>http2-server</artifactId>
+    	<version>9.4.7.v20170914</version>
 	</dependency>
 	
   </dependencies>  

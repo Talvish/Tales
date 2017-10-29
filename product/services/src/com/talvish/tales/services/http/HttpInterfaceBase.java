@@ -29,6 +29,7 @@ import javax.servlet.Filter;
 import javax.servlet.Servlet;
 
 import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.eclipse.jetty.server.ConnectionFactory;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.SecureRequestCustomizer;
@@ -37,6 +38,8 @@ import org.eclipse.jetty.server.SslConnectionFactory;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletMapping;
+import org.eclipse.jetty.http2.server.HTTP2CServerConnectionFactory;
+import org.eclipse.jetty.http2.server.HTTP2ServerConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -388,8 +391,15 @@ public abstract class HttpInterfaceBase extends InterfaceBase {
     	// here is how to get setup
     	// http://git.eclipse.org/c/jetty/org.eclipse.jetty.project.git/tree/examples/embedded/src/main/java/org/eclipse/jetty/embedded/ManyConnectors.java
 
-    	// let's setup our jetty http configuration
+    	// let's setup our jetty http configuration and appropriate factories
     	HttpConfiguration httpConfiguration = generateJettyHttpConfiguration( theConfiguration );
+    	ConnectionFactory[] connectionFactories = new ConnectionFactory[ theConfiguration.getProtocols().size( ) ];
+    	
+    	int protocolIndex = 0;
+    	for( String protocol : theConfiguration.getProtocols( ) ) {
+    		connectionFactories[ protocolIndex ] = generateConnectionFactory( protocol, httpConfiguration );
+    		protocolIndex += 1;
+    	}
     	
     	// now we create our connector
     	ServerConnector connector = new ServerConnector( 
@@ -399,7 +409,7 @@ public abstract class HttpInterfaceBase extends InterfaceBase {
     			null, // use a default bye pool with default configuration
     			theConfiguration.getAcceptors() == null ? -1 : theConfiguration.getAcceptors( ), 
     			theConfiguration.getSelectors() == null ? -1 : theConfiguration.getSelectors( ),  
-    			new HttpConnectionFactory( httpConfiguration ) );
+    			connectionFactories );
     	
     	if( theConfiguration.getAcceptQueueSize() != null ) {
     		connector.setAcceptQueueSize( theConfiguration.getAcceptQueueSize( ) );
@@ -421,6 +431,26 @@ public abstract class HttpInterfaceBase extends InterfaceBase {
 
     	// display our configuration for the connector
 		displayConnectorConfiguration( connector, theEndpoint, httpConfiguration, theConfiguration );
+    }
+    
+    /**
+     * Helper method that will generate the appropriate factory for the protocol.
+     * @param theProtocol the protocol to create a factory for
+     * @param theHttpConfiguration the configuration to use
+     * @return the new factory
+     */
+    private ConnectionFactory generateConnectionFactory( String theProtocol, HttpConfiguration theHttpConfiguration ) {
+    	ConnectionFactory connectionFactory;
+    	
+    	switch( theProtocol ) {
+    	case "http2":
+    		connectionFactory = new HTTP2CServerConnectionFactory( theHttpConfiguration );
+    		break;
+    	default:
+    		connectionFactory = new HttpConnectionFactory( theHttpConfiguration );
+    		break;
+    	}
+    	return connectionFactory;
     }
 
 	/**
@@ -567,6 +597,16 @@ public abstract class HttpInterfaceBase extends InterfaceBase {
     		settingBuilder.append( "\n\tOutput Buffer Size (default): " );
     	}
 		settingBuilder.append( theHttpConfiguration.getOutputBufferSize( ) );
+
+    	int protocolIndex = 0;
+		settingBuilder.append( "\n\tProtocols: " );
+    	for( String protocol : theConfiguration.getProtocols( ) ) {
+    		if( protocolIndex > 0 ) {
+    			settingBuilder.append( ", " );
+    		}
+    		settingBuilder.append( protocol );
+    		protocolIndex += 1;
+    	}
 
 
 		settingBuilder.append( "\n\tReuse Address (default): " );
