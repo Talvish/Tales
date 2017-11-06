@@ -115,7 +115,15 @@ public class FieldSite implements MemberSite {
     public <A extends Annotation> A getAnnotation( Class<A> theAnnotationClass ) {
     	return field.getAnnotation( theAnnotationClass ) ;
     }
-	
+
+    /**
+     * Returns all annotation on the field.
+     * @return the annotations, which will be a zero length array if none
+     */
+    public Annotation[] getAnnotations( ) {
+    	return field.getAnnotations(  ) ;
+    }
+
 	/**
 	 * Gets data from a field off the source object.
 	 * @param theSource the source object to get data from.

@@ -41,4 +41,10 @@ public interface MemberSite extends DataSite {
      * @return the annotation or null if it doesn't exist
      */
     <A extends Annotation> A getAnnotation( Class<A> theAnnotationClass );
+    
+    /**
+     * Returns all annotation on the field.
+     * @return the annotations, which will be a zero length array if none
+     */
+    Annotation[] getAnnotations( );
 }

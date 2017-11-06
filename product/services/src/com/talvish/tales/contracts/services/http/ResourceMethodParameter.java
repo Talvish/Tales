@@ -15,12 +15,17 @@
 // ***************************************************************************
 package com.talvish.tales.contracts.services.http;
 
+import java.lang.annotation.Annotation;
+
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.talvish.tales.parts.ValidationException;
+import com.talvish.tales.parts.constraints.ValidatorHelper;
+import com.talvish.tales.parts.constraints.ValueValidator;
 import com.talvish.tales.parts.naming.LowerCaseValidator;
 import com.talvish.tales.parts.naming.NameManager;
 import com.talvish.tales.parts.naming.NameValidator;
@@ -127,25 +132,26 @@ public class ResourceMethodParameter {
 	private final String valueName;
 	private final boolean sensitive;
 	private final Translator valueTranslator;
+	private final ValueValidator[] validators;
 
 	/**
 	 * Constructor called when there is a context parameter.
 	 */
-	ResourceMethodParameter( ParameterSource theSource, JavaType theType, int theMethodParamOffset, boolean isSensitive, ResourceMethod theMethod ) {
-		this( theSource, theType, theMethodParamOffset, null, -1, null, isSensitive, theMethod );
+	ResourceMethodParameter( ParameterSource theSource, JavaType theType, int theMethodParamOffset, boolean isSensitive, Annotation[] theAnnotations, ResourceMethod theMethod ) {
+		this( theSource, theType, theMethodParamOffset, null, -1, null, isSensitive, theAnnotations, theMethod );
 	}
 	
 	/**
 	 * Constructor called when there is a request parameter, header or cookie parameter referenced.
 	 */
-	ResourceMethodParameter( ParameterSource theSource, JavaType theType, int theMethodParamOffset, String theValueName, Translator theValueTranslator, boolean isSensitive, ResourceMethod theMethod ) {
-		this( theSource, theType, theMethodParamOffset, theValueName, -1, theValueTranslator, isSensitive, theMethod );
+	ResourceMethodParameter( ParameterSource theSource, JavaType theType, int theMethodParamOffset, String theValueName, Translator theValueTranslator, boolean isSensitive, Annotation[] theAnnotations, ResourceMethod theMethod ) {
+		this( theSource, theType, theMethodParamOffset, theValueName, -1, theValueTranslator, isSensitive, theAnnotations, theMethod );
 	}
 
 	/**
 	 * Shared constructor called from above then request parameter is referenced, or directly if we have a path parameter.
 	 */
-	ResourceMethodParameter( ParameterSource theSource, JavaType theType, int theMethodParamOffset, String theValueName, int thePathReference, Translator theValueTranslator, boolean isSensitive, ResourceMethod theMethod ) {
+	ResourceMethodParameter( ParameterSource theSource, JavaType theType, int theMethodParamOffset, String theValueName, int thePathReference, Translator theValueTranslator, boolean isSensitive, Annotation[] theAnnotations, ResourceMethod theMethod ) {
 		NameValidator nameValidator = NameManager.getValidator( ResourceMethodParameter.RESOURCE_METHOD_PARAMETER_NAME_VALIDATOR );
 		
 		Preconditions.checkNotNull( theSource, "the source of the parameter must be given");
@@ -188,6 +194,9 @@ public class ResourceMethodParameter {
 		} else {
 			this.cookieValue = CookieValue.NONE;
 		}
+		
+		// now we check for validation/constraint annotations
+		validators = ValidatorHelper.generateValidators( theAnnotations, theType );
 	}
 	
 	/**
@@ -270,6 +279,20 @@ public class ResourceMethodParameter {
 	 * @return the translated object
 	 */
 	public Object translate( Object theObject ) {
-		return valueTranslator.translate( theObject );
+		Object value = valueTranslator.translate( theObject );
+		
+		for( ValueValidator validator : validators ) {
+			if( !validator.isValid( value ) ) {
+				throw new ValidationException( 
+						String.format( 
+								"Method '%s.%s' could not validate parameter '%s' due to failing validator '%s'", 
+								this.resourceMethod.getResourceType().getName(), 
+								this.resourceMethod.getName(), 
+								this.getValueName( ), 
+								validator.getClass().getSimpleName( ) ) );
+			}
+		}
+		
+		return value;
 	}
 }
