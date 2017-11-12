@@ -23,7 +23,7 @@ import java.math.BigDecimal;
  * @author jmolnar
  *
  */
-public class MinBigDecimalValidator implements ValueValidator {
+public class MinBigDecimalValidator implements ValueValidator<BigDecimal> {
 	private final BigDecimal value;
 
 
@@ -48,11 +48,11 @@ public class MinBigDecimalValidator implements ValueValidator {
 	 * @param theValue the value to check
 	 * @return true if the passed in value is the equal to or greater than, false otherwise
 	 */
-	public boolean isValid( Object theValue ) {
+	public boolean isValid( BigDecimal theValue ) {
 		if( theValue == null ) {
 			return true;
 		} else {
-			return ( ( BigDecimal ) theValue ).compareTo( value ) >= 0;
+			return theValue.compareTo( value ) >= 0;
 		}
 	}
 }

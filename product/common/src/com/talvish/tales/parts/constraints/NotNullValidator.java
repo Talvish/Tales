@@ -15,19 +15,10 @@
 // ***************************************************************************
 package com.talvish.tales.parts.constraints;
 
-/**
- * The interface representing representing a validator.
- * @author jmolnar
- * @param <T> The type the validator will be checking.
- *
- */
-// TODO: consider making this generic
-public interface ValueValidator<T> {
-	/**
-	 * Indicates with the value is considered valid based on  
-	 * constraints the subclass will define.
-	 * @param theValue the value to compare
-	 * @return true if the valid is valid, false otherwise
-	 */
-	boolean isValid( T theValue );
+public class NotNullValidator implements ValueValidator<Object> {
+
+	@Override
+	public boolean isValid(Object theValue) {
+		return theValue != null; 
+	}
 }

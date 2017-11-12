@@ -15,19 +15,17 @@
 // ***************************************************************************
 package com.talvish.tales.parts.constraints;
 
-/**
- * The interface representing representing a validator.
- * @author jmolnar
- * @param <T> The type the validator will be checking.
- *
- */
-// TODO: consider making this generic
-public interface ValueValidator<T> {
-	/**
-	 * Indicates with the value is considered valid based on  
-	 * constraints the subclass will define.
-	 * @param theValue the value to compare
-	 * @return true if the valid is valid, false otherwise
-	 */
-	boolean isValid( T theValue );
+import com.google.common.base.Preconditions;
+import com.talvish.tales.parts.reflection.JavaType;
+
+public class NotNullProducer implements ValidatorProducer<NotNull> {
+	private static final NotNullValidator validator = new NotNullValidator( );
+
+	@Override
+	public ValueValidator<?> produceValidator( NotNull theAnnotation, JavaType theType ) {
+		Preconditions.checkNotNull( theAnnotation, "need an annotation" );
+		Preconditions.checkNotNull( theType, "need a type to produce a validator for the NotNull annotation" );
+
+		return validator;
+	}
 }

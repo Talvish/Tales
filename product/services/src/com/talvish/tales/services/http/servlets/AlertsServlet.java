@@ -27,13 +27,8 @@ import org.slf4j.LoggerFactory;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.talvish.tales.contracts.services.http.ServletContract;
-import com.talvish.tales.serialization.Readability;
-import com.talvish.tales.services.OperationContext;
 import com.talvish.tales.services.Service;
-import com.talvish.tales.services.OperationContext.Details;
-import com.talvish.tales.services.http.AttributeConstants;
 import com.talvish.tales.services.http.ResponseHelper;
-import com.talvish.tales.system.alerts.Alert;
 
 /**
  * This is a simple servlet that shows the alerts exposed by the associated service.
@@ -74,7 +69,7 @@ public class AlertsServlet extends AdministrationServlet {
 //					null );
 //		} else {
 		logger.info( "Request made to list the alerts." );
-		OperationContext operationContext = ( OperationContext )theRequest.getAttribute( AttributeConstants.OPERATION_REQUEST_CONTEXT );
+		//OperationContext operationContext = ( OperationContext )theRequest.getAttribute( AttributeConstants.OPERATION_REQUEST_CONTEXT );
 		JsonObject serviceObject = new JsonObject( );
 		Service service = getService( );
 		
@@ -96,12 +91,12 @@ public class AlertsServlet extends AdministrationServlet {
 	 * @param theAlert the alert to jsonify
 	 * @return the jsonified alert
 	 */
-	private JsonObject jsonifyAlert( Alert theAlert, Readability theReadability, Details theDetails ) {
-		//Map< Class<?>, Translator> targetTranslators = theReadability == Readability.HUMAN ? humanTranslators : machineTranslators;
-		JsonObject alertObject = new JsonObject( );
-
-		alertObject.addProperty( "name", theAlert.getName( ) );		
-	
-		return alertObject;
-	}
+//	private JsonObject jsonifyAlert( Alert theAlert, Readability theReadability, Details theDetails ) {
+//		//Map< Class<?>, Translator> targetTranslators = theReadability == Readability.HUMAN ? humanTranslators : machineTranslators;
+//		JsonObject alertObject = new JsonObject( );
+//
+//		alertObject.addProperty( "name", theAlert.getName( ) );		
+//	
+//		return alertObject;
+//	}
 }

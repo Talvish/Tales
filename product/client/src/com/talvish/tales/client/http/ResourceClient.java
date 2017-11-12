@@ -224,9 +224,6 @@ public class ResourceClient {
 		settingBuilder.append( "\n\tConnect Timeout: " );
 		settingBuilder.append( theClient.getConnectTimeout() );
 	
-		settingBuilder.append( "\n\tDispatch I/O: " );
-		settingBuilder.append( theClient.isDispatchIO( ) );
-
 		settingBuilder.append( "\n\tFollow Redirects: " );
 		settingBuilder.append( theClient.isFollowRedirects( ) );
 

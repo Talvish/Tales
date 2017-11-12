@@ -17,6 +17,8 @@ package com.talvish.tales.system.status;
 
 // NOTE: note implemented
 public class IHealth {
+	//if I can get the ability to pull configuration for caching from the configuration THEN perhaps I can
+	//put throttling as a setting as well for the methods
 
 	// performance
 	// total operations

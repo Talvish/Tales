@@ -21,7 +21,7 @@ package com.talvish.tales.parts.constraints;
  * @author jmolnar
  *
  */
-public class MaxIntegerValidator implements ValueValidator {
+public class MaxIntegerValidator implements ValueValidator<Integer> {
 	private final int value;
 
 
@@ -46,12 +46,11 @@ public class MaxIntegerValidator implements ValueValidator {
 	 * @param theValue the value to check
 	 * @return true if the passed in value is the equal to or less than, false otherwise
 	 */
-	public boolean isValid( Object theValue ) {
+	public boolean isValid( Integer theValue ) {
 		if( theValue == null ) {
 			return true;
 		} else {
-			return ( ( int )theValue ) <= value;
-			
+			return theValue <= value;			
 		}
 	}
 }

@@ -17,8 +17,6 @@ package com.talvish.tales.parts.translators;
 
 import java.util.BitSet;
 
-import javax.xml.bind.DatatypeConverter;
-
 /**
  * Generates a BitSet from a String. 
  * The class expects the string to be in little endian byte ordering.

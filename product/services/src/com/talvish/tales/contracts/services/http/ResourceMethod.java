@@ -140,6 +140,7 @@ public class ResourceMethod extends Subcontract {
 	 * @param theResourceType the resource that contains this method
 	 * @param theResourceFacility the resource facility to use to help setup the method, its parameters, etc
 	 */
+	@SuppressWarnings("unlikely-arg-type")
 	ResourceMethod( 
 			String theName, 
 			String theDescription, 
@@ -740,25 +741,29 @@ public class ResourceMethod extends Subcontract {
 			Matcher thePathMatcher, 
 			ResourceFacility theResourceFacility, 
 			AsyncState theAsyncState ) {
-
 		// TODO: move this entire method out
-		logger.info( 
-				"Executing, {}, resource method '{}.{}' (aka '{}').", new Object[]{
-				 theAsyncState != null ? "non-blocking" : "blocking",
-				this.resourceType.getType().getName(), 
-				this.method.getName( ), 
-				this.getName( ) } );
-		StringBuilder loggedParameterBuilder = new StringBuilder( );
+		
+		final boolean infoLoggingEnabled = logger.isInfoEnabled();
+		
+		if( infoLoggingEnabled ) {
+			logger.info( 
+					"Executing, {}, resource method '{}.{}' (aka '{}').", new Object[]{
+					 theAsyncState != null ? "non-blocking" : "blocking",
+					this.resourceType.getType().getName(), 
+					this.method.getName( ), 
+					this.getName( ) } );
+		}
+		final StringBuilder loggedParameterBuilder = new StringBuilder( );
 		ResourceMethodResult result = null;
 		int loggedParameters = 0;
 		// start the execution timer		
-		long startTimestamp = System.nanoTime(); 
+		final long startTimestamp = System.nanoTime(); 
 		try {
 			// first we need to get the request URI and ensure it matches
-			String uri = theRequest.getRequestURI();
+			final String uri = theRequest.getRequestURI();
 	
 			// if we have a match, we need to generate the parameters to use 
-			Object[] parameters	= new Object[ this.methodParameters.size( ) ];
+			final Object[] parameters	= new Object[ this.methodParameters.size( ) ];
 			String stringValue;
 			Object actualValue;
 			ParameterSource parameterSource;
@@ -820,22 +825,24 @@ public class ResourceMethod extends Subcontract {
 							throw new IllegalStateException( String.format( "Parameter '%s' for request '%s', using path '%s', is using an unsupported source of '%s'.", parameter.getValueName(), this.getName(), this.parameterPath, parameterSource ) );
 						}
 						
-						// the following is for logging purposes
-						if( theContext.getResponseTarget() == Readability.MACHINE ) {
-							if( loggedParameters > 0 ) {
-								loggedParameterBuilder.append( ", " );
+						// the following is for logging purposes only
+						if( infoLoggingEnabled ) {
+							if( theContext.getResponseTarget() == Readability.MACHINE ) {
+								if( loggedParameters > 0 ) {
+									loggedParameterBuilder.append( ", " );
+								}
+							} else {
+								loggedParameterBuilder.append( "\n\t" );
 							}
-						} else {
-							loggedParameterBuilder.append( "\n\t" );
+							loggedParameterBuilder.append( parameter.getValueName( ) );
+							loggedParameterBuilder.append( " = " );
+							if( parameter.isSensitive( ) ) {
+								loggedParameterBuilder.append( "<SENSITIVE>" );
+							} else {
+								loggedParameterBuilder.append( stringValue );
+							}
+							loggedParameters += 1;
 						}
-						loggedParameterBuilder.append( parameter.getValueName( ) );
-						loggedParameterBuilder.append( " = " );
-						if( parameter.isSensitive( ) ) {
-							loggedParameterBuilder.append( "<SENSITIVE>" );
-						} else {
-							loggedParameterBuilder.append( stringValue );
-						}
-						loggedParameters += 1;
 						
 						actualValue = parameter.translate( stringValue );
 						if( actualValue == null && parameter.getType().getUnderlyingClass( ).isPrimitive() ) {
@@ -868,7 +875,7 @@ public class ResourceMethod extends Subcontract {
 			// process
 			if( result == null ) {
 		  		//we have the parameters so invoke the method, which may cause an exception (caught in the outer try)
-				Object typeLessResult = method.invoke( theObject, parameters );
+				final Object typeLessResult = method.invoke( theObject, parameters );
 				if( this.methodReturn.isResourceResponse() ) {
 					ResourceResult<?> resourceResult = ( ResourceResult<?> )typeLessResult; 
 					if( resourceResult == null ) {
@@ -913,16 +920,18 @@ public class ResourceMethod extends Subcontract {
 			// record when we ended
 			long executionTime = System.nanoTime( ) - startTimestamp;
 			status.recordExecutionTime( executionTime );
-			logger.info( 
-					"Executed, {}, resource method '{}.{}' (aka '{}') in {} ms with {} parameter(s) resulting in status '{}'. {}", new Object[] {
-					( theAsyncState != null ? "non-blocking" + ( theAsyncState.hasCompleted() ? " though timed-out" : "" ) : "blocking" ),
-					this.resourceType.getType().getName(),
-					this.method.getName( ), 
-					this.getName( ), 
-					( ( double )executionTime ) * 0.000001, 
-					loggedParameters,
-					result == null ? "unknown" : result.getCode(),
-					loggedParameterBuilder.toString() } );
+			if( infoLoggingEnabled ) {
+				logger.info( 
+						"Executed, {}, resource method '{}.{}' (aka '{}') in {} ms with {} parameter(s) resulting in status '{}'. {}", new Object[] {
+						( theAsyncState != null ? "non-blocking" + ( theAsyncState.hasCompleted() ? " though timed-out" : "" ) : "blocking" ),
+						this.resourceType.getType().getName(),
+						this.method.getName( ), 
+						this.getName( ), 
+						( ( double )executionTime ) * 0.000001, 
+						loggedParameters,
+						result == null ? "unknown" : result.getCode(),
+						loggedParameterBuilder.toString() } );
+			}
 		}
 		return result;
 	}

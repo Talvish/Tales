@@ -16,8 +16,6 @@
 
 package com.talvish.tales.parts.translators;
 
-import javax.xml.bind.DatatypeConverter;
-
 /**
  * Translator that converts a byte array into a string.
  * @author jmolnar

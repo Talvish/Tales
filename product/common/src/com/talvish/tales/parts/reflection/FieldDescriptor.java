@@ -22,7 +22,7 @@ import java.util.List;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.talvish.tales.parts.constraints.ValidatorHelper;
+import com.talvish.tales.parts.constraints.ValidatorManager;
 import com.talvish.tales.parts.constraints.ValueValidator;
 import com.talvish.tales.parts.sites.MemberSite;
 import com.talvish.tales.parts.sites.ValidatingMemberSite;
@@ -114,7 +114,7 @@ public abstract class FieldDescriptor<T extends TypeDescriptor<T, F>, F extends 
         containingType = theContainingType;
         
         // now we get the items are are meant for validation purposes
-        ValueValidator[] validators = ValidatorHelper.generateValidators( theFieldSite.getAnnotations(), theFieldSite.getType( ) );
+        ValueValidator<?>[] validators = ValidatorManager.getInstance().generateValidators( theFieldSite.getAnnotations(), theFieldSite.getType( ) );
 
         // now we create a member site extension that takes validators
         // BUT I would love if we could make this faster by embedding 

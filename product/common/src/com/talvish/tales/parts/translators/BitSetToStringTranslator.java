@@ -18,8 +18,6 @@ package com.talvish.tales.parts.translators;
 
 import java.util.BitSet;
 
-import javax.xml.bind.DatatypeConverter;
-
 /**
  * Translator that converts a BitSet into a string.
  * The generated string is in little endian byte ordering.

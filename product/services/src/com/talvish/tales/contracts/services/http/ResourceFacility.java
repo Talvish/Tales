@@ -78,8 +78,7 @@ public final class ResourceFacility implements Facility {
 		this.jsonTranslation = theJsonTranslationFacility;
 		
 		// register some default handlers
-		registerExceptionHandler( DependencyException.class, new ExceptionHandler<DependencyException>() {
-			public ResourceMethodResult toResult( ResourceMethod theMethod, DependencyException theException ) {
+		registerExceptionHandler( DependencyException.class, ( theMethod, theException ) -> {
 				return new ResourceMethodResult( 
 						DependencyException.Problem.convert( theException.getProblem( ) ),
 						null,
@@ -89,11 +88,9 @@ public final class ResourceFacility implements Facility {
 								theMethod.getResourceType().getType().getSimpleName(), 
 								theMethod.getMethod( ).getName( ) ), 
 						theException );
-			}
-		});
+		} );
 
-		registerExceptionHandler( InvalidParameterException.class, new ExceptionHandler<InvalidParameterException>() {
-			public ResourceMethodResult toResult( ResourceMethod theMethod, InvalidParameterException theException ) {
+		registerExceptionHandler( InvalidParameterException.class, ( theMethod, theException ) -> {
 				JsonObject parameter = null;
 				if( !Strings.isNullOrEmpty( theException.getName() ) ) {
 					parameter = new JsonObject( );
@@ -108,11 +105,10 @@ public final class ResourceFacility implements Facility {
 								theMethod.getResourceType().getType().getSimpleName(), 
 								theMethod.getMethod( ).getName( ) ), 
 						theException );
-			}
-		});
+		} );
 
-		registerExceptionHandler( InvalidStateException.class, new ExceptionHandler<InvalidStateException>() {
-			public ResourceMethodResult toResult( ResourceMethod theMethod, InvalidStateException theException ) {
+
+		registerExceptionHandler( InvalidStateException.class, ( theMethod, theException ) -> {
 				return new ResourceMethodResult( 
 						Status.CALLER_BAD_STATE,
 						theException.getCode(),
@@ -122,11 +118,9 @@ public final class ResourceFacility implements Facility {
 								theMethod.getResourceType().getType().getSimpleName(), 
 								theMethod.getMethod( ).getName( ) ), 
 						theException );
-			}
-		});
+		} );
 
-		registerExceptionHandler( NotFoundException.class, new ExceptionHandler<NotFoundException>() {
-			public ResourceMethodResult toResult( ResourceMethod theMethod, NotFoundException theException ) {
+		registerExceptionHandler( NotFoundException.class, ( theMethod, theException ) -> {
 				return new ResourceMethodResult( 
 						Status.CALLER_NOT_FOUND,
 						theException.getCode(),
@@ -136,11 +130,9 @@ public final class ResourceFacility implements Facility {
 								theMethod.getResourceType().getType().getSimpleName(), 
 								theMethod.getMethod( ).getName( ) ), 
 						theException );
-			}
 		});
 
-		registerExceptionHandler( AuthorizationException.class, new ExceptionHandler<AuthorizationException>() {
-			public ResourceMethodResult toResult( ResourceMethod theMethod, AuthorizationException theException ) {
+		registerExceptionHandler( AuthorizationException.class, ( theMethod, theException ) -> {
 				ResourceMethodResult result = new ResourceMethodResult( 
 						Status.CALLER_UNAUTHORIZED,
 						null,
@@ -161,9 +153,8 @@ public final class ResourceFacility implements Facility {
 						"WWW-Authenticate", 
 						String.format( "%s realm=\"%s\"", scheme, realm ) );
 				return result;
-			}
 		});
-}
+	}
 	
 	/**
 	 * Returns the facility responsible for converting to/from JSON.

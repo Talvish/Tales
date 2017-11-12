@@ -15,19 +15,19 @@
 // ***************************************************************************
 package com.talvish.tales.parts.constraints;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
 /**
- * The interface representing representing a validator.
+ * This annotation is used as a constraint on parameters and class members 
+ * that are integers (e.g int, long, etc) to indicate the maximum value of the 
+ * parameter or class member. 
+ * Currently this supports int, long and BigDecimal.
  * @author jmolnar
- * @param <T> The type the validator will be checking.
- *
  */
-// TODO: consider making this generic
-public interface ValueValidator<T> {
-	/**
-	 * Indicates with the value is considered valid based on  
-	 * constraints the subclass will define.
-	 * @param theValue the value to compare
-	 * @return true if the valid is valid, false otherwise
-	 */
-	boolean isValid( T theValue );
+@Retention( RetentionPolicy.RUNTIME)
+@Target(value={ElementType.FIELD,ElementType.PARAMETER})
+public @interface NotEmpty {
 }

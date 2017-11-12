@@ -57,7 +57,7 @@ public abstract class ContractServletHolder extends ServletHolder {
 	 * This is a simple async listener to attempt to make sure we track
 	 * the success and failures of async operations.
 	 */
-	private AsyncListener asyncListener = new AsyncListener() {
+	private final AsyncListener asyncListener = new AsyncListener() {
 		@Override
 		public void onTimeout(AsyncEvent theEvent) throws IOException {
 		}
@@ -221,17 +221,18 @@ public abstract class ContractServletHolder extends ServletHolder {
 		}
 
 		// now record how long it took to calculate
-		OperationContext context = ( OperationContext )theRequest.getAttribute( AttributeConstants.OPERATION_REQUEST_CONTEXT );
-		long executionTime = context.calculateElapsedTime();
+		final OperationContext context = ( OperationContext )theRequest.getAttribute( AttributeConstants.OPERATION_REQUEST_CONTEXT );
+		final long executionTime = context.calculateElapsedTime();
 		contract.getStatus().recordExecutionTime( executionTime );
 
-		logger.info( 
-				"Processed, {}, a request for contract '{}/{}' in {} ms resulting in http status {}.", new Object[]{
-				wasAsync ? "non-blocking" : "blocking",
-				this.contract.getName(), 
-				theRequest.getParameter( "version" ), 
-				( ( double )executionTime ) * 0.000001, 
-				status } );
-
+		if( logger.isInfoEnabled( ) ) {
+			logger.info( 
+					"Processed, {}, a request for contract '{}/{}' in {} ms resulting in http status {}.", new Object[]{
+					wasAsync ? "non-blocking" : "blocking",
+					this.contract.getName(), 
+					theRequest.getParameter( "version" ), 
+					( ( double )executionTime ) * 0.000001, 
+					status } );
+		}
 	}
 }

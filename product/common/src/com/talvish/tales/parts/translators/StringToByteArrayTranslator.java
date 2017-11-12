@@ -15,8 +15,6 @@
 // ***************************************************************************
 package com.talvish.tales.parts.translators;
 
-import javax.xml.bind.DatatypeConverter;
-
 public class StringToByteArrayTranslator extends StringToObjectTranslatorBase implements Translator {
 
 	public StringToByteArrayTranslator( ) {

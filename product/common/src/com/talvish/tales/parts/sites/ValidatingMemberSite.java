@@ -28,9 +28,9 @@ import com.talvish.tales.parts.reflection.JavaType;
  */
 public class ValidatingMemberSite implements MemberSite {
 	private final MemberSite memberSite;
-	private final ValueValidator[] validators;
+	private final ValueValidator<?>[] validators;
 	
-	public ValidatingMemberSite( MemberSite theMemberSite, ValueValidator[] theValidators ) {
+	public ValidatingMemberSite( MemberSite theMemberSite, ValueValidator<?>[] theValidators ) {
 		// TODO: param validation
 		// TODO: copy the validators
 		memberSite = theMemberSite;
@@ -100,6 +100,7 @@ public class ValidatingMemberSite implements MemberSite {
 	 * @param theSink the object to set a value on
 	 * @param theValue the value to set the member on the sink object
 	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public void setData( Object theSink, Object theValue ) {
 		// TODO: optimize this, check for null first, or size 0 or something
 		for( ValueValidator validator : validators ) {

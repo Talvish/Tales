@@ -15,19 +15,19 @@
 // ***************************************************************************
 package com.talvish.tales.parts.constraints;
 
+import com.google.common.base.Strings;
+
 /**
- * The interface representing representing a validator.
+ * This annotation is used as a constraint on parameters and class members 
+ * that are integers (e.g int, long, etc) to indicate the maximum value of the 
+ * parameter or class member. 
+ * Currently this supports int, long and BigDecimal.
  * @author jmolnar
- * @param <T> The type the validator will be checking.
- *
  */
-// TODO: consider making this generic
-public interface ValueValidator<T> {
-	/**
-	 * Indicates with the value is considered valid based on  
-	 * constraints the subclass will define.
-	 * @param theValue the value to compare
-	 * @return true if the valid is valid, false otherwise
-	 */
-	boolean isValid( T theValue );
+public class NotEmptyValidator implements ValueValidator<String> {
+
+	@Override
+	public boolean isValid(String theValue) {
+		return !Strings.isNullOrEmpty( theValue ); 
+	}
 }

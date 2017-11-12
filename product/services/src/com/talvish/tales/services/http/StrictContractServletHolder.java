@@ -60,8 +60,7 @@ public class StrictContractServletHolder extends ContractServletHolder {
 		//       contracts are more lax, etc  ... even then it could be that a front-end could see 
 		//       the missing version and at that time bind to the latest known good, so the servlets
 		//       still require it, but front-end picks latest
-		String version = theHttpRequest.getParameter( ParameterConstants.VERSION_PARAMETER );
-		boolean missingVersion = Strings.isNullOrEmpty( version );
+		final boolean missingVersion = Strings.isNullOrEmpty( theVersion );
 		
 		// here we want to check if we have a service request
 		// if we do, we want to grab the version parameter and validate
@@ -77,15 +76,15 @@ public class StrictContractServletHolder extends ContractServletHolder {
 					null );
 			logger.warn( "A service request was made on contract '{}' but a version wasn't specified.", getContract( ).getName() );
 			filtered = true;
-		} else if( !getContract( ).supports( version ) ) { // see if the version is supported
+		} else if( !getContract( ).supports( theVersion ) ) { // see if the version is supported
 			ResponseHelper.writeFailure( 
 					theHttpRequest, 
 					theHttpResponse, 
 					Status.CALLER_BAD_INPUT, 
 					FailureSubcodes.VERSION_NOT_SUPPORTED,
-					String.format( "version '%s' is not supported", version ), 
+					String.format( "version '%s' is not supported", theVersion ), 
 					null );
-			logger.warn( "A service request was made on contract '{}' asking for version '{}' which is not supported.", getContract( ).getName(), version );
+			logger.warn( "A service request was made on contract '{}' asking for version '{}' which is not supported.", getContract( ).getName(), theVersion );
 			filtered = true;
 		}
 		return filtered;

@@ -15,19 +15,16 @@
 // ***************************************************************************
 package com.talvish.tales.parts.constraints;
 
+import java.lang.annotation.Annotation;
+
+import com.talvish.tales.parts.reflection.JavaType;
+
 /**
- * The interface representing representing a validator.
+ * Produces a validator for a particular value type. 
  * @author jmolnar
- * @param <T> The type the validator will be checking.
  *
+ * @param <T> the type of annotation it produces annotations 
  */
-// TODO: consider making this generic
-public interface ValueValidator<T> {
-	/**
-	 * Indicates with the value is considered valid based on  
-	 * constraints the subclass will define.
-	 * @param theValue the value to compare
-	 * @return true if the valid is valid, false otherwise
-	 */
-	boolean isValid( T theValue );
+public interface ValidatorProducer<T extends Annotation > {
+	ValueValidator<?> produceValidator( T theAnnotation, JavaType theType );
 }

@@ -21,7 +21,7 @@ package com.talvish.tales.parts.constraints;
  * @author jmolnar
  *
  */
-public class MinLongValidator implements ValueValidator {
+public class MinLongValidator implements ValueValidator<Long> {
 	private final long value;
 
 
@@ -46,11 +46,11 @@ public class MinLongValidator implements ValueValidator {
 	 * @param theValue the value to check
 	 * @return true if the passed in value is the equal to or greater, false otherwise
 	 */
-	public boolean isValid( Object theValue ) {
+	public boolean isValid( Long theValue ) {
 		if( theValue == null ) {
 			return true;
 		} else {
-			return ( ( long ) theValue ) >= value;
+			return theValue >= value;
 		}
 	}
 }

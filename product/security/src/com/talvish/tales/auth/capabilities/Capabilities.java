@@ -17,12 +17,11 @@ package com.talvish.tales.auth.capabilities;
 
 import java.util.BitSet;
 
-import javax.xml.bind.DatatypeConverter;
-
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.talvish.tales.contracts.data.DataContract;
 import com.talvish.tales.contracts.data.DataMember;
+import com.talvish.tales.parts.translators.DatatypeConverter;
 import com.talvish.tales.serialization.OnDeserialized;
 
 

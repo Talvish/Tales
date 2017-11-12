@@ -24,7 +24,7 @@ import javax.servlet.http.HttpServletResponse;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.talvish.tales.parts.ValidationException;
-import com.talvish.tales.parts.constraints.ValidatorHelper;
+import com.talvish.tales.parts.constraints.ValidatorManager;
 import com.talvish.tales.parts.constraints.ValueValidator;
 import com.talvish.tales.parts.naming.LowerCaseValidator;
 import com.talvish.tales.parts.naming.NameManager;
@@ -132,7 +132,7 @@ public class ResourceMethodParameter {
 	private final String valueName;
 	private final boolean sensitive;
 	private final Translator valueTranslator;
-	private final ValueValidator[] validators;
+	private final ValueValidator<?>[] validators;
 
 	/**
 	 * Constructor called when there is a context parameter.
@@ -196,7 +196,7 @@ public class ResourceMethodParameter {
 		}
 		
 		// now we check for validation/constraint annotations
-		validators = ValidatorHelper.generateValidators( theAnnotations, theType );
+		validators = ValidatorManager.getInstance().generateValidators( theAnnotations, theType );
 	}
 	
 	/**
@@ -278,10 +278,11 @@ public class ResourceMethodParameter {
 	 * @param theObject to translate
 	 * @return the translated object
 	 */
+	@SuppressWarnings("unchecked")
 	public Object translate( Object theObject ) {
 		Object value = valueTranslator.translate( theObject );
 		
-		for( ValueValidator validator : validators ) {
+		for( @SuppressWarnings("rawtypes") ValueValidator validator : validators ) {
 			if( !validator.isValid( value ) ) {
 				throw new ValidationException( 
 						String.format( 
