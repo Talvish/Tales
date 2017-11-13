@@ -21,9 +21,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.talvish.tales.contracts.data.DataContractTypeSource;
 import com.talvish.tales.serialization.json.JsonTranslationFacility;
-import com.talvish.tales.system.Conditions;
 import com.talvish.tales.system.configuration.hierarchical.Setting;
 import com.talvish.tales.system.configuration.hierarchical.SourceManager;
+import com.talvish.tales.validation.Conditions;
 
 /**
  * This class represents a config source where data is sourced from 

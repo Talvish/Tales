@@ -26,7 +26,7 @@ import com.talvish.tales.parts.reflection.FieldDescriptor;
 import com.talvish.tales.parts.reflection.ValueType;
 import com.talvish.tales.parts.sites.MemberSite;
 import com.talvish.tales.serialization.SerializationField;
-import com.talvish.tales.system.Conditions;
+import com.talvish.tales.validation.Conditions;
 
 /**
  * This class represents a field that is a setting for configuration.

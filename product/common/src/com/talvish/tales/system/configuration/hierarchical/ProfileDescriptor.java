@@ -29,7 +29,7 @@ import com.talvish.tales.contracts.data.DataMember;
 import com.talvish.tales.parts.naming.LowerCaseValidator;
 import com.talvish.tales.parts.naming.NameManager;
 import com.talvish.tales.parts.naming.NameValidator;
-import com.talvish.tales.system.Conditions;
+import com.talvish.tales.validation.Conditions;
 
 // TODO: it would be nice to have a warning if a block includes something the parent block has already included
 

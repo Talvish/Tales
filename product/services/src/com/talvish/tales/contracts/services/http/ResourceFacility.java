@@ -36,11 +36,11 @@ import com.talvish.tales.serialization.json.JsonTranslationFacility;
 import com.talvish.tales.serialization.json.translators.ChainToJsonElementToStringTranslator;
 import com.talvish.tales.serialization.json.translators.StringToJsonElementToChainTranslator;
 import com.talvish.tales.services.http.FailureSubcodes;
-import com.talvish.tales.system.AuthorizationException;
 import com.talvish.tales.system.Facility;
-import com.talvish.tales.system.InvalidParameterException;
-import com.talvish.tales.system.InvalidStateException;
-import com.talvish.tales.system.NotFoundException;
+import com.talvish.tales.validation.AuthorizationException;
+import com.talvish.tales.validation.InvalidStateException;
+import com.talvish.tales.validation.InvalidParameterException;
+import com.talvish.tales.validation.NotFoundException;
 
 
 // TODO: - do not force all members existing when you save (json types)
@@ -84,12 +84,12 @@ public final class ResourceFacility implements Facility {
 						null,
 						null,
 						String.format( 
-								"A dependency failure occurred while running '%s.%s'.", 
-								theMethod.getResourceType().getType().getSimpleName(), 
-								theMethod.getMethod( ).getName( ) ), 
+								"Request %s experienced a dependency failure.", 
+								theMethod.getParameterPath( ) ), 
 						theException );
 		} );
 
+		
 		registerExceptionHandler( InvalidParameterException.class, ( theMethod, theException ) -> {
 				JsonObject parameter = null;
 				if( !Strings.isNullOrEmpty( theException.getName() ) ) {
@@ -101,9 +101,9 @@ public final class ResourceFacility implements Facility {
 						theException.getCode(),
 						theException.getName(),
 						String.format( 
-								"Received invalid data for '%s.%s'.", 
-								theMethod.getResourceType().getType().getSimpleName(), 
-								theMethod.getMethod( ).getName( ) ), 
+								"Parameter {%s} for request %s received invalid data.",
+								theException.getName(),
+								theMethod.getParameterPath( ) ), 
 						theException );
 		} );
 
@@ -114,9 +114,8 @@ public final class ResourceFacility implements Facility {
 						theException.getCode(),
 						null,
 						String.format( 
-								"'%s.%s' indicated it is in an invalid state.", 
-								theMethod.getResourceType().getType().getSimpleName(), 
-								theMethod.getMethod( ).getName( ) ), 
+								"Request %s indicated it is in an invalid state.", 
+								theMethod.getParameterPath( ) ), 
 						theException );
 		} );
 
@@ -126,9 +125,9 @@ public final class ResourceFacility implements Facility {
 						theException.getCode(),
 						theException.getIdentifier(),
 						String.format( 
-								"Cannot find necessary data for '%s.%s'.", 
-								theMethod.getResourceType().getType().getSimpleName(), 
-								theMethod.getMethod( ).getName( ) ), 
+								"Request %s was unable to locate the item identified by '%s'.",
+								theMethod.getParameterPath( ),
+								theException.getIdentifier( ) ), 
 						theException );
 		});
 
@@ -138,9 +137,8 @@ public final class ResourceFacility implements Facility {
 						null,
 						null,
 						String.format( 
-								"Not authorized to execute method '%s.%s'.", 
-								theMethod.getResourceType().getType().getSimpleName(), 
-								theMethod.getMethod( ).getName( ) ), 
+								"Request %s indicated you are not authorized.", 
+								theMethod.getParameterPath( ) ), 
 						theException );
 				
 				String scheme = theException.getScheme( ); // TODO: needs to be RFC 2616 quoted-string compliant

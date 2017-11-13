@@ -32,7 +32,7 @@ import com.talvish.tales.parts.translators.Translator;
 import com.talvish.tales.serialization.TypeFormatAdapter;
 import com.talvish.tales.serialization.UrlEncoding;
 import com.talvish.tales.serialization.json.translators.ChainToJsonElementToStringTranslator;
-import com.talvish.tales.system.Conditions;
+import com.talvish.tales.validation.Conditions;
 
 /**
  * A representation of the method on a Tales-enabled service.

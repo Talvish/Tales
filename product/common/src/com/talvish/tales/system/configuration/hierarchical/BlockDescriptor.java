@@ -28,7 +28,7 @@ import com.talvish.tales.contracts.data.DataMember;
 import com.talvish.tales.parts.naming.LowerCaseValidator;
 import com.talvish.tales.parts.naming.NameManager;
 import com.talvish.tales.parts.naming.NameValidator;
-import com.talvish.tales.system.Conditions;
+import com.talvish.tales.validation.Conditions;
 
 /**
  * This class represents the block structure as found in the configuration. 

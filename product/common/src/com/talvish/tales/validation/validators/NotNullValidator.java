@@ -13,25 +13,33 @@
 // *  See the License for the specific language governing permissions and
 // *  limitations under the License.
 // ***************************************************************************
-package com.talvish.tales.parts.constraints;
-
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+package com.talvish.tales.validation.validators;
 
 /**
- * This annotation is used as a constraint on parameters and class members 
- * that are integers (e.g int, long, etc) to indicate the minimum value of the 
- * parameter or class member. 
- * Currently this supports int, long and BigDecimal.
+ * A validator that checks to see if a value is null or not.
  * @author jmolnar
+ *
  */
-@Retention( RetentionPolicy.RUNTIME)
-@Target(value={ElementType.FIELD,ElementType.PARAMETER})
-public @interface Min {
+public class NotNullValidator implements ValueValidator<Object> {
+
 	/**
-	 * The minimum value of the parameter or class member.
+	 * Performs the check to see if the  value is null.
+	 * Null values are treated as valid.
+	 * @param theValue the value to check
+	 * @return true if the passed in value is not null, false otherwise
 	 */
-	long value( );
+	@Override
+	public boolean isValid(Object theValue) {
+		return theValue != null; 
+	}
+	
+	/**
+	 * Generates a message for a value that is considered invalid.
+	 * @param theValue the value to generate a message for 
+	 * @param theBuilder the builder to create the message in
+	 */
+	@Override 
+	public void generateMessageFragment( Object theValue, StringBuilder theBuilder ) {
+		theBuilder.append( "the value is missing or null" );
+	}
 }

@@ -21,11 +21,11 @@ import java.util.List;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.talvish.tales.parts.OnValidation;
 import com.talvish.tales.system.configuration.ConfigurationException;
 import com.talvish.tales.system.configuration.annotated.Setting;
 import com.talvish.tales.system.configuration.annotated.Settings;
 import com.talvish.tales.system.configuration.annotated.SettingsName;
+import com.talvish.tales.validation.OnValidation;
 
 
 /**

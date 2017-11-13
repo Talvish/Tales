@@ -21,7 +21,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.talvish.tales.communication.Status;
 import com.talvish.tales.contracts.data.DataContract;
-import com.talvish.tales.system.Conditions;
+import com.talvish.tales.validation.Conditions;
 
 /**
  * The result coming out of a resource method call.

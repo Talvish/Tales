@@ -23,16 +23,16 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.talvish.tales.parts.ValidationException;
-import com.talvish.tales.parts.constraints.ValidatorManager;
-import com.talvish.tales.parts.constraints.ValueValidator;
 import com.talvish.tales.parts.naming.LowerCaseValidator;
 import com.talvish.tales.parts.naming.NameManager;
 import com.talvish.tales.parts.naming.NameValidator;
 import com.talvish.tales.parts.reflection.JavaType;
 import com.talvish.tales.parts.translators.Translator;
 import com.talvish.tales.services.OperationContext;
-import com.talvish.tales.system.Conditions;
+import com.talvish.tales.validation.Conditions;
+import com.talvish.tales.validation.ValidationException;
+import com.talvish.tales.validation.validators.ValidatorManager;
+import com.talvish.tales.validation.validators.ValueValidator;
 
 /**
  * The details regarding a parameter on a method we are exposing in a resource.
@@ -284,13 +284,17 @@ public class ResourceMethodParameter {
 		
 		for( @SuppressWarnings("rawtypes") ValueValidator validator : validators ) {
 			if( !validator.isValid( value ) ) {
-				throw new ValidationException( 
-						String.format( 
-								"Method '%s.%s' could not validate parameter '%s' due to failing validator '%s'", 
-								this.resourceMethod.getResourceType().getName(), 
-								this.resourceMethod.getName(), 
-								this.getValueName( ), 
-								validator.getClass().getSimpleName( ) ) );
+				StringBuilder builder = new StringBuilder( );
+
+				builder.append( this.getSource( ).name() );
+				builder.append( " parameter {");
+				builder.append( this.getValueName( ) );
+				builder.append( "} failed validation because " );
+				validator.generateMessageFragment( theObject, builder );
+				builder.append( "." );
+			
+				// now throw the exception
+				throw new ValidationException( builder.toString( ) ); 
 			}
 		}
 		

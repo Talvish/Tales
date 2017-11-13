@@ -18,10 +18,10 @@ package com.talvish.tales.client.http;
 import com.google.common.base.Strings;
 
 import com.talvish.tales.client.http.ResourceConfigurationBase;
-import com.talvish.tales.parts.OnValidation;
-import com.talvish.tales.system.Conditions;
 import com.talvish.tales.system.configuration.annotated.Setting;
 import com.talvish.tales.system.configuration.annotated.Settings;
+import com.talvish.tales.validation.Conditions;
+import com.talvish.tales.validation.OnValidation;
 
 /**
  * The configuration needed to setup the object id manager to retrieving object ids locally.

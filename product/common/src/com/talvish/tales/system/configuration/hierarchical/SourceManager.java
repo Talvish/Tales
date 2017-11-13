@@ -31,8 +31,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.talvish.tales.parts.reflection.JavaType;
 import com.talvish.tales.serialization.json.JsonTranslationFacility;
-import com.talvish.tales.system.Conditions;
 import com.talvish.tales.system.configuration.ConfigurationException;
+import com.talvish.tales.validation.Conditions;
 
 /**
  * This class manages json-based configuration settings centered around a root source file (and any of its includes).

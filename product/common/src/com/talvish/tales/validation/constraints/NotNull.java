@@ -13,12 +13,21 @@
 // *  See the License for the specific language governing permissions and
 // *  limitations under the License.
 // ***************************************************************************
-package com.talvish.tales.parts.constraints;
+package com.talvish.tales.validation.constraints;
 
-public class NotNullValidator implements ValueValidator<Object> {
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-	@Override
-	public boolean isValid(Object theValue) {
-		return theValue != null; 
-	}
+/**
+ * This annotation is used as a constraint on parameters and class members 
+ * that are integers (e.g int, long, etc) to indicate the maximum value of the 
+ * parameter or class member. 
+ * Currently this supports int, long and BigDecimal.
+ * @author jmolnar
+ */
+@Retention( RetentionPolicy.RUNTIME)
+@Target(value={ElementType.FIELD,ElementType.PARAMETER})
+public @interface NotNull {
 }

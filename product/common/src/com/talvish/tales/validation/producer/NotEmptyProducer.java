@@ -13,12 +13,24 @@
 // *  See the License for the specific language governing permissions and
 // *  limitations under the License.
 // ***************************************************************************
-package com.talvish.tales.parts.constraints;
+package com.talvish.tales.validation.producer;
 
 import com.google.common.base.Preconditions;
+import com.talvish.tales.validation.constraints.NotEmpty;
 import com.talvish.tales.parts.reflection.JavaType;
+import com.talvish.tales.validation.validators.NotEmptyValidator;
+import com.talvish.tales.validation.validators.ValueValidator;
 
+/**
+ * Produces a validator for the specified annotation and value type. 
+ * @author jmolnar
+ */
 public class NotEmptyProducer implements ValidatorProducer<NotEmpty> {
+	/**
+	 * Produces a ValueValidator for the specified NotEmpty annotation and associated type.
+	 * @param theAnnotation the annotation instance
+	 * @param theType the type the annotation was used on
+	 */
 	@Override
 	public ValueValidator<?> produceValidator( NotEmpty theAnnotation, JavaType theType ) {
 		Preconditions.checkNotNull( theAnnotation, "need an annotation" );

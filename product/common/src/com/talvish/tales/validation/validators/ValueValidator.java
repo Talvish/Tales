@@ -13,21 +13,27 @@
 // *  See the License for the specific language governing permissions and
 // *  limitations under the License.
 // ***************************************************************************
-package com.talvish.tales.parts.constraints;
-
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+package com.talvish.tales.validation.validators;
 
 /**
- * This annotation is used as a constraint on parameters and class members 
- * that are integers (e.g int, long, etc) to indicate the maximum value of the 
- * parameter or class member. 
- * Currently this supports int, long and BigDecimal.
+ * The interface representing representing a validator.
  * @author jmolnar
+ * @param <T> The type the validator will be checking.
+ *
  */
-@Retention( RetentionPolicy.RUNTIME)
-@Target(value={ElementType.FIELD,ElementType.PARAMETER})
-public @interface NotEmpty {
+public interface ValueValidator<T> {
+	/**
+	 * Indicates with the value is considered valid based on  
+	 * constraints the subclass will define.
+	 * @param theValue the value to compare
+	 * @return true if the valid is valid, false otherwise
+	 */
+	boolean isValid( T theValue );
+	
+	/**
+	 * Generates a fragment of a message for when a value is wrong.
+	 * @param theValue the value considered wrong
+	 * @param theBuilder the builder to append text to
+	 */
+	void generateMessageFragment( T theValue, StringBuilder theBuilder );
 }

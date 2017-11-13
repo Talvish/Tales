@@ -17,9 +17,11 @@ package com.talvish.tales.parts.sites;
 
 import java.lang.annotation.Annotation;
 
-import com.talvish.tales.parts.ValidationException;
-import com.talvish.tales.parts.constraints.ValueValidator;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.talvish.tales.parts.reflection.JavaType;
+import com.talvish.tales.validation.ValidationException;
+import com.talvish.tales.validation.validators.ValueValidator;
 
 /**
  * {@link MemberSite} extension that validates items during the setter calls.
@@ -27,15 +29,24 @@ import com.talvish.tales.parts.reflection.JavaType;
  *
  */
 public class ValidatingMemberSite implements MemberSite {
+	private final String containingTypeName;
 	private final MemberSite memberSite;
 	private final ValueValidator<?>[] validators;
 	
-	public ValidatingMemberSite( MemberSite theMemberSite, ValueValidator<?>[] theValidators ) {
-		// TODO: param validation
-		// TODO: copy the validators
+	public ValidatingMemberSite( String theContainingTypeName, MemberSite theMemberSite, ValueValidator<?>[] theValidators ) {
+        Preconditions.checkArgument( !Strings.isNullOrEmpty( theContainingTypeName ), "need a containing type name" );
+        Preconditions.checkNotNull( theMemberSite, "need a member site" );
+        
+        // TODO: 
+		containingTypeName = theContainingTypeName;
 		memberSite = theMemberSite;
-		validators = theValidators;
-		
+
+		// TODO: could make it so that if null/empty we don't have an empty array
+		if( theValidators != null ) {
+			validators = theValidators.clone( );
+		} else {
+			validators = new ValueValidator<?>[ 0 ];
+		}
 	}
 	
 	/**
@@ -95,6 +106,7 @@ public class ValidatingMemberSite implements MemberSite {
 	public Object getData( Object theSource ) {
 		return memberSite.getData(theSource);
 	}
+	
 	/**
 	 * Sets data on a member of a sink object
 	 * @param theSink the object to set a value on
@@ -105,16 +117,20 @@ public class ValidatingMemberSite implements MemberSite {
 		// TODO: optimize this, check for null first, or size 0 or something
 		for( ValueValidator validator : validators ) {
 			if( !validator.isValid( theValue ) ) {
-				throw new ValidationException( 
-						String.format( 
-								"Member '%s.%s' could not be set due to failing validator '%s'", 
-								memberSite.getContainingType().getSimpleName(), 
-								memberSite.getName( ), 
-								validator.getClass().getSimpleName( ) ) );
+				StringBuilder builder = new StringBuilder( );
+
+				builder.append( "Data member ");
+				builder.append( containingTypeName );
+				builder.append( "." );
+				builder.append( memberSite.getName( ) );
+				builder.append( " failed validation because " );
+				validator.generateMessageFragment( theValue, builder );
+				builder.append( "." );
+				
+				// now throw the exception
+				throw new ValidationException( builder.toString( ) ); 
 			}
 		}
-
 		memberSite.setData(theSink, theValue);
 	}
-
 }

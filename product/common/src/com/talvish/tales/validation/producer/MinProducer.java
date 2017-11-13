@@ -13,15 +13,29 @@
 // *  See the License for the specific language governing permissions and
 // *  limitations under the License.
 // ***************************************************************************
-package com.talvish.tales.parts.constraints;
+package com.talvish.tales.validation.producer;
 
 import java.math.BigDecimal;
 
 import com.google.common.base.Preconditions;
 import com.talvish.tales.parts.reflection.JavaType;
+import com.talvish.tales.validation.constraints.Min;
+import com.talvish.tales.validation.validators.MinBigDecimalValidator;
+import com.talvish.tales.validation.validators.MinIntegerValidator;
+import com.talvish.tales.validation.validators.MinLongValidator;
+import com.talvish.tales.validation.validators.ValueValidator;
 
+/**
+ * Produces a validator for the specified annotation and value type. 
+ * @author jmolnar
+ */
 public class MinProducer implements ValidatorProducer<Min> {
 
+	/**
+	 * Produces a ValueValidator for the specified Min annotation and associated type.
+	 * @param theAnnotation the annotation instance
+	 * @param theType the type the annotation was used on
+	 */
 	@Override
 	public ValueValidator<?> produceValidator( Min theAnnotation, JavaType theType ) {
 		Preconditions.checkNotNull( theAnnotation, "need an annotation" );

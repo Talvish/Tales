@@ -25,10 +25,9 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.google.common.base.Preconditions;
-
-import com.talvish.tales.parts.OnValidation;
 import com.talvish.tales.parts.reflection.JavaType;
 import com.talvish.tales.system.Facility;
+import com.talvish.tales.validation.OnValidation;
 
 /**
  * A helper class for systems that are trying to analyze classes to pull out fields and types 

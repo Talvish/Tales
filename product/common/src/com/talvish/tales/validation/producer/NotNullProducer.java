@@ -13,14 +13,27 @@
 // *  See the License for the specific language governing permissions and
 // *  limitations under the License.
 // ***************************************************************************
-package com.talvish.tales.parts.constraints;
+package com.talvish.tales.validation.producer;
 
 import com.google.common.base.Preconditions;
+import com.talvish.tales.validation.constraints.NotNull;
 import com.talvish.tales.parts.reflection.JavaType;
+import com.talvish.tales.validation.validators.NotNullValidator;
+import com.talvish.tales.validation.validators.ValueValidator;
 
+/**
+ * Produces a validator for the specified annotation and value type. 
+ * @author jmolnar
+ *
+ */
 public class NotNullProducer implements ValidatorProducer<NotNull> {
 	private static final NotNullValidator validator = new NotNullValidator( );
 
+	/**
+	 * Produces a ValueValidator for the specified NotNull annotation and associated type.
+	 * @param theAnnotation the annotation instance
+	 * @param theType the type the annotation was used on
+	 */
 	@Override
 	public ValueValidator<?> produceValidator( NotNull theAnnotation, JavaType theType ) {
 		Preconditions.checkNotNull( theAnnotation, "need an annotation" );

@@ -48,7 +48,7 @@ import com.talvish.tales.serialization.json.JsonTranslationFacility;
 import com.talvish.tales.serialization.json.JsonTypeMap;
 import com.talvish.tales.serialization.json.translators.JsonObjectToObjectTranslator;
 import com.talvish.tales.serialization.json.translators.ObjectToJsonObjectTranslator;
-import com.talvish.tales.system.Conditions;
+import com.talvish.tales.validation.Conditions;
 
 
 /**

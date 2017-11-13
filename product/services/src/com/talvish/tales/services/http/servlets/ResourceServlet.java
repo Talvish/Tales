@@ -360,7 +360,7 @@ public class ResourceServlet extends HttpServlet {
 						// we set completed, and this call was the call to set it
 						// then we can write our failures and set to completed
 						if( asyncState.setCompleted( ) ) {
-							ResponseHelper.writeFailure( theRequest, theResponse, Status.LOCAL_TIMEOUT, null, String.format( "Timed-out executing resource method '%s.%s'.", resourceType.getName( ), method.getName( ) ), null );
+							ResponseHelper.writeFailure( theRequest, theResponse, Status.LOCAL_TIMEOUT, null, String.format( "Timed-out executing resource method %s.%s.", resourceType.getName( ), method.getName( ) ), null );
 							theEvent.getAsyncContext().complete( );
 						}
 					}
@@ -374,7 +374,7 @@ public class ResourceServlet extends HttpServlet {
 						// we set completed, and this call was the call to set it
 						// then we can write our failures and set to completed
 						if( asyncState.setCompleted( ) ) {
-							ResponseHelper.writeFailure( theRequest, theResponse, Status.LOCAL_ERROR, FailureSubcodes.UNHANDLED_EXCEPTION, String.format( "Unknown exception executing resource method '%s.%s'.", resourceType.getName( ), method.getName( ) ), theEvent.getThrowable() );
+							ResponseHelper.writeFailure( theRequest, theResponse, Status.LOCAL_ERROR, FailureSubcodes.UNHANDLED_EXCEPTION, String.format( "Unknown exception executing resource method %s.%s.", resourceType.getName( ), method.getName( ) ), theEvent.getThrowable() );
 							theEvent.getAsyncContext().complete( );
 						}
 					}
@@ -400,7 +400,7 @@ public class ResourceServlet extends HttpServlet {
 							if( asyncResult != null ) {
 								ResponseHelper.writeResponse( theRequest, theResponse, asyncResult );
 							} else {
-								ResponseHelper.writeFailure( theRequest, theResponse, Status.CALLER_NOT_FOUND, FailureSubcodes.UNKNOWN_REQUEST, String.format( "Path '%s' maps to resource '%s.%s' but execution did not return a result.", theRequest.getRequestURL().toString( ), resourceType.getName( ), method.getName( ) ), null );
+								ResponseHelper.writeFailure( theRequest, theResponse, Status.CALLER_NOT_FOUND, FailureSubcodes.UNKNOWN_REQUEST, String.format( "Path %s maps to resource %s.%s but execution did not return a result.", theRequest.getRequestURL().toString( ), resourceType.getName( ), method.getName( ) ), null );
 							}
 							asyncContext.complete( );
 						}
@@ -432,11 +432,11 @@ public class ResourceServlet extends HttpServlet {
 						updateCompletionStatus( method, theResponse );
 					}
 				} else {
-					ResponseHelper.writeFailure(theRequest, theResponse, Status.CALLER_NOT_FOUND, FailureSubcodes.UNKNOWN_REQUEST, String.format( "Path '%s' maps to resource '%s.%s' but execution did not return a result.", theRequest.getRequestURL().toString( ), this.resourceType.getName( ), method.getName( ) ), null );
+					ResponseHelper.writeFailure(theRequest, theResponse, Status.CALLER_NOT_FOUND, FailureSubcodes.UNKNOWN_REQUEST, String.format( "Path %s maps to resource %s.%s but execution did not return a result.", theRequest.getRequestURL().toString( ), this.resourceType.getName( ), method.getName( ) ), null );
 				}
 			}
 		} else {
-			ResponseHelper.writeFailure(theRequest, theResponse, Status.CALLER_NOT_FOUND, FailureSubcodes.UNKNOWN_REQUEST, String.format( "Path '%s' maps to resource '%s' but an operation could not be found.", theRequest.getRequestURL().toString( ), this.resourceType.getName( ) ), null );
+			ResponseHelper.writeFailure(theRequest, theResponse, Status.CALLER_NOT_FOUND, FailureSubcodes.UNKNOWN_REQUEST, String.format( "Path %s maps to resource %s but an operation could not be found.", theRequest.getRequestURL().toString( ), this.resourceType.getName( ) ), null );
 		}
    	}
 	

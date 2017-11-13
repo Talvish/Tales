@@ -13,21 +13,24 @@
 // *  See the License for the specific language governing permissions and
 // *  limitations under the License.
 // ***************************************************************************
-package com.talvish.tales.parts.constraints;
+package com.talvish.tales.validation.producer;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.Annotation;
+
+import com.talvish.tales.parts.reflection.JavaType;
+import com.talvish.tales.validation.validators.ValueValidator;
 
 /**
- * This annotation is used as a constraint on parameters and class members 
- * that are integers (e.g int, long, etc) to indicate the maximum value of the 
- * parameter or class member. 
- * Currently this supports int, long and BigDecimal.
+ * Produces a validator for the specified annotation and value type. 
  * @author jmolnar
+ *
+ * @param <T> the type of annotation it produces annotations 
  */
-@Retention( RetentionPolicy.RUNTIME)
-@Target(value={ElementType.FIELD,ElementType.PARAMETER})
-public @interface NotNull {
+public interface ValidatorProducer<T extends Annotation > {
+	/**
+	 * Produces a ValueValidator for the specified annotation and associated type.
+	 * @param theAnnotation the annotation instance
+	 * @param theType the type the annotation was used on
+	 */
+	ValueValidator<?> produceValidator( T theAnnotation, JavaType theType );
 }

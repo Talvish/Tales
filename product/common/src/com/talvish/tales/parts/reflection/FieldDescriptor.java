@@ -22,10 +22,10 @@ import java.util.List;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.talvish.tales.parts.constraints.ValidatorManager;
-import com.talvish.tales.parts.constraints.ValueValidator;
 import com.talvish.tales.parts.sites.MemberSite;
 import com.talvish.tales.parts.sites.ValidatingMemberSite;
+import com.talvish.tales.validation.validators.ValidatorManager;
+import com.talvish.tales.validation.validators.ValueValidator;
 
 public abstract class FieldDescriptor<T extends TypeDescriptor<T, F>, F extends FieldDescriptor<T, F>> {
 	/**
@@ -120,7 +120,7 @@ public abstract class FieldDescriptor<T extends TypeDescriptor<T, F>, F extends 
         // BUT I would love if we could make this faster by embedding 
         // the translators and validators together
         if( validators != null ) {
-        	site = new ValidatingMemberSite( theFieldSite, validators );
+        	site = new ValidatingMemberSite( containingType.getName(), theFieldSite, validators );
         } else {
         	site = theFieldSite;
         }

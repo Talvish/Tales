@@ -25,7 +25,7 @@ import com.talvish.tales.parts.naming.NameValidator;
 import com.talvish.tales.parts.naming.SegmentedLowercaseValidator;
 import com.talvish.tales.serialization.json.UnmappedName;
 import com.talvish.tales.serialization.json.UnmappedValue;
-import com.talvish.tales.system.Conditions;
+import com.talvish.tales.validation.Conditions;
 
 /**
  * This class represents the setting structure as found in the configuration. 

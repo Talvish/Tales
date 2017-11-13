@@ -1,5 +1,5 @@
 // ***************************************************************************
-// *  Copyright 2017 Joseph Molnar
+// *  Copyright 2015 Joseph Molnar
 // *
 // *  Licensed under the Apache License, Version 2.0 (the "License");
 // *  you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
 // *  See the License for the specific language governing permissions and
 // *  limitations under the License.
 // ***************************************************************************
-package com.talvish.tales.parts.constraints;
+package com.talvish.tales.validation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -21,17 +21,11 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * This annotation is used as a constraint on parameters and class members 
- * that are integers (e.g int, long, etc) to indicate the maximum value of the 
- * parameter or class member. 
- * Currently this supports int, long and BigDecimal.
+ * This annotation indicates a method is meant to be used for validation.
  * @author jmolnar
  */
 @Retention( RetentionPolicy.RUNTIME)
-@Target(value={ElementType.FIELD,ElementType.PARAMETER})
-public @interface Max {
-	/**
-	 * The maximum value of the parameter or class member.
-	 */
-	long value( );
+@Target( ElementType.METHOD )
+public @interface OnValidation {
+
 }

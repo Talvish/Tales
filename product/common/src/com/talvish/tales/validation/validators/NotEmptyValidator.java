@@ -13,21 +13,34 @@
 // *  See the License for the specific language governing permissions and
 // *  limitations under the License.
 // ***************************************************************************
-package com.talvish.tales.parts.constraints;
+package com.talvish.tales.validation.validators;
 
 import com.google.common.base.Strings;
 
 /**
- * This annotation is used as a constraint on parameters and class members 
- * that are integers (e.g int, long, etc) to indicate the maximum value of the 
- * parameter or class member. 
- * Currently this supports int, long and BigDecimal.
+ * A validator that checks to see if a string value is empty or null.
  * @author jmolnar
+ *
  */
 public class NotEmptyValidator implements ValueValidator<String> {
 
-	@Override
+	/**
+	 * Performs the check to see if the string value is empty or null.
+	 * Null values are treated as valid.
+	 * @param theValue the value to check
+	 * @return true if the passed in value is not empty or null, false otherwise
+	 */
 	public boolean isValid(String theValue) {
 		return !Strings.isNullOrEmpty( theValue ); 
+	}
+	
+	/**
+	 * Generates a message for a value that is considered invalid.
+	 * @param theValue the value to generate a message for 
+	 * @param theBuilder the builder to create the message in
+	 */
+	@Override 
+	public void generateMessageFragment( String theValue, StringBuilder theBuilder ) {
+		theBuilder.append( "the value is missing, empty or null" );
 	}
 }

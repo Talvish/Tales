@@ -13,44 +13,46 @@
 // *  See the License for the specific language governing permissions and
 // *  limitations under the License.
 // ***************************************************************************
-package com.talvish.tales.parts.constraints;
+package com.talvish.tales.validation.validators;
+
+import java.math.BigDecimal;
 
 /**
- * A validator that ensures an value to compare is equal to or greater 
+ * A validator that ensures an value to compare is equal to or less 
  * than the value the instance was constructed with.
  * @author jmolnar
  *
  */
-public class MinLongValidator implements ValueValidator<Long> {
-	private final long value;
+public class MaxBigDecimalValidator extends MaxValidator<BigDecimal> {
+	private final BigDecimal value;
 
 
 	/**
 	 * The constructor taking the value to compare against.
 	 * @param theValue the value to compare against
 	 */
-	public MinLongValidator( long theValue ) {
+	public MaxBigDecimalValidator( BigDecimal theValue ) {
 		value = theValue;
 	}
 
 	/**
 	 * The value that will be compared against.
 	 */
-	public long getValue( ) {
+	public BigDecimal getValue( ) {
 		return value;
 	}
 	
 	/**
-	 * Performs the comparison assuming the correct type.
+	 * Performs the check to see if the value is valid, in this case, less than or equal to stored value.
 	 * Null values are treated as valid.
 	 * @param theValue the value to check
-	 * @return true if the passed in value is the equal to or greater, false otherwise
+	 * @return true if the passed in value is the equal to or less than, false otherwise
 	 */
-	public boolean isValid( Long theValue ) {
+	public boolean isValid( BigDecimal theValue ) {
 		if( theValue == null ) {
 			return true;
 		} else {
-			return theValue >= value;
+			return theValue.compareTo( value ) <= 0;
 		}
 	}
 }

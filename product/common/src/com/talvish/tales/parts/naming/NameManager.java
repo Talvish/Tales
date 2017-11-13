@@ -21,7 +21,7 @@ import java.util.Map;
 
 import com.google.common.base.Strings;
 import com.talvish.tales.parts.naming.NameValidator;
-import com.talvish.tales.system.Conditions;
+import com.talvish.tales.validation.Conditions;
 
 /**
  * A utility class used to validate names read in from external sources or exposed externally.

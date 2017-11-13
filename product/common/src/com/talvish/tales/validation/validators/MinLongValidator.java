@@ -13,44 +13,44 @@
 // *  See the License for the specific language governing permissions and
 // *  limitations under the License.
 // ***************************************************************************
-package com.talvish.tales.parts.constraints;
+package com.talvish.tales.validation.validators;
 
 /**
- * A validator that ensures an value to compare is equal to or less 
+ * A validator that ensures an value to compare is equal to or greater 
  * than the value the instance was constructed with.
  * @author jmolnar
  *
  */
-public class MaxIntegerValidator implements ValueValidator<Integer> {
-	private final int value;
+public class MinLongValidator extends MinValidator<Long> {
+	private final long value;
 
 
 	/**
 	 * The constructor taking the value to compare against.
 	 * @param theValue the value to compare against
 	 */
-	public MaxIntegerValidator( int theValue ) {
-		value = theValue; // 
+	public MinLongValidator( long theValue ) {
+		value = theValue;
 	}
 
 	/**
 	 * The value that will be compared against.
 	 */
-	public int getValue( ) {
+	public Long getValue( ) {
 		return value;
-	}
+	}	
 	
 	/**
-	 * Performs the comparison assuming the correct type.
+	 * Performs the check to see if the value is valid, in this case, greater than or equal to stored value.
 	 * Null values are treated as valid.
 	 * @param theValue the value to check
-	 * @return true if the passed in value is the equal to or less than, false otherwise
+	 * @return true if the passed in value is the equal to or greater than, false otherwise
 	 */
-	public boolean isValid( Integer theValue ) {
+	public boolean isValid( Long theValue ) {
 		if( theValue == null ) {
 			return true;
 		} else {
-			return theValue <= value;			
+			return theValue >= value;
 		}
 	}
 }

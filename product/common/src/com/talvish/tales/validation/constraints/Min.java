@@ -13,18 +13,25 @@
 // *  See the License for the specific language governing permissions and
 // *  limitations under the License.
 // ***************************************************************************
-package com.talvish.tales.parts.constraints;
+package com.talvish.tales.validation.constraints;
 
-import java.lang.annotation.Annotation;
-
-import com.talvish.tales.parts.reflection.JavaType;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * Produces a validator for a particular value type. 
+ * This annotation is used as a constraint on parameters and class members 
+ * that are integers (e.g int, long, etc) to indicate the minimum value of the 
+ * parameter or class member. 
+ * Currently this supports int, long and BigDecimal.
  * @author jmolnar
- *
- * @param <T> the type of annotation it produces annotations 
  */
-public interface ValidatorProducer<T extends Annotation > {
-	ValueValidator<?> produceValidator( T theAnnotation, JavaType theType );
+@Retention( RetentionPolicy.RUNTIME)
+@Target(value={ElementType.FIELD,ElementType.PARAMETER})
+public @interface Min {
+	/**
+	 * The minimum value of the parameter or class member.
+	 */
+	long value( );
 }
