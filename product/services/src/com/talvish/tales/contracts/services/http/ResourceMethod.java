@@ -61,7 +61,7 @@ import com.talvish.tales.serialization.TypeFormatAdapter;
 import com.talvish.tales.serialization.UrlEncoding;
 import com.talvish.tales.services.OperationContext;
 import com.talvish.tales.services.http.FailureSubcodes;
-import com.talvish.tales.services.http.servlets.ResourceServlet.AsyncState;
+import com.talvish.tales.services.http.servlets.ResourceAsyncState;
 
 /**
  * This class represents a method that is mapping from a http request 
@@ -185,7 +185,23 @@ public class ResourceMethod extends Subcontract {
 		String[] paths = generatePaths( specifiedPath, resourceType.getBoundPath(), newPathParams );
 		parameterPath = paths[ 2 ];
 		orderingPath = paths[ 1 ];
-		pathRegex = paths[ 0 ];
+		String partialPathRegex = paths[ 0 ];
+		int count = 0;
+
+		// TODO: we could run things where version is either in the path or query string
+		// 		 if in the path, then the path can be modified to match against version
+		//		 if in query string, nothing actually needs to be done
+//		partialPathRegex = "(/" + partialPathRegex + ") (";
+//		for( String version : theVersions ) {
+//			if( count > 0 ) {
+//				partialPathRegex +=" | ";
+//			}
+//			partialPathRegex += "v" + version;
+//			count += 1;
+//		}
+//		partialPathRegex += ")";
+		pathRegex = partialPathRegex;  
+
 		pathPattern = Pattern.compile( pathRegex );
 		pathParams = Collections.unmodifiableList( newPathParams );
 
@@ -740,7 +756,7 @@ public class ResourceMethod extends Subcontract {
 			OperationContext theContext ,
 			Matcher thePathMatcher, 
 			ResourceFacility theResourceFacility, 
-			AsyncState theAsyncState ) {
+			ResourceAsyncState theAsyncState ) {
 		// TODO: move this entire method out
 		
 		final boolean infoLoggingEnabled = logger.isInfoEnabled();
@@ -759,10 +775,7 @@ public class ResourceMethod extends Subcontract {
 		// start the execution timer		
 		final long startTimestamp = System.nanoTime(); 
 		try {
-			// first we need to get the request URI and ensure it matches
-			final String uri = theRequest.getRequestURI();
-	
-			// if we have a match, we need to generate the parameters to use 
+			// we need to generate the parameters to use 
 			final Object[] parameters	= new Object[ this.methodParameters.size( ) ];
 			String stringValue;
 			Object actualValue;
@@ -925,7 +938,8 @@ public class ResourceMethod extends Subcontract {
 						String methodName = String.format( "%s.%s", 
 								this.getResourceType().getType().getSimpleName(), 
 								this.getMethod( ).getName( ) );
-						result = new ResourceMethodResult( Status.LOCAL_ERROR, null, methodName, String.format( "Unexpected null result for %s.", uri ), null );
+						result = new ResourceMethodResult( Status.LOCAL_ERROR, null, methodName, String.format( "Unexpected null result for %s.", theRequest.getRequestURI() ), null );
+
 					} else {
 						result = new ResourceMethodResult( ( JsonElement )this.methodReturn.translate( resourceResult.getValue( ) ), resourceResult );
 					}

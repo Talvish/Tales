@@ -32,7 +32,7 @@ import com.talvish.tales.contracts.services.http.ResourceFacility;
 import com.talvish.tales.contracts.services.http.ResourceType;
 import com.talvish.tales.contracts.services.http.ServletContract;
 import com.talvish.tales.services.Service;
-import com.talvish.tales.services.http.servlets.ResourceServlet;
+import com.talvish.tales.services.http.servlets.ResourceQueryServlet;
 import com.talvish.tales.system.ExecutionLifecycleState;
 import com.talvish.tales.system.ExecutorManager;
 
@@ -186,7 +186,7 @@ public class HttpInterface extends HttpInterfaceBase {
     	configurationBuilder.append( executionTimeout );
 
     	// so now we need to create the servlet we will run within
-    	ResourceServlet servlet = new ResourceServlet( 
+    	ResourceQueryServlet servlet = new ResourceQueryServlet( 
     			theResource, 
     			resourceType, 
     			resourceFacility, 

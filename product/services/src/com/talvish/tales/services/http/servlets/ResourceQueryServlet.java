@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 
 import javax.servlet.AsyncContext;
@@ -57,58 +56,9 @@ import com.talvish.tales.services.http.ResponseHelper;
  *
  */
 @SuppressWarnings("serial")
-public class ResourceServlet extends HttpServlet {
+public class ResourceQueryServlet extends HttpServlet {
 
-	/**
-	 * A simple helper class that manages if the non-blocking
-	 * call was executed or not, in part because, at least in
-	 * Jetty, the AsyncContext/ServletResponse cannot bec
-	 * checked (without exceptions or re-set data) 
-	 * @author jmolnar
-	 *
-	 */
-	public static class AsyncState {
-		private final AsyncContext context;
-		private AtomicBoolean completed = new AtomicBoolean( false );
-		
-		/**
-		 * Constructor taking the AsyncContext 
-		 * this state is associated with.
-		 * @param theContext the associated context
-		 */
-		public AsyncState( AsyncContext theContext ) {
-			Preconditions.checkNotNull( theContext, "need a context" );
-			context = theContext;
-		}
-
-		/**
-		 * Returns the associated context.
-		 * @return the assocated context.
-		 */
-		public AsyncContext getContext(  ) {
-			return context;
-		}
-		
-		/**
-		 * Indicates if the associated context/operation has completed.
-		 * @return indicates operation has completed or not
-		 */
-		public final boolean hasCompleted( ) {
-			return completed.get();
-		}
-		
-		/**
-		 * Sets the completed state to true indicating the 
-		 * associating context/operation is done. It is not
-		 * an indication of success.
-		 * @return indicates if the state was set during this call or or not, indicating whether this was the call to update the state, or it previously been set
-		 */
-		public final boolean setCompleted( ) {
-			// as a note, a race condition is possible in generally knowing which condition occurred
-			// between successful finish, a time, or even a rejected queue insertion (meaning too busy)
-			return !completed.getAndSet( true );
-		}
-	}
+	
 	
 	// TODO: have the methods, from the resource type, listed per contract 
 
@@ -130,7 +80,7 @@ public class ResourceServlet extends HttpServlet {
      * Constructor taking the two main objects needed, the resource and the information
      * about the resource.
      */
-    public ResourceServlet( Object theResource, ResourceType theResourceType, ResourceFacility theFacility, Executor theExecutor, long theExecutionTimeout ) {
+    public ResourceQueryServlet( Object theResource, ResourceType theResourceType, ResourceFacility theFacility, Executor theExecutor, long theExecutionTimeout ) {
     	Preconditions.checkNotNull( theResource, "need the resource" );
     	Preconditions.checkNotNull( theResourceType, "need a resource type" );
     	Preconditions.checkNotNull(theFacility, "the resource type '%s' needs a resource facility", theResourceType.getName( ) );
@@ -351,7 +301,7 @@ public class ResourceServlet extends HttpServlet {
 
 				// need to indicate we are going async
 				AsyncContext asyncContext = theRequest.startAsync();
-				AsyncState asyncState = new AsyncState( asyncContext );
+				ResourceAsyncState asyncState = new ResourceAsyncState( asyncContext );
 				
 				asyncContext.setTimeout( executionTimeout );
 				asyncContext.addListener( new AsyncListener( ) {
